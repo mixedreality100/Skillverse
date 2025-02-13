@@ -1,0 +1,290 @@
+/* Add this at the top of your CSS file */
+@import url('https://fonts.googleapis.com/css2?family=Abereto&display=swap');
+
+/* General styles */
+body, input, button, p, h1, a, label, span {
+  color: #000; /* Black text */
+}
+
+html {
+  scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: white; /* Set to white or any desired color */
+  font-family: 'Abereto', sans-serif; /* Fallback to sans-serif if Abereto is not available */
+}
+
+/* Input field styles */
+.input-field {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: #000;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.input-field:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+/* Button styles */
+.social-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #000;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  width: 100%; /* Full width */
+  max-width: 200px; /* Limit button width */
+  margin: 10px 0; /* Add margin for spacing */
+}
+
+.social-button:hover {
+  background-color: #ebebeb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.link {
+  cursor: pointer;
+  color: #2563eb;
+  text-decoration: none; /* Remove default underline */
+  margin: 0 5px; /* Reduce space between links */
+}
+
+.link:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Sign up link styles */
+.signup-link {
+  cursor: pointer;
+  color: #2563eb;
+  text-decoration: none; /* Remove default underline */
+  margin-right: 5px; /* Adjust spacing */
+}
+
+.signup-link:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Log in link styles */
+.login-link {
+  cursor: pointer;
+  color: #2563eb;
+  text-decoration: none; /* Remove default underline */
+  margin-left: 5px; /* Adjust spacing */
+}
+
+.login-link:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Form header styles */
+.form-header {
+  display: flex;
+  justify-content: center; /* Center the links */
+  margin-bottom: 20px;
+}
+
+.form-header .active {
+  font-weight: bold;
+}
+
+/* Center the container */
+.login-container {
+ display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+  padding: 20px; /* Add padding for smaller screens */
+  background-color: white; /* White background for the login page */
+}
+
+/* Form container styles */
+.form-container {
+  background-color: white; /* White background for the form */
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 900px; /* Keep the max-width of the form */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content horizontally */
+  margin: auto; /* Center the form vertically and horizontally */
+}
+
+/* Specific styles for the "Create Account" button */
+.create-account-button {
+  background-color: #000; /* Black background */
+  color: #fff; /* White text */
+  border: none; /* Remove border */
+  padding: 12px 20px; /* Adjust padding */
+  border-radius: 30px; /* Rounded corners */
+  font-size: 16px; /* Font size */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  width: 150%; /* Full width */
+  max-width: 200px; /* Limit button width */
+  margin-left: 70px ; /* Add margin for spacing */
+}
+
+.create-account-button:hover {
+  background-color: #333; /* Darker background on hover */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Specific styles for the "Login" button */
+.login-button {
+  background-color: black;
+  color: white;
+  border: 1px solid #ddd;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  width: 100%;
+  max-width: 200px;
+  margin-left: 70px;
+}
+
+.login-button:hover {
+  background-color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #000;
+}
+
+.divider:not(:empty)::before {
+  margin-right: 0.5em;
+}
+
+.divider:not(:empty)::after {
+  margin-left: 0.5em;
+}
+
+/* Add this to your CSS file */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px); /* Start slightly lower */
+  transition: opacity 0.5s ease-in, transform 0.5s ease-in; /* Ease-in effect */
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0); /* Move to original position */
+}
+
+.fade-out {
+    opacity: 1;
+    transition: opacity 0.5s ease-out; /* Fade-out effect */
+}
+
+.fade-out.hidden {
+    opacity: 0; /* Fully transparent */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@keyframes ease-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px); /* Adjust the vertical movement as needed */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-ease-in {
+    animation: ease-in 0.5s ease-in forwards; /* Adjust duration as needed */
+}
+
+/* Example styles for dropdown */
+.dropdown {
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem; /* Adjust as needed */
+    width: 200px; /* Set a width for the dropdown */
+    background-color: white;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 50; /* Ensure it appears above other elements */
+}
+
+/* Continuous fade-in effect */
+@keyframes continuousFadeIn {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.fade-in-constant {
+  animation: continuousFadeIn 3s ease-in-out infinite; /* Adjust duration as needed */
+}
+
+.carousel-container {
+  overflow: hidden; /* Hide overflow to create a sliding effect */
+  width: 100%; /* Adjust as necessary */
+}
+
+.carousel {
+  display: flex;
+  animation: slide 10s linear infinite; /* Adjust duration as necessary */
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(100%); /* Start from the right */
+  }
+  100% {
+    transform: translateX(-100%); /* Move to the left */
+  }
+}
+
+/* Add this to your CSS file or in a style tag in your component */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;             /* Chrome, Safari and Opera */
+}
