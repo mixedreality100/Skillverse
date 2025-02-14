@@ -41,7 +41,7 @@ const NewQuizPage = () => {
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="text-red-500 text-center">Error: {error}</div>;
   }
 
   const handleAnswerChange = (questionId, option) => {
@@ -68,62 +68,60 @@ const NewQuizPage = () => {
 
   if (quizSubmitted) {
     return (
-      <div className="bg-[#FFFFFF] flex justify-center items-center w-full min-h-screen">
-        <div className="max-w-[1440px] w-full p-8">
-          <h1 className="text-2xl font-bold mb-4">Quiz Results</h1>
-          <div>
-            {quizQuestions.map((question) => (
-              <div key={question.id} className="mb-4">
-                <p className="text-lg font-bold">{question.question}</p>
-                <div className="mt-2">
-                  {['A', 'B', 'C', 'D'].map((option) => (
-                    <div key={option} className="flex items-center">
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value={option}
-                        disabled
-                        checked={userAnswers[question.id] === option}
-                        className="mr-2"
-                      />
-                      <span
-                        className={
-                          userAnswers[question.id] === option
-                            ? userAnswers[question.id] === question.correct_answer
-                              ? 'text-green-500'
-                              : 'text-red-500'
-                            : ''
-                        }
-                      >
-                        {option}. {question[`option_${option.toLowerCase()}`]}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-2">
-                  <span className="font-bold">Correct Answer:</span> {question.correct_answer}
-                </div>
+      <div className="bg-gray-100 flex flex-col justify-center items-center w-full min-h-screen p-8">
+        <h1 className="text-2xl font-bold mb-4">Quiz Results</h1>
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl neomorphic">
+          {quizQuestions.map((question) => (
+            <div key={question.id} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-md">
+              <p className="text-lg font-bold">{question.question}</p>
+              <div className="mt-2">
+                {['A', 'B', 'C', 'D'].map((option) => (
+                  <div key={option} className="flex items-center">
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      value={option}
+                      disabled
+                      checked={userAnswers[question.id] === option}
+                      className="mr-2"
+                    />
+                    <span
+                      className={
+                        userAnswers[question.id] === option
+                          ? userAnswers[question.id] === question.correct_answer
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                          : ''
+                      }
+                    >
+                      {option}. {question[`option_${option.toLowerCase()}`]}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="mt-4">
-            <p className="text-xl font-bold">Your Score: {score.toFixed(2)}%</p>
-            <p className={score >= passingScore * 100 ? 'text-green-500' : 'text-red-500'}>
-              {score >= passingScore * 100 ? 'You passed!' : 'You did not pass.'}
-            </p>
-          </div>
+              <div className="mt-2">
+                <span className="font-bold">Correct Answer:</span> {question.correct_answer}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4">
+          <p className="text-xl font-bold">Your Score: {score.toFixed(2)}%</p>
+          <p className={score >= passingScore * 100 ? 'text-green-500' : 'text-red-500'}>
+            {score >= passingScore * 100 ? 'You passed!' : 'You did not pass.'}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#FFFFFF] flex justify-center items-center w-full min-h-screen">
-      <div className="max-w-[1440px] w-full p-8">
-        <h1 className="text-2xl font-bold mb-4">Quiz</h1>
-        <form onSubmit={(e) => e.preventDefault()}>
+    <div className="bg-gray-100 flex flex-col justify-center items-center w-full min-h-screen p-8">
+      <h1 className="text-2xl font-bold mb-4">Quiz</h1>
+      <form onSubmit={(e) => e.preventDefault()} className="w-full max-w-2xl">
+        <div className="bg-white p-6 rounded-lg shadow-lg neomorphic">
           {quizQuestions.map((question) => (
-            <div key={question.id} className="mb-4">
+            <div key={question.id} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-md">
               <p className="text-lg font-bold">{question.question}</p>
               <div className="mt-2">
                 {['A', 'B', 'C', 'D'].map((option) => (
@@ -142,15 +140,17 @@ const NewQuizPage = () => {
               </div>
             </div>
           ))}
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-            onClick={handleSubmit}
-          >
-            Submit
-          </button>
-        </form>
-      </div>
+          <div className="flex justify-center mt-6">
+            <button
+              type="submit"
+              className="px-6 py-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition duration-300"
+              onClick={handleSubmit}
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 };

@@ -224,7 +224,7 @@ const LearnerSettings = ({ userInfo, updateUserInfo }) => {
           </div>
         ) : (
           <div>
-            <p className="text-lg">{'*'.repeat(localUserInfo.password.length)}</p>
+            <p className="text-lg">{localUserInfo.password ? '*'.repeat(localUserInfo.password.length) : 'No password set'}</p>
           </div>
         )}
       </div>

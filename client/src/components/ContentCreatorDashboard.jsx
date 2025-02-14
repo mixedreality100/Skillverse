@@ -23,7 +23,7 @@ export const ContentCreatorDashboard = () => {
   const navigate = useNavigate();
   
   const courses = [
-    { id: 1, name: 'Course 1', enrolledStudents: 30 }
+    { id: 1, name: 'Medicinal Plants', enrolledStudents: 30 }
     // Add more courses as needed
   ];
 

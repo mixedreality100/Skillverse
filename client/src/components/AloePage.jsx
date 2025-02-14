@@ -14,8 +14,6 @@ import { Box } from './Box1';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import Toggle from './toggle';  // Update the path as needed
-
 
 function Model() {
   const { scene } = useGLTF('/model/aleovera.glb');
@@ -128,6 +126,10 @@ export const AloePage = () => {
       clearTimeout(timer);
     };
   }, []);
+
+  const handleARClick = () => {
+    navigate('/module-viewer');
+  };
 
   if (loading) {
     return <Loader />;
@@ -428,7 +430,7 @@ export const AloePage = () => {
             <PlusButton onClick={toggleLeavesPopup} />
             {isLeavesPopupVisible && (
               <div className="absolute top-[2.5rem] left-[2.8125rem] bg-white border border-gray-300 p-4 rounded shadow-md w-[25rem] h-[11.875rem] z-20 popup-content">
-                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[1.5625rem]">{/*Leaves*/}PlantPart1</span>
+                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[1.5625rem]">{/Leaves/}PlantPart1</span>
                 <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[1.125rem] tracking-[0] leading-[2.1875rem]">
                   {/* : Thick, fleshy, and lance-shaped with serrated edges. They are
                     typically green to gray-green with white flecks. */}
@@ -443,7 +445,7 @@ export const AloePage = () => {
             <PlusButton onClick={toggleGelPopup} />
             {isGelPopupVisible && (
               <div className="absolute top-[-6.25rem] left-[2.8125rem] bg-white border border-gray-300 p-4 rounded shadow-md w-[25rem] h-[11.875rem] z-20 popup-content">
-                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[1.5625rem]">{/*Gel*/}PlantPart2</span>
+                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[1.5625rem]">{/Gel/}PlantPart2</span>
                 <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[1.125rem] tracking-[0] leading-[2.1875rem]">
                 {/* : The inner part of the leaf contains a clear, gel-like substance
                 that is rich in nutrients and has various medicinal properties. */}
@@ -456,65 +458,69 @@ export const AloePage = () => {
           </div>
 
           <div className="absolute w-[1440px] h-24 top-0 left-0 bg-[#FFFFFF]">
-            <div className="absolute top-4 right-4">
-              <Toggle />
-            </div>
           </div>
 
-          <div className="absolute w-[1238px] top-[850px] left-[74px] z-10">
+          <div className="absolute w-[2476px] top-[850px] left-[74px] z-10">
             <div ref={paperRef} className="paper-container p-16 bg-white rounded-lg">
-              <Paper
-                className="paper-card"
-                elevation={6}
-                sx={{
-                  p: 3,
+              <div
+                className="flex flex-col items-center justify-center bg-white rounded-lg shadow-lg"
+                style={{
+                  padding: '1rem',
                   textAlign: 'center',
                   color: '#725c5c',
-                  borderRadius: 2,
+                  borderRadius: '0.5rem',
                   fontSize: '1.1rem',
                   fontFamily: 'Poppins, sans-serif',
                   transform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
                   opacity: isVisible ? 1 : 0,
                   transition: 'all 0.8s ease-out',
-                  minHeight: '12.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'white',
-                  zIndex: 10
+                  zIndex: 10,
+                  whiteSpace: 'pre-line', // Allows new lines to be respected
                 }}
               >
-                Botanic Description
-              </Paper>
-              <Paper
-                className="paper-card"
-                elevation={6}
-                sx={{
-                  p: 3,
+                {`Aloe vera is a perennial plant that can grow up to 4 ft tall 
+The leaves are triangular, fleshy, and have serrated edges 
+The leaves are grey to green and sometimes have white spots 
+The leaves have sharp, pinkish spines along their edges 
+The flowers are yellow, tube-like, and cluster on a stem
+                  `} {/* Add more lines as needed */}
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute w-[2476px] top-[1135px] left-[74px] z-10">
+            <div ref={paperRef} className="paper-container p-16 bg-white rounded-lg">
+              <div
+                className="flex flex-col items-center justify-center bg-white rounded-lg shadow-lg"
+                style={{
+                  padding: '1rem',
                   textAlign: 'center',
                   color: '#725c5c',
-                  borderRadius: 2,
+                  borderRadius: '0.5rem',
                   fontSize: '1.1rem',
                   fontFamily: 'Poppins, sans-serif',
                   transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
                   opacity: isVisible ? 1 : 0,
                   transition: 'all 0.8s ease-out',
-                  minHeight: '12.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'white',
-                  zIndex: 10
+                  zIndex: 10,
+                  whiteSpace: 'pre-line', // Allows new lines to be respected
                 }}
               >
-                Extras
-              </Paper>
+                {`Leaves: Contains gel and latex.
+                  `}
+                 {`Gel: Found in inner parts of leaf.
+                    `}
+                 {`Latex: Found in the green outer layer of the leaf
+                  `}
+              </div>
             </div>
           </div>
 
+
+
           <div className="absolute w-[360px] h-[46px] top-[2042px] left-[1658px] bg-[#333333c4]" />
 
-          <div className="absolute w-full h-[7.125rem] top-[1437px] bg-[#94B5A0] model-section">
+          <div className="absolute w-full h-[7.125rem] top-[1470px] bg-[#94B5A0] model-section">
             <p className="absolute w-full top-9 left-0 [font-family:'Poppins',Helvetica] font-bold text-black text-[3.5625rem] text-center tracking-[-1.71px] leading-[2.625rem] whitespace-nowrap model-text">
               Check Out this 3D model
             </p>
@@ -541,11 +547,14 @@ export const AloePage = () => {
             style={{ top: '3350px' }}
           >
             {/* AR Icon */}
-            <div className="group relative w-[16.625rem] h-[16.625rem] bg-white rounded-[2.5rem] border border-black shadow-[inset_10px_10px_4px_#00000040] transition-all duration-300 ease-in-out hover:w-[25rem] flex items-center overflow-hidden">
+            <div 
+              onClick={handleARClick}
+              className="group relative w-[16.625rem] h-[16.625rem] bg-white rounded-[2.5rem] border border-black shadow-[inset_10px_10px_4px_#00000040] transition-all duration-300 ease-in-out hover:w-[25rem] flex items-center overflow-hidden cursor-pointer"
+            >
               <img
                 className="absolute w-[7.5rem] h-[7.5rem] top-[4.6875rem] left-[5rem] transition-all duration-300 ease-in-out group-hover:translate-x-[-3.125rem] object-cover"
                 alt="Augmented Reality Icon"
-                src="static\img\ar-icon.svg"
+                src="../static/img/ar-icon.svg"
               />
               <span className="ml-[15rem] text-[3.25rem] font-bold text-gray-800 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100">
                 AR
@@ -557,7 +566,7 @@ export const AloePage = () => {
               <img
                 className="absolute w-[7.5rem] h-[7.5rem] top-[4.6875rem] right-[4.375rem] transition-all duration-300 ease-in-out group-hover:translate-x-[3.125rem] object-cover"
                 alt="Virtual Reality Icon"
-                src="static\img\vr-icon.svg"
+                src="../static/img/vr-icon.svg"
               />
               <span className="ml-[5.625rem] text-[3.25rem] font-bold text-gray-800 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100">
                 VR
@@ -587,9 +596,9 @@ export const AloePage = () => {
             </div>
           </section>
 
-          <p className="absolute w-[38.625rem] top-[101.1875rem] left-[2.6875rem] [font-family:'Poppins',Helvetica] font-bold text-[#063229] text-[2.1875rem] tracking-[0] leading-[2.20625rem] aloe-text">
+          <p className="absolute w-[38.625rem] top-[101.1875rem] left-[2.6875rem] [font-family:'Poppins',Helvetica] font-bold text-[#063229] text-[1.5rem] tracking-[0] leading-[2.20625rem] aloe-text">
             {/* Aloe vera: Nature&#39;s First Aid */}
-            Plant Name: Subtopic Title
+            Welcome to the world of Aloe Vera, a plant so cool it's been nicknamed the "Plant of Immortality"
           </p>
 
           <section id="3d-model" className="absolute w-[30.375rem] top-[105.1875rem] left-[4.4375rem]">
@@ -626,12 +635,12 @@ export const AloePage = () => {
           <section className="hero-text">
             <div className="absolute top-[125px] left-[40px] [font-family:'Bebas_Neue',Helvetica] font-light text-[#94B5A0] text-center tracking-[0.66875rem] leading-[normal]">
               {/* Aloe<span className="opacity-100"></span><span className='text-[#0A342A]'>vera</span> */}
-              TITLE
+              AloeVera
             </div>
 
             <div className="absolute scientific-name top-[35.9375rem] left-[70rem] [font-family:'Times_New_Roman-Italic',Helvetica] font-bold italic text-black text-[1.8125rem] text-center tracking-[0.14625rem] leading-[normal] whitespace-nowrap">
               {/* Aloe Barbadensis */}
-              Scientific Name
+              Aloe Barbadensis
             </div>
 
             {/* <div className="absolute intro-text top-[35.9375rem] left-[3.125rem] text-left p-4 max-w-[25rem]">

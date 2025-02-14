@@ -14,7 +14,7 @@ const upload = multer({ storage: storage });
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'xr',
+  database: 'xr-new',
   password: '1234', // Replace with your PostgreSQL password
   port: 5432,
 });
@@ -366,6 +366,51 @@ app.get('/api/modules/:moduleId/quiz', async (req, res) => {
   }
 });
 
+app.post('/api/enroll', async (req, res) => {
+  const { userId, courseId } = req.body;
+
+  try {
+      await pool.query(
+          'INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2)',
+          [userId, courseId]
+      );
+      res.status(200).send('Enrollment successful');
+  } catch (error) {
+      console.error('Error enrolling user:', error);
+      res.status(500).send('Enrollment failed');
+  }
+});
+
+
+app.get('/api/enrollments/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+      const result = await pool.query(
+          'SELECT c.id, c.course_name AS title, c.course_image AS image FROM enrollments e JOIN courses c ON e.course_id = c.id WHERE e.user_id = $1',
+          [userId]
+      );
+      res.json(result.rows);
+  } catch (error) {
+      console.error('Error fetching enrollments:', error);
+      res.status(500).send('Error fetching enrollments');
+  }
+});
+
+app.get('/users/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    const result = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 
 app.listen(port, () => {

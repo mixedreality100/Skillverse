@@ -43,9 +43,27 @@ export const Plants = () => {
   };
 
   const handleEnrollNow = async (moduleId) => {
- 
+    const userId = 1; // Assuming userInfo contains the user's ID
+    const courseId = 6; // Assuming courseId is available in this context
+
+    try {
+        const response = await fetch('http://localhost:3000/api/enroll', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId, courseId }),
+        });
+
+        if (response.ok) {
+            setIsEnrollPopupOpen(false);
             navigate(`/aloepage/${moduleId}`);
-       
+        } else {
+            console.error('Enrollment failed');
+        }
+    } catch (error) {
+        console.error('Error enrolling:', error);
+    }
 };
 
   const handleCancel = () => {

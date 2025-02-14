@@ -340,12 +340,12 @@ export default function LandingPage() {
             >
               About Us
             </NavButton>
-            <NavButton 
+            {/* <NavButton 
               className="transform transition-transform duration-300 hover:scale-110 text-black" 
               onClick={handleContentCreater}
             >
               cc
-            </NavButton>
+            </NavButton> */}
             <NavButton 
               className="transform transition-transform duration-300 hover:scale-110 text-black" 
               onClick={handelExploreCourseClick}

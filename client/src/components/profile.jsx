@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useClerk } from "@clerk/clerk-react"; // Import Clerk
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const ProfileButton = () => {
     const [isOpen, setIsOpen] = useState(false);
     const { signOut } = useClerk(); // Get signOut function from Clerk
+    const navigate = useNavigate(); // Initialize useNavigate
 
     const toggleDropdown = () => {
         setIsOpen(!isOpen);
@@ -32,13 +34,13 @@ const ProfileButton = () => {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 transform transition-all duration-300 ease-in-out origin-top-right scale-100 opacity-100">
                     <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                         <button 
-                            onClick={() => console.log("Dashboard clicked")} 
+                            onClick={() => navigate('/learner-dashboard')} // Navigate to learner dashboard
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left transition duration-200"
                         >
                             Dashboard
                         </button>
                         <button 
-                            onClick={() => console.log("Settings clicked")} 
+                            onClick={() => navigate("/learner-dashboard")} 
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left transition duration-200"
                         >
                             Settings

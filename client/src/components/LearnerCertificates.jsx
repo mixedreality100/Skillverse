@@ -2,41 +2,41 @@ import React from "react";
 
 const LearnerCertificates = () => {
   const certificates = [
-    { 
-        id: 1,
-        title: "Alovera", 
-        issueDate: "2025-01-01", 
-        thumbnail: "https://via.placeholder.com/150" 
-     },
-    { 
-        id: 2, 
-        title: "Ashvagandha", 
-        issueDate: "2025-01-05", 
-        thumbnail: "https://via.placeholder.com/150" 
-    },
-    { 
-        id: 3, 
-        title: "Tulsi", 
-        issueDate: "2025-01-10", 
-        thumbnail: "https://via.placeholder.com/150" },
-    { 
-        id: 4, 
-        title: "Haldi", 
-        issueDate: "2025-01-15", 
-        thumbnail: "https://via.placeholder.com/150" 
-    },
-    { 
-        id: 5, 
-        title: "Garlic", 
-        issueDate: "2025-01-20", 
-        thumbnail: "https://via.placeholder.com/150" 
-    },
-    { 
-        id: 6, 
-        title: "Ginger", 
-        issueDate: "2025-01-25", 
-        thumbnail: "https://via.placeholder.com/150" 
-    },
+  //   { 
+  //       id: 1,
+  //       title: "Alovera", 
+  //       issueDate: "2025-01-01", 
+  //       thumbnail: "https://via.placeholder.com/150" 
+  //    },
+  //   { 
+  //       id: 2, 
+  //       title: "Ashvagandha", 
+  //       issueDate: "2025-01-05", 
+  //       thumbnail: "https://via.placeholder.com/150" 
+  //   },
+  //   { 
+  //       id: 3, 
+  //       title: "Tulsi", 
+  //       issueDate: "2025-01-10", 
+  //       thumbnail: "https://via.placeholder.com/150" },
+  //   { 
+  //       id: 4, 
+  //       title: "Haldi", 
+  //       issueDate: "2025-01-15", 
+  //       thumbnail: "https://via.placeholder.com/150" 
+  //   },
+  //   { 
+  //       id: 5, 
+  //       title: "Garlic", 
+  //       issueDate: "2025-01-20", 
+  //       thumbnail: "https://via.placeholder.com/150" 
+  //   },
+  //   { 
+  //       id: 6, 
+  //       title: "Ginger", 
+  //       issueDate: "2025-01-25", 
+  //       thumbnail: "https://via.placeholder.com/150" 
+  //   },
   ];
 
   const Certificate = ({ title, issueDate, thumbnail, onDownload }) => (

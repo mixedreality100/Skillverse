@@ -44,7 +44,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/content-creator-dashboard" element={<ContentCreatorDashboard />} />
-        <Route path="/learner-dashboard" element={<LearnerDashboard />} />
+        <Route path="/learner-dashboard" element={<LearnerDashboard userId={9} />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/plants" element={<Plants />} />
         {/* <Route path="/coursepage" element={<CoursePage />} /> */}
@@ -66,10 +66,16 @@ function App() {
         <Route path="/aloepage/:moduleId" element={<AloePage />} />
 
         <Route path="/quiz/:moduleId" element={<NewQuizPage />} />
+     
         
         <Route path="/modules/:moduleId" element={<ModuleViewer />} />
+
+
+        
         <Route path="JWTfethcer" element={<JWTFetcher/>}/>
         <Route path="Toggle" element={<Toggle/>}/>
+        <Route path="/module-viewer" element={<ModuleViewer />} />
+
       </Routes>
     </div>
   );

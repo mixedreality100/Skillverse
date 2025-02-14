@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Mic, MicOff } from 'lucide-react';
+import NavButton from "./NavButton";
 
 const ExploreCourse = () => {
   const [courses, setCourses] = useState([]);
@@ -91,13 +92,53 @@ const ExploreCourse = () => {
     setIsListening(!isListening);
   };
 
+  const handelAboutUsClick = () => {
+    navigate('/aboutus');
+  };
+
+  const handelExploreCourseClick = () => {
+    navigate('/explore');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
+        
+        {/* Navigation Header */}
+      <div className="flex gap-9 mb-8">
+        <NavButton 
+          path="#courses" 
+          className="transform transition-transform duration-300 hover:scale-110 text-black" 
+          onClick={() => document.getElementById('courses').scrollIntoView({ behavior: 'smooth' })}
+        >
+          Home
+        </NavButton>
+        <NavButton 
+          className="transform transition-transform duration-300 hover:scale-110 text-black" 
+          onClick={handelAboutUsClick}
+        >
+          Courses
+        </NavButton>
+        {/* <NavButton 
+          className="transform transition-transform duration-300 hover:scale-110 text-black" 
+          onClick={handleContentCreater}
+        >
+          cc
+        </NavButton> */}
+        <NavButton 
+          className="transform transition-transform duration-300 hover:scale-110 text-black" 
+          onClick={handelExploreCourseClick}
+        >
+          About Us
+        </NavButton>
+      </div>
+
+
+
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Explore Courses</h1>
 
         {/* Search Section */}
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-sm">
+        <div className="mb-8 bg-white p-6 rounded-lg shadow-sm text-white">
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
               <input
@@ -143,7 +184,7 @@ const ExploreCourse = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border rounded-lg text-white"
           >
             <option value="">Sort by</option>
             <option value="name">Course Name</option>
@@ -154,7 +195,7 @@ const ExploreCourse = () => {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="px-4 py-2 border rounded-lg"
+              className="px-4 py-2 border rounded-lg text-white"
             >
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
@@ -164,7 +205,7 @@ const ExploreCourse = () => {
           <select
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border rounded-lg text-white"
           >
             <option value="">All Levels</option>
             <option value="Beginner">Beginner</option>
