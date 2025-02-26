@@ -51,14 +51,18 @@ export default function AboutUs() {
             <div className="absolute inset-0 bg-[url('/path/to/your/background.jpg')] bg-cover opacity-30"></div>
 
             {/* Back Button */}
-            <motion.button 
-                className="absolute top-5 left-5 bg-orange-500 text-white py-2 px-4 rounded-lg shadow-md hover:bg-orange-600 transition duration-300"
+            <div 
+                className="absolute top-5 left-[70px] w-[47px] h-[47px] cursor-pointer hover:scale-105 transition-transform bg-transparent"
                 onClick={handleBackClick}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
             >
-                Back to Home
-            </motion.button>
+                <img 
+                    src="./src/assets/skillverse.svg"
+                    alt="Back to Home"
+                    className="w-full h-full pointer-events-none object-contain"
+                    style={{ touchAction: 'none' }}
+                />
+            </div>
+
 
             {/* Hero Section */}
             <motion.div 
@@ -131,13 +135,13 @@ export default function AboutUs() {
                                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
                             }}
                         >
-                            <div className="w-32 h-32 mx-auto mb-4 rounded-full border-2 border-orange-500 overflow-hidden">
+                            {/* <div className="w-32 h-32 mx-auto mb-4 rounded-full border-2 border-orange-500 overflow-hidden">
                                 <img 
                                     src={dev.image || "/api/placeholder/128/128"} 
                                     alt={dev.name}
                                     className="w-full h-full object-cover"
                                 />
-                            </div>
+                            </div> */}
                             <h3 className="text-xl font-bold text-black mb-2">{dev.name}</h3>
                             <p className="text-gray-600">{dev.role}</p>
                             <div className="mt-4 flex justify-center space-x-3">

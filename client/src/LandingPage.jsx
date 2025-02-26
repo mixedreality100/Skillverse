@@ -33,10 +33,10 @@ export default function LandingPage() {
     if (user) {
       console.log("🔹 useEffect triggered, user:", user);
       saveUser();
+      
     }
   }, [user]);
   
-
   const saveUser = async () => {
     try {
         if (!user || !getToken) {
@@ -46,10 +46,9 @@ export default function LandingPage() {
 
         console.log("🔸 Clerk User ID:", user.id);
         const token = await getToken();
-        console.log("🔸 Making request to backend with Clerk ID:", user.id);
+        console.log("🔸 Token retrieved, length:", token?.length);
 
         const userData = {
-            userId: user.id,
             email: user.primaryEmailAddress?.emailAddress,
             firstName: user.firstName,
             lastName: user.lastName,
@@ -65,11 +64,13 @@ export default function LandingPage() {
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(userData),
+            credentials: "include" // Try adding this to include cookies
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error("❌ Failed to save user. Status:", response.status, "Error:", errorText);
+            const errorData = await response.text();
+            console.error("❌ Failed to save user. Status:", response.status);
+            console.error("❌ Error details:", errorData);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -83,19 +84,12 @@ export default function LandingPage() {
     }
 };
   
-
- 
-
   const handelAboutUsClick = () => {
     navigate('/aboutus');
   };
 
   const handelExploreCourseClick = () => {
     navigate('/explore');
-  };
-
-  const handleContentCreater = () => {
-    navigate('/content-creator-dashboard');
   };
 
   const addToRefs = (el) => {
@@ -321,9 +315,9 @@ export default function LandingPage() {
       <header className="flex flex-col items-center px-5 pt-7 bg-white fade-in" ref={addToRefs}>
         <nav className="flex justify-between items-center w-full max-w-[1274px]">
           <img
-            src="https://cdn.builder.io/api/v1/image/assets/3a21b8a04dbf44e1bd87f9c99615809c/9a85d68a299dbf652639e83aca7528b4c2f03fe9195d4867a888b581656f222f?apiKey=3a21b8a04dbf44e1bd87f9c99615809c&"
+            src="./src/assets/skillverse.svg"
             alt="Company logo"
-            className="w-[47px] aspect-square"
+            className="w-[58px] aspect-square left-[30px]"
           />
 
           <div className="flex gap-9">
@@ -336,33 +330,20 @@ export default function LandingPage() {
             </NavButton>
             <NavButton 
               className="transform transition-transform duration-300 hover:scale-110 text-black" 
+              onClick={handelExploreCourseClick}
+            >
+              Explore
+            </NavButton>
+            <NavButton 
+              className="transform transition-transform duration-300 hover:scale-110 text-black" 
               onClick={handelAboutUsClick}
             >
               About Us
             </NavButton>
-            {/* <NavButton 
-              className="transform transition-transform duration-300 hover:scale-110 text-black" 
-              onClick={handleContentCreater}
-            >
-              cc
-            </NavButton> */}
-            <NavButton 
-              className="transform transition-transform duration-300 hover:scale-110 text-black" 
-              onClick={handelExploreCourseClick}
-            >
-              explore
-            </NavButton>
+            
           </div>
 
           <div className="flex items-center gap-5">
-            <button className="p-2 border rounded-full">
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets/3a21b8a04dbf44e1bd87f9c99615809c/bfe4b520ea1da75dbddb2eb1a1a9243824537e162104b8c7014f0ec08838afd3?apiKey=3a21b8a04dbf44e1bd87f9c99615809c&"
-                alt="Search"
-                className="w-5"
-              />
-            </button>
-
             <SignedOut>
               <SignInButton>
                 <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
@@ -378,21 +359,31 @@ export default function LandingPage() {
         </nav>
 
         <section className="flex flex-col items-start py-16 text-start">
-          <div className="flex items-center">
-            <h1 className="text-9xl font-extrabold text-black flex flex-col">
-              <span className="self-end" style={{ textShadow: "7px 7px 4px rgba(0, 0, 0, 0.5)" }}>Visualize</span>
-              <span className="text-yellow-500 self-end mr-[0.5em]" style={{ textShadow: "7px 7px 4px rgba(0, 0, 0, 0.5)" }}>&</span>
-              <span className="self-end relative" style={{ textShadow: "7px 7px 4px rgba(0, 0, 0, 0.5)" }}>
-                Learn
-                <h5 className="text-gray-700 text-sm absolute left-[8em] top-full mt-1">
-                  Education is the kindling of a flame, not the filling of a vessel.{" "}
+  <style>
+    {`
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
+      
+      .poppins-font {
+        font-family: 'Poppins', sans-serif;
+        text-shadow: 7px 7px 4px rgba(0, 0, 0, 0.5);
+      }
+
+    `}
+  </style>
+  <div className="flex items-center justify-between w-full">
+    <h1 className="text-9xl font-bold text-black flex flex-col">
+      <span className="self-end poppins-font">Visualize</span>
+      <span className="text-yellow-500 self-end mr-[0.5em] poppins-font">&</span>
+      <span className="self-end relative poppins-font">
+        Learn
+        <h5 className="text-gray-700 text-sm absolute left-[8em] top-full mt-1" style={{ textShadow: "none" }}>
+            Education is the kindling of a flame, not the filling of a vessel.{" "}
                   <span className="italic">- Socrates</span>
-                </h5>
-              </span>
-            </h1>
-            <img src="src/assets/Hero.png" alt="Hero" className="ml-4 w-2/5 h-auto" />
-          </div>
-        </section>
+        </h5>
+           </span>
+    </h1>
+    <img src="src/assets/Hero.png" alt="Hero" className="ml-auto w-2/5 h-auto" />  </div>
+</section>
       </header>
 
       {/* Step Into the Future Section */}
@@ -440,9 +431,10 @@ export default function LandingPage() {
 
       {/* Courses Section */}
       <section id="courses" className="py-16 px-5 mb-[130px] fade-in" ref={addToRefs}>
-        <h2 className="text-7xl font-bold text-center mb-10 text-yellow-500 px-16 py-4 w-fit mx-auto rounded-xl" style={{ textShadow: "2px 2px 0px black, -2px -2px 0px black, 2px -2px 0px black, -2px 2px 0px black" }}>
-          Courses
-        </h2>
+        <h2 className="text-7xl font-bold text-center mb-10 text-yellow-500 px-16 py-4 w-fit mx-auto rounded-xl" style={{ textShadow: "1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black" }}>
+              Courses
+          </h2>
+
         <div className="flex flex-nowrap gap-10 justify-center">
           {courses.map((course, index) => (
             <CourseCard
@@ -453,7 +445,7 @@ export default function LandingPage() {
               courseId={course.id} // Pass courseId to CourseCard
               iconSrc={course.iconSrc}
               showOverlay={index === 0 || index === 1 || index === 2}
-              className="w-1/4 transition-transform transform hover:scale-105 fade-in"
+              className="w-1/4 transition-transform transform hover:scale-105 fade-in cursor-pointer"
               ref={addToRefs}
              
             />
@@ -462,7 +454,7 @@ export default function LandingPage() {
       </section>
       {/* className="w-1/4 transition-transform transform hover:scale-105 fade-in" ref={addToRefs} */}
       {/* About Us Section */}
-      <footer id="footer" className={`absolute top-[2270px] left-[10px] w-full h-[440px] fade-in ${isVisible ? 'visible' : ''}`}>
+      <footer id="footer" className={`absolute top-[2290px] left-[10px] w-full h-[440px] fade-in ${isVisible ? 'visible' : ''}`}>
         <div className="relative w-[1450px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
           <div className="absolute top-[252px] left-[23px] w-[1374px] h-[178px] bg-white rounded-[12px]">
             <div className="flex justify-center space-x-4 mt-4">
@@ -493,14 +485,8 @@ export default function LandingPage() {
             <span className="text-[#B9DE00]">ur</span>
             <span className="text-red-500">e</span>
           </p>
-          <Home/>
-          
-
         </div>
-        
       </footer>
-      
-      
     </main>
   );
 }

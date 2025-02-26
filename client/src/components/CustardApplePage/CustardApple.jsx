@@ -46,8 +46,8 @@ function Model() {
     <primitive 
       ref={modelRef}
       object={scene} 
-      scale={0.09}
-      position={[1.2, -0.8, 0]}
+      scale={2.5}
+      position={[1.2, 0.5, -2]}
       rotation={[0, Math.PI / 2, 0]}
     />
   );
@@ -60,12 +60,23 @@ export const CustardApple = () => {
   const [navigateToCustardApple, setNavigateToCustardApple] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const paperRef = useRef(null);
+  const cameraPosition = [5.3786, 2.4045, 0.9665];
 
   const toggleLeavesPopup = () => {
+    // Close the gel popup if it's open
+    if (isGelPopupVisible) {
+      setIsGelPopupVisible(false);
+    }
+    // Toggle the leaves popup
     setIsLeavesPopupVisible(!isLeavesPopupVisible);
   };
-
+  
   const toggleGelPopup = () => {
+    // Close the leaves popup if it's open
+    if (isLeavesPopupVisible) {
+      setIsLeavesPopupVisible(false);
+    }
+    // Toggle the gel popup
     setIsGelPopupVisible(!isGelPopupVisible);
   };
 
@@ -123,28 +134,26 @@ export const CustardApple = () => {
         </style>
         <div className="bg-[#FFFFFF] overflow-hidden w-[1440px] h-[4853px] relative">
 
-          <div className="absolute top-[1750px] left-[950px] z-10">
+          <div className="absolute top-[1780px] left-[1050px] z-10">
             <PlusButton onClick={toggleLeavesPopup} />
             {isLeavesPopupVisible && (
-              <div className="absolute top-[40px] left-[45px] bg-white border border-gray-300 p-4 rounded shadow-md w-[400px] h-[190px] z-20">
-                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">Leaves</span>
+              <div className="absolute top-[50px] left-[-25px] bg-white border border-gray-300 p-4 rounded shadow-md w-[400px] h-[190px] z-20">
+                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">Fruit</span>
                 <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[18px] tracking-[0] leading-[35px]">
-                  : Thick, fleshy, and lance-shaped with serrated edges. They are
-                    typically green to gray-green with white flecks.
+                : The fruit is packed with vitamin B6, which can boost your mood, and lutein, which is good for your eyes.
                       <br />
                     <br />
                     </span>
               </div>
             )}
           </div>
-          <div className="absolute top-[2050px] left-[690px] z-10">
+          <div className="absolute top-[1850px] left-[790px] z-10">
             <PlusButton onClick={toggleGelPopup} />
             {isGelPopupVisible && (
-              <div className="absolute top-[-100px] left-[45px] bg-white border border-gray-300 p-4 rounded shadow-md w-[400px] h-[190px] z-20">
-                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">Gel</span>
+              <div className="absolute top-[50px] left-[35px] bg-white border border-gray-300 p-4 rounded shadow-md w-[400px] h-[190px] z-20">
+                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">Seeds</span>
                 <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[18px] tracking-[0] leading-[35px]">
-                : The inner part of the leaf contains a clear, gel-like substance
-                that is rich in nutrients and has various medicinal properties.
+                : Custard apple seeds can help get rid of lice due to their insecticidal properties. However, they are toxic and should never be eaten
                       <br />
                     <br />
                     </span>
@@ -386,7 +395,7 @@ export const CustardApple = () => {
           <Box2 />
 
           <div className="absolute w-full h-[869px] top-[1437px] left-0">
-            <Canvas camera={{ position: [2.192129250918481, 1, 4.405377373613455], fov: 45 }} shadows>
+            <Canvas camera={{ position: cameraPosition}} >
               <ambientLight intensity={2} />
               <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
               <directionalLight position={[-5, 5, -5]} intensity={1} />

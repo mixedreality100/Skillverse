@@ -23,7 +23,7 @@ export const ContentCreatorDashboard = () => {
   const navigate = useNavigate();
   
   const courses = [
-    { id: 1, name: 'Medicinal Plants', enrolledStudents: 30 }
+    { id: 1, name: 'Medicinal Plants', enrolledStudents: 1 }
     // Add more courses as needed
   ];
 
@@ -63,8 +63,12 @@ export const ContentCreatorDashboard = () => {
       <div className="fixed w-[247px] bg-black text-white h-full">
         {/* Logo Area */}
         <div className="flex items-center p-6">
-          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-            <span className="text-black">⌖</span>
+        <div className="w-20 h-15 rounded-full bg-white flex items-center justify-center">
+          <img
+            src="./src/assets/skillverse.svg"
+            alt="Company logo"
+            className="w-[47px] aspect-square"
+          />
           </div>
           <span className="ml-2 text-white flex items-center">
             <span className="text-green-500">●</span> Trainer

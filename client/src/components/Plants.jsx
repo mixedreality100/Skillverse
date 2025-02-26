@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import backArrow from '../assets/HomeButton.svg';
+import backArrow from '../assets/skillverse.svg';
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import ProfileButton from "./profile";
 
 export const Plants = () => {
   const { courseId } = useParams();
@@ -42,28 +44,40 @@ export const Plants = () => {
     setIsEnrollPopupOpen(true);
   };
 
+  const handleCourseClick = () => {
+    navigate('/');
+    setTimeout(() => {
+      const coursesSection = document.getElementById('courses');
+      if (coursesSection) {
+        coursesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   const handleEnrollNow = async (moduleId) => {
-    const userId = 1; // Assuming userInfo contains the user's ID
-    const courseId = 6; // Assuming courseId is available in this context
-
-    try {
-        const response = await fetch('http://localhost:3000/api/enroll', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId, courseId }),
-        });
-
-        if (response.ok) {
-            setIsEnrollPopupOpen(false);
+    setIsEnrollPopupOpen(false);
             navigate(`/aloepage/${moduleId}`);
-        } else {
-            console.error('Enrollment failed');
-        }
-    } catch (error) {
-        console.error('Error enrolling:', error);
-    }
+    // const userId = 1; // Assuming userInfo contains the user's ID
+    // const courseId = 6; // Assuming courseId is available in this context
+
+    // try {
+    //     const response = await fetch('http://localhost:3000/api/enroll', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //         },
+    //         body: JSON.stringify({ userId, courseId }),
+    //     });
+
+    //     if (response.ok) {
+    //         setIsEnrollPopupOpen(false);
+    //         navigate(`/aloepage/${moduleId}`);
+    //     } else {
+    //         console.error('Enrollment failed');
+    //     }
+    // } catch (error) {
+    //     console.error('Error enrolling:', error);
+    // }
 };
 
   const handleCancel = () => {
@@ -78,17 +92,13 @@ export const Plants = () => {
             {/* Hero Image */}
           </div>
 
-          <div className="absolute top-[30px] left-[160px] w-[60px] h-[60px]">
-            <div 
-              className="relative hover:scale-110 transition-transform duration-200"
-            >
-              <div className="absolute top-[9px] left-[9px] w-[42px] h-[42px] bg-white rounded-[21.24px] shadow-md transform rotate-[132.27deg]"></div>
+          <div className="absolute top-[22px] left-[30px] w-[60px] h-[60px]">
               <img
-                className="absolute top-[4px] left-[5px] w-[75px] h-[54px]"
+                className="w-[58px] aspect-square"
                 alt="Back Arrow"
                 src={backArrow}
+                onClick={() => navigate('/')}
               />
-            </div>
           </div>
 
           <div>
@@ -101,30 +111,46 @@ export const Plants = () => {
               {courseDetails?.course_name || ''}
             </div>
           </div>
-
+        <div className='flex gap-9'>
           <button 
-            className="absolute top-[30px] left-[350px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
-            onClick={() => navigate('/#hero')}
-          >
-            Home
-          </button>
-
-          <button 
-            className="absolute top-[30px] left-[454px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
-            onClick={() => navigate('/#courses')}
+            className="absolute top-[30px] left-[550px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+            onClick={handleCourseClick}
           >
             Courses
           </button>
 
           <button 
-            className="absolute top-[30px] left-[562px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+            className="absolute top-[30px] left-[659px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+            onClick={() => navigate('/explore')}
+          >
+            Explore
+          </button>
+
+          <button 
+            className="absolute top-[30px] left-[762px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
             onClick={() => navigate('/aboutus')}
           >
             About Us
           </button>
+
+          <div className="absolute top-[30px] left-[1270px]">
+            <SignedOut>
+              <SignInButton>
+                <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
+                  Login
+                </button>
+              </SignInButton>
+            </SignedOut>
+
+            <SignedIn>
+              <ProfileButton />
+            </SignedIn>
+          </div>
+        </div>
+          
         </div>
 
-        <div id="categories-section" className="absolute top-[760px] left-[50px] w-full">
+        <div id="categories-section" className="absolute top-[900px] left-[50px] w-full">
           <div>
             <style>
               {`

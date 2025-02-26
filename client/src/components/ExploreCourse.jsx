@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { Mic, MicOff } from 'lucide-react';
 import NavButton from "./NavButton";
 
 const ExploreCourse = () => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortBy, setSortBy] = useState('');
@@ -92,39 +94,48 @@ const ExploreCourse = () => {
     setIsListening(!isListening);
   };
 
-  const handelAboutUsClick = () => {
-    navigate('/aboutus');
+  const handelCoursesClick = () => {
+    navigate('/');
+    setTimeout(() => {
+      const coursesSection = document.getElementById('courses');
+      if (coursesSection) {
+        coursesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handelExploreCourseClick = () => {
-    navigate('/explore');
+    navigate('/aboutus');
   };
+
+  const handleHomeClick = () => {
+    navigate('/')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        
-        {/* Navigation Header */}
-      <div className="flex gap-9 mb-8">
+    
+      <div className="flex gap-9 mb-8 relative">
+      <img
+            src="./src/assets/skillverse.svg"
+            alt="Company logo"
+            className="w-[58px] aspect-square absolute left-0"
+            onClick={() => navigate("/")}
+          />
+      <div className="flex gap-9 justify-center w-full">
         <NavButton 
-          path="#courses" 
           className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={() => document.getElementById('courses').scrollIntoView({ behavior: 'smooth' })}
+          onClick={handleHomeClick}
         >
           Home
         </NavButton>
         <NavButton 
           className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={handelAboutUsClick}
+          onClick={handelCoursesClick}
         >
           Courses
         </NavButton>
-        {/* <NavButton 
-          className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={handleContentCreater}
-        >
-          cc
-        </NavButton> */}
         <NavButton 
           className="transform transition-transform duration-300 hover:scale-110 text-black" 
           onClick={handelExploreCourseClick}
@@ -132,7 +143,13 @@ const ExploreCourse = () => {
           About Us
         </NavButton>
       </div>
+     </div>
 
+     {/* <div className='absolute top-[30px] left-[1280px]'>
+     <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
+                  Login
+                </button>
+     </div> */}
 
 
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Explore Courses</h1>

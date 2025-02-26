@@ -23,6 +23,7 @@ import NewQuizPage from './components/NewQuizPage';
 import ModuleViewer from './components/ModuleViewer';
 import JWTFetcher from './components/JWTfetcher';
 import Toggle from './components/toggle';
+import { SketchfabVR } from './components/modelvr';
 
 function App() {
   useEffect(() => {
@@ -75,6 +76,7 @@ function App() {
         <Route path="JWTfethcer" element={<JWTFetcher/>}/>
         <Route path="Toggle" element={<Toggle/>}/>
         <Route path="/module-viewer" element={<ModuleViewer />} />
+        <Route path="/modelvr" element={<SketchfabVR />} />
 
       </Routes>
     </div>

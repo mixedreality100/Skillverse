@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Loader from './Loader';
+import NavButton from './NavButton';
+import skillverseLogo from '../assets/skillverse.svg';
+import { useNavigate } from "react-router-dom";
 
 const NewQuizPage = () => {
   const { moduleId } = useParams();
@@ -36,6 +39,20 @@ const NewQuizPage = () => {
     }
   }, [moduleId]);
 
+  const handleback = () => {
+    window.history.back();
+  };
+
+  const handleCourses = () => {
+    useNavigate('/');
+    setTimeout(() => {
+      const coursesSection = document.getElementById('courses');
+      if (coursesSection) {
+        coursesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   if (loading) {
     return <Loader />;
   }
@@ -67,9 +84,34 @@ const NewQuizPage = () => {
   };
 
   if (quizSubmitted) {
-    return (
+    return (     
       <div className="bg-gray-100 flex flex-col justify-center items-center w-full min-h-screen p-8">
-        <h1 className="text-2xl font-bold mb-4">Quiz Results</h1>
+        <img 
+          className="absolute top-[22px] left-[30px] w-[60px] h-[60px]"
+          src={skillverseLogo} 
+          alt="logo" 
+          onClick={handleback}
+        />
+
+        <div className='absolute top-[30px] left-1/2 transform -translate-x-1/2 flex gap-9'>
+          <NavButton 
+            className="transform transition-transform duration-300 hover:scale-110 text-black" 
+            onClick={handleCourses}
+          >
+            Courses
+          </NavButton>
+          <NavButton
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
+          >
+            Explore
+          </NavButton>
+          <NavButton
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
+          >
+            About Us
+          </NavButton>
+        </div>
+        <h1 className="text-2xl font-bold mb-4 mt-20">Quiz Results</h1>
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl neomorphic">
           {quizQuestions.map((question) => (
             <div key={question.id} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-md">
@@ -117,7 +159,34 @@ const NewQuizPage = () => {
 
   return (
     <div className="bg-gray-100 flex flex-col justify-center items-center w-full min-h-screen p-8">
-      <h1 className="text-2xl font-bold mb-4">Quiz</h1>
+      
+      <img 
+        className="absolute top-[22px] left-[30px] w-[60px] h-[60px]"
+        src={skillverseLogo} 
+        alt="logo" 
+        onClick={handleback}
+      />
+
+      <div className='absolute top-[30px] left-1/2 transform -translate-x-1/2 flex gap-9'>
+        <NavButton 
+          className="transform transition-transform duration-300 hover:scale-110 text-black" 
+          onClick={handleCourses}
+        >
+          Courses
+        </NavButton>
+        <NavButton
+          className="transform transition-transform duration-300 hover:scale-110 text-black"
+        >
+          Explore
+        </NavButton>
+        <NavButton
+          className="transform transition-transform duration-300 hover:scale-110 text-black"
+        >
+          About Us
+        </NavButton>
+      </div>
+
+      <h1 className="text-2xl font-bold mb-4 mt-20">Quiz</h1>
       <form onSubmit={(e) => e.preventDefault()} className="w-full max-w-2xl">
         <div className="bg-white p-6 rounded-lg shadow-lg neomorphic">
           {quizQuestions.map((question) => (

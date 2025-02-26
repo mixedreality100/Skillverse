@@ -62,10 +62,20 @@ export const ShoeFlower = () => {
   const paperRef = useRef(null);
 
   const toggleLeavesPopup = () => {
+    // Close the gel popup if it's open
+    if (isGelPopupVisible) {
+      setIsGelPopupVisible(false);
+    }
+    // Toggle the leaves popup
     setIsLeavesPopupVisible(!isLeavesPopupVisible);
   };
-
+  
   const toggleGelPopup = () => {
+    // Close the leaves popup if it's open
+    if (isLeavesPopupVisible) {
+      setIsLeavesPopupVisible(false);
+    }
+    // Toggle the gel popup
     setIsGelPopupVisible(!isGelPopupVisible);
   };
 

@@ -14,7 +14,7 @@ const upload = multer({ storage: storage });
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'xr-new',
+  database: 'xr',
   password: '1234', // Replace with your PostgreSQL password
   port: 5432,
 });

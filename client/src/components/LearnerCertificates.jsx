@@ -2,12 +2,12 @@ import React from "react";
 
 const LearnerCertificates = () => {
   const certificates = [
-  //   { 
-  //       id: 1,
-  //       title: "Alovera", 
-  //       issueDate: "2025-01-01", 
-  //       thumbnail: "https://via.placeholder.com/150" 
-  //    },
+    { 
+        id: 1,
+        title: "Medicinal Plants", 
+        issueDate: "2025-02-01", 
+        thumbnail: "./src/assets/certificate.png" 
+      },
   //   { 
   //       id: 2, 
   //       title: "Ashvagandha", 
