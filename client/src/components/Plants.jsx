@@ -4,6 +4,8 @@ import backArrow from "../assets/skillverse.svg";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import ProfileButton from "./profile";
 import Loader from "./Loader"; // Import the Loader component
+import medicinalhero from "../plantsAssets/image2.jpg";
+
 
 export const Plants = () => {
   const { courseId } = useParams();
@@ -99,7 +101,12 @@ export const Plants = () => {
       {/* Using a container with relative positioning and a reasonable height */}
       <div className="bg-[#ffffff] overflow-x-hidden w-[1440px] relative rounded-lg">
         <div className="relative w-[1426px] h-[824px]">
-          <div className="relative w-full">{/* Hero Image */}</div>
+          <div className="relative w-full">       
+                          <img
+                          src={medicinalhero}
+                          alt="Hero image"
+                          className="absolute top-[105px] left-[0px] w-full h-[580px] opacity-100 z-0 rounded-[20px] object-cover blur-[4px]" // Custom blur 
+                        /></div>
 
           <div className="absolute top-[22px] left-[30px] w-[60px] h-[60px]">
             <img
@@ -117,7 +124,7 @@ export const Plants = () => {
               `}
             </style>
             <div
-              className="absolute top-[420px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-light text-[#62BD69] text-[350px] text-center tracking-[1.71px] leading-[0.8]"
+              className="absolute top-[420px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-light text-[#85C86A] text-[350px] text-center tracking-[1.71px] leading-[0.8] drop-shadow-[2px_2px_4px_rgba(0,0,0,0.5)]"
               style={{ fontFamily: "Bebas Neue, Helvetica" }}
             >
               {courseDetails?.course_name || ""}
@@ -161,14 +168,14 @@ export const Plants = () => {
           </div>
         </div>
 
-        <div id="categories-section" className="relative mt-[50px] mx-[50px] w-[90%]">
+        <div id="categories-section" className="relative mt-[-10px] mx-[50px] w-[90%]">
           <div>
             <style>
               {`
                 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
               `}
             </style>
-            <div className="text-left text-[#000000] text-[100px] font-bold mb-4" style={{ fontFamily: 'Poppins, sans-serif', marginTop: '6' }}>
+            <div className="text-left text-[#000000] text-[100px] font-bold mb-4" style={{ fontFamily: 'Poppins, sans-serif', marginTop: '3' }}>
               Modules
             </div>
           </div>

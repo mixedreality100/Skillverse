@@ -13,6 +13,7 @@ import PlusButton from "../PlusButton";
 import { Box2 } from "../Box2";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
+import custardAppleTree from "../CustardApplePage/custardappletree.png"; // Import the tree image
 
 function Model() {
   const { scene } = useGLTF("/model/custardapple.glb");
@@ -133,6 +134,12 @@ export const CustardApple = () => {
           `}
         </style>
         <div className="bg-[#FFFFFF] overflow-hidden w-[1440px] h-[4853px] relative">
+        {/* Add the tree image here */}
+        <img
+            src={custardAppleTree}
+            alt="Custard Apple Tree"
+            className="absolute top-[95px] left-[550px] w-[450px] h-[700px] opacity-100 z-0 "
+          />
           <div className="absolute top-[1780px] left-[1050px] z-10">
             <PlusButton onClick={toggleLeavesPopup} />
             {isLeavesPopupVisible && (

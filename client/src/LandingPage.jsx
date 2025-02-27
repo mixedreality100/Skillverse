@@ -409,6 +409,7 @@ export default function LandingPage() {
 
       {/* Step Into the Future Section */}
       <section className="bg-black text-white py-0 fade-in" ref={addToRefs}>
+        
         <div className="carousel-container">
           <div className="flex flex-wrap justify-center gap-5 text-center ">
             {[".step .", ".in .", ".the .", ".future ."].map((text, index) => (
@@ -501,7 +502,7 @@ export default function LandingPage() {
         }`}
       >
         <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
-          <div className="absolute top-[252px] left-[23px] w-[1440px] h-[178px] bg-white rounded-[12px]">
+          <div className="absolute top-[252px] left-[0px] w-[1440px] h-[178px] bg-white rounded-[12px]">
             <div className="flex justify-center space-x-4 mt-4">
               {/* Instagram Button */}
               <button

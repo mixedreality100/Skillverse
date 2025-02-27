@@ -18,6 +18,7 @@ import skillverseLogo from "../assets/skillverse.svg";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { Menu, X } from "lucide-react"; // For icons
+import aloeverohero from "../plantsAssets/image1.jpg";
 
 function Model() {
   const { scene } = useGLTF("/model/aleovera.glb");
@@ -90,11 +91,11 @@ export const AloePage = () => {
     setIsLeavesPopupVisible(!isLeavesPopupVisible);
   };
   const handelAboutUsClick = () => {
-    navigate('/aboutus');
+    navigate("/aboutus");
   };
 
   const handelExploreCourseClick = () => {
-    navigate('/explore');
+    navigate("/explore");
   };
   const toggleGelPopup = () => {
     if (isLeavesPopupVisible) {
@@ -190,7 +191,6 @@ export const AloePage = () => {
   if (navigateToCustardApple) {
     return <Navigate to="/custard-apple" />;
   }
-
 
   return (
     <div className="bg-[#FFFFFF] flex justify-center items-center w-full min-h-screen">
@@ -606,6 +606,13 @@ export const AloePage = () => {
           `}
         </style>
         <div className="bg-[#ffffff] overflow-hidden w-[1440px] h-[4853px] relative">
+          {/* Add the tree image here */}
+          <img
+            src={aloeverohero}
+            alt="Aloevera headpng"
+            className="absolute top-[125px] left-[0px] w-full h-[540px] opacity-100 z-0 rounded-[20px] object-cover blur-[0px]" // Custom blur (5px)
+          />
+
           <div className="absolute w-[1440px] h-24 top-0 left-0 bg-[#FFFFFF]"></div>
 
           <div className="absolute w-[2476px] top-[850px] left-[74px] z-10">
@@ -795,8 +802,7 @@ export const AloePage = () => {
           </section>
 
           <section className="hero-text">
-            <div className="absolute top-[125px] left-[10px] [font-family:'Bebas_Neue',Helvetica] font-light text-[#7BB661] text-center tracking-[0.66875rem] leading-[normal]">
-              {/* Aloe<span className="opacity-100"></span><span className='text-[#0A342A]'>vera</span> */}
+          <div className="absolute top-[125px] left-[10px] [font-family:'Bebas_Neue',Helvetica] font-light text-[#89CA6E] text-center tracking-[0.66875rem] leading-[normal] drop-shadow-[2px_2px_4px_rgba(0,0,0,0.5)]">              {/* Aloe<span className="opacity-100"></span><span className='text-[#0A342A]'>vera</span> */}
               AloeVera
             </div>
 
@@ -875,14 +881,16 @@ export const AloePage = () => {
               >
                 Courses
               </NavButton>
-              <NavButton className="transform transition-transform duration-300 hover:scale-110 text-black"
-                onClick={handelExploreCourseClick}>
-              
+              <NavButton
+                className="transform transition-transform duration-300 hover:scale-110 text-black"
+                onClick={handelExploreCourseClick}
+              >
                 Explore
               </NavButton>
-              <NavButton className="transform transition-transform duration-300 hover:scale-110 text-black"
+              <NavButton
+                className="transform transition-transform duration-300 hover:scale-110 text-black"
                 onClick={handelAboutUsClick}
->
+              >
                 About Us
               </NavButton>
             </div>
@@ -944,49 +952,49 @@ export const AloePage = () => {
           </div>
         </div>
 
-        <div className="absolute top-[4850px] left-[30px] w-[1440px] h-[440px] responsive-container">
+        <div className="absolute top-[4850px] left-[15px] w-[1440px] h-[440px] responsive-container">
           <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center footer-image">
             <div className="absolute top-[252px] left-[23px] w-[1374px] h-[178px] bg-white rounded-[12px] social-container">
               <div className="flex justify-center space-x-4 mt-4 social-buttons">
-                 {/* Instagram Button */}
-              <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
-                onClick={() =>
-                  (window.location.href = "https://www.instagram.com")
-                }
-              >
-                Instagram
-              </button>
+                {/* Instagram Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() =>
+                    (window.location.href = "https://www.instagram.com")
+                  }
+                >
+                  Instagram
+                </button>
 
-              {/* Twitter Button */}
-              <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
-                onClick={() =>
-                  (window.location.href = "https://www.twitter.com")
-                }
-              >
-                Twitter
-              </button>
+                {/* Twitter Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() =>
+                    (window.location.href = "https://www.twitter.com")
+                  }
+                >
+                  Twitter
+                </button>
 
-              {/* Facebook Button */}
-              <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
-                onClick={() =>
-                  (window.location.href = "https://www.facebook.com")
-                }
-              >
-                Facebook
-              </button>
+                {/* Facebook Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() =>
+                    (window.location.href = "https://www.facebook.com")
+                  }
+                >
+                  Facebook
+                </button>
 
-              {/* Pinterest Button */}
-              <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
-                onClick={() =>
-                  (window.location.href = "https://www.pinterest.com")
-                }
-              >
-                Pinterest
-              </button>
+                {/* Pinterest Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() =>
+                    (window.location.href = "https://www.pinterest.com")
+                  }
+                >
+                  Pinterest
+                </button>
               </div>
               <div className="mt-4 border-t border-gray-300"></div>
               <div className="text-center mt-2">
