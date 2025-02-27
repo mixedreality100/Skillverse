@@ -15,7 +15,7 @@ import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
 function Model() {
-  const { scene } = useGLTF("/model/CustardApple.glb");
+  const { scene } = useGLTF("/model/custardapple.glb");
   const modelRef = useRef();
 
   useEffect(() => {
