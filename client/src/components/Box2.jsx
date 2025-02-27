@@ -7,7 +7,7 @@ export const Box2 = () => {
   const navigate = useNavigate();
 
   const handleHomeButtonClick = () => {
-    navigate('/aloepage');
+    navigate('/aloepage/6');
   };
 
   return (

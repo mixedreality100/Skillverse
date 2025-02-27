@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
-import Button from '../Button';
-import TakeQuizButton from '../TakeQuizButton';
-import Switch from '../Switch';
-import Cards from './card1';
-import Cards2 from './card2';
-import Cards3 from './card3';
+import React, { useState, useEffect, useRef } from "react";
+import { Canvas } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import Button from "../Button";
+import TakeQuizButton from "../TakeQuizButton";
+import Switch from "../Switch";
+import Cards from "./card1";
+import Cards2 from "./card2";
+import Cards3 from "./card3";
 import { Navigate } from "react-router-dom";
-import Loader from '../Loader';
-import PlusButton from '../PlusButton';
-import { Box5 } from '../Box5';
-import Paper from '@mui/material/Paper';
-import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import Loader from "../Loader";
+import PlusButton from "../PlusButton";
+import { Box5 } from "../Box5";
+import Paper from "@mui/material/Paper";
+import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
 function Model() {
-  const { scene } = useGLTF('/model/aleovera.glb');
+  const { scene } = useGLTF("/model/aleovera.glb");
   const modelRef = useRef();
 
   useEffect(() => {
@@ -36,16 +36,16 @@ function Model() {
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
   return (
-    <primitive 
+    <primitive
       ref={modelRef}
-      object={scene} 
+      object={scene}
       scale={6}
       position={[1.2, -0.2, 0]}
       rotation={[0, Math.PI / 2, 0]}
@@ -69,7 +69,7 @@ export const TulsiPlant = () => {
     // Toggle the leaves popup
     setIsLeavesPopupVisible(!isLeavesPopupVisible);
   };
-  
+
   const toggleGelPopup = () => {
     // Close the leaves popup if it's open
     if (isLeavesPopupVisible) {
@@ -83,12 +83,12 @@ export const TulsiPlant = () => {
     console.log("Loading state:", loading);
     window.scrollTo(0, 0); // Ensures the page scrolls to the top
     const timer = setTimeout(() => {
-        setLoading(false);
-        navigate('/next-page'); // Navigates to next page
+      setLoading(false);
+      navigate("/next-page"); // Navigates to next page
     }, 1000);
 
     return () => clearTimeout(timer);
-}, []);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -125,7 +125,7 @@ export const TulsiPlant = () => {
   return (
     <div className="bg-[#FFFFFF] flex justify-center items-center w-full min-h-screen">
       <div className="max-w-[1440px] w-full">
-        <style> 
+        <style>
           {`
             @import url("https://fonts.googleapis.com/css?family=Poppins:700,400|Poly:400,italic|Bebas+Neue:400");
           `}
@@ -140,13 +140,15 @@ export const TulsiPlant = () => {
             <PlusButton onClick={toggleLeavesPopup} />
             {isLeavesPopupVisible && (
               <div className="absolute top-[40px] left-[45px] bg-white border border-gray-300 p-4 rounded shadow-md w-[400px] h-[190px] z-20">
-                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">Leaves</span>
+                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">
+                  Leaves
+                </span>
                 <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[18px] tracking-[0] leading-[35px]">
-                  : Thick, fleshy, and lance-shaped with serrated edges. They are
-                    typically green to gray-green with white flecks.
-                      <br />
-                    <br />
-                    </span>
+                  : Thick, fleshy, and lance-shaped with serrated edges. They
+                  are typically green to gray-green with white flecks.
+                  <br />
+                  <br />
+                </span>
               </div>
             )}
           </div>
@@ -154,13 +156,16 @@ export const TulsiPlant = () => {
             <PlusButton onClick={toggleGelPopup} />
             {isGelPopupVisible && (
               <div className="absolute top-[-100px] left-[45px] bg-white border border-gray-300 p-4 rounded shadow-md w-[400px] h-[190px] z-20">
-                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">Gel</span>
+                <span className="font-bold [font-family:'Poppins',Helvetica] font-bold text-[#025169] text-[25px]">
+                  Gel
+                </span>
                 <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[18px] tracking-[0] leading-[35px]">
-                : The inner part of the leaf contains a clear, gel-like substance
-                that is rich in nutrients and has various medicinal properties.
-                      <br />
-                    <br />
-                    </span>
+                  : The inner part of the leaf contains a clear, gel-like
+                  substance that is rich in nutrients and has various medicinal
+                  properties.
+                  <br />
+                  <br />
+                </span>
               </div>
             )}
           </div>
@@ -178,7 +183,7 @@ export const TulsiPlant = () => {
           </div>
 
           <div className="absolute w-[1238px] top-[850px] left-[74px] z-10">
-            <div 
+            <div
               ref={paperRef}
               className="p-16 bg-white rounded-lg grid grid-cols-2 gap-8"
             >
@@ -186,50 +191,55 @@ export const TulsiPlant = () => {
                 elevation={6}
                 sx={{
                   p: 3,
-                  textAlign: 'center',
-                  color: '#063229',
+                  textAlign: "center",
+                  color: "#063229",
                   borderRadius: 2,
-                  fontSize: '1.1rem',
-                  fontFamily: 'Poppins, sans-serif',
-                  transform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
+                  fontSize: "1.1rem",
+                  fontFamily: "Poppins, sans-serif",
+                  transform: isVisible ? "translateX(0)" : "translateX(-100%)",
                   opacity: isVisible ? 1 : 0,
-                  transition: 'all 0.8s ease-out',
-                  minHeight: '200px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'white',
+                  transition: "all 0.8s ease-out",
+                  minHeight: "200px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "white",
                   zIndex: 10,
-                  willChange: 'transform, opacity'
+                  willChange: "transform, opacity",
                 }}
               >
                 <div className="text-lg">
-                  Hey there! Let me tell you about a fascinating plant called Tulsi. Think of it like a sacred, natural wonder that's been enriching lives and promoting health for centuries!
+                  Hey there! Let me tell you about a fascinating plant called
+                  Tulsi. Think of it like a sacred, natural wonder that's been
+                  enriching lives and promoting health for centuries!
                 </div>
               </Paper>
               <Paper
                 elevation={6}
                 sx={{
                   p: 3,
-                  textAlign: 'center',
-                  color: '#063229',
+                  textAlign: "center",
+                  color: "#063229",
                   borderRadius: 2,
-                  fontSize: '1.1rem',
-                  fontFamily: 'Poppins, sans-serif',
-                  transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
+                  fontSize: "1.1rem",
+                  fontFamily: "Poppins, sans-serif",
+                  transform: isVisible ? "translateX(0)" : "translateX(100%)",
                   opacity: isVisible ? 1 : 0,
-                  transition: 'all 0.8s ease-out',
-                  minHeight: '200px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'white',
+                  transition: "all 0.8s ease-out",
+                  minHeight: "200px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "white",
                   zIndex: 10,
-                  willChange: 'transform, opacity'
+                  willChange: "transform, opacity",
                 }}
               >
                 <div className="text-lg">
-                  The Tulsi plant, with its vibrant green leaves and aromatic presence, is like a divine gift to homes and gardens. When you crush its leaves, you'll experience a refreshing, spicy fragrance that's both calming and invigorating.
+                  The Tulsi plant, with its vibrant green leaves and aromatic
+                  presence, is like a divine gift to homes and gardens. When you
+                  crush its leaves, you'll experience a refreshing, spicy
+                  fragrance that's both calming and invigorating.
                 </div>
               </Paper>
             </div>
@@ -261,7 +271,7 @@ export const TulsiPlant = () => {
           <section
             id="ar_vr-icon"
             className="absolute flex justify-center items-center gap-10 py-20 w-full"
-            style={{ top: '3350px' }}
+            style={{ top: "3350px" }}
           >
             {/* AR Icon */}
             <div className="group relative w-[266px] h-[266px] bg-white rounded-[40px] border border-black shadow-[inset_10px_10px_4px_#00000040] transition-all duration-300 ease-in-out hover:w-[400px] flex items-center overflow-hidden">
@@ -301,10 +311,13 @@ export const TulsiPlant = () => {
           </section>
 
           <p className="absolute w-[618px] top-[1619px] left-[43px] [font-family:'Poppins',Helvetica] font-bold text-[#063229] text-[30px] tracking-[0] leading-[35.3px]">
-          Tulsi: Nature&#39;s Sacred Delight
+            Tulsi: Nature&#39;s Sacred Delight
           </p>
 
-          <section id="3d-model" className="absolute w-[486px] top-[1683px] left-[71px]">
+          <section
+            id="3d-model"
+            className="absolute w-[486px] top-[1683px] left-[71px]"
+          >
             <div className="[font-family:'Poppins',Helvetica] font-normal text-[#063229] text-[22px] text-justify tracking-[0] leading-[35px]">
               {/* <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[22px] tracking-[0] leading-[35px]">
                 Aloe vera is a succulent plant known for its medicinal properties.
@@ -316,9 +329,12 @@ export const TulsiPlant = () => {
               <span className="font-bold">Leaves</span>*/}
 
               <span className="[font-family:'Poppins',Helvetica] font-normal text-[#025169] text-[18px] tracking-[0] leading-[35px]">
-              Welcome to the World of Tulsi, a plant so revered it's known as 'Nature's Sacred Delight'! Get ready to embark on an exciting journey where you'll explore the secrets of this ancient herb, its spiritual significance, and its incredible health benefits. 🌿
-              <br />
-
+                Welcome to the World of Tulsi, a plant so revered it's known as
+                'Nature's Sacred Delight'! Get ready to embark on an exciting
+                journey where you'll explore the secrets of this ancient herb,
+                its spiritual significance, and its incredible health benefits.
+                🌿
+                <br />
                 <br />
               </span>
 
@@ -357,21 +373,21 @@ export const TulsiPlant = () => {
             </div>
 
             <div className="absolute w-[521px] h-72 top-[2471px] right-[100px]">
-              <Cards2 /> 
+              <Cards2 />
             </div>
 
             <div className="absolute w-[521px] h-72 top-[2747px] left-[520px]">
-              <Cards3 /> 
+              <Cards3 />
             </div>
           </section>
 
           <section className="hero-text">
-  <div className="absolute top-[90px] left-[150px] right-[50px] [font-family:'Bebas_Neue',Helvetica] font-light text-[#94B5A0] tracking-[10.71px] max-w-full">
-    <div className="relative text-left">
-      <span className="text-[#4CAF50] text-[350px]">Holy</span>
-      <span className="text-[#0A342A] text-[350px]">Basil</span>
-    </div>
-  </div>
+            <div className="absolute top-[90px] left-[150px] right-[50px] [font-family:'Bebas_Neue',Helvetica] font-light text-[#94B5A0] tracking-[10.71px] max-w-full">
+              <div className="relative text-left">
+                <span className="text-[#4CAF50] text-[350px]">Holy</span>
+                <span className="text-[#0A342A] text-[350px]">Basil</span>
+              </div>
+            </div>
 
             <div className="absolute top-[495px] left-[1180px] [font-family:'Times_New_Roman-Italic',Helvetica] font-bold italic text-black text-[39px] text-center tracking-[2.34px] leading-[normal] whitespace-nowrap">
               Tulsi Plant
@@ -379,7 +395,11 @@ export const TulsiPlant = () => {
 
             <div className="absolute top-[535px] left-[50px] text-left p-4 max-w-[400px]">
               <div className="[font-family:'Poppins',Helvetica] font-normal text-black text-[12px] leading-[normal] tracking-[1.0px]">
-              Welcome to the world of Tulsi, a sacred herb so powerful it's often called the "Holy Basil"! Prepare yourself for an enlightening journey as we explore this ancient plant, revered for its spiritual significance, rich aroma, and amazing health benefits!
+                Welcome to the world of Tulsi, a sacred herb so powerful it's
+                often called the "Holy Basil"! Prepare yourself for an
+                enlightening journey as we explore this ancient plant, revered
+                for its spiritual significance, rich aroma, and amazing health
+                benefits!
               </div>
             </div>
           </section>
@@ -398,9 +418,19 @@ export const TulsiPlant = () => {
           <Box5 />
 
           <div className="absolute w-full h-[869px] top-[1437px] left-0">
-            <Canvas camera={{ position: [2.192129250918481, 1, 4.405377373613455], fov: 45 }} shadows>
+            <Canvas
+              camera={{
+                position: [2.192129250918481, 1, 4.405377373613455],
+                fov: 45,
+              }}
+              shadows
+            >
               <ambientLight intensity={2} />
-              <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
+              <directionalLight
+                position={[5, 5, 5]}
+                intensity={1.5}
+                castShadow
+              />
               <directionalLight position={[-5, 5, -5]} intensity={1} />
               <hemisphereLight intensity={1} groundColor="white" />
 
@@ -408,15 +438,65 @@ export const TulsiPlant = () => {
             </Canvas>
           </div>
         </div>
-        <div>
-  {/* Existing content */}
-  {/* <button
-    onClick={() => setNavigateToCustardApple(true)}
-    className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition duration-300"
-  >
-    Go to home page
-  </button> */}
-</div>
+        <div className="absolute top-[4850px] left-[30px] w-[1440px] h-[440px] responsive-container">
+          <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center footer-image">
+            <div className="absolute top-[252px] left-[23px] w-[1374px] h-[178px] bg-white rounded-[12px] social-container">
+              <div className="flex justify-center space-x-4 mt-4 social-buttons">
+                 {/* Instagram Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.instagram.com")
+                }
+              >
+                Instagram
+              </button>
+
+              {/* Twitter Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.twitter.com")
+                }
+              >
+                Twitter
+              </button>
+
+              {/* Facebook Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.facebook.com")
+                }
+              >
+                Facebook
+              </button>
+
+              {/* Pinterest Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.pinterest.com")
+                }
+              >
+                Pinterest
+              </button>
+              </div>
+              <div className="mt-4 border-t border-gray-300"></div>
+              <div className="text-center mt-2">
+                <p className="text-xl text-gray-800">
+                  © 2024, All Rights Reserved
+                </p>
+              </div>
+            </div>
+            <p className="absolute top-[40px] left-[363px] text-[64px] font-normal text-center text-white heading-text">
+              Be the one with
+              <span className="text-red-500"> Nat</span>
+              <span className="text-[#B9DE00]">ur</span>
+              <span className="text-red-500">e</span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -413,15 +413,65 @@ export const ShoeFlower = () => {
             </Canvas>
           </div>
         </div>
-        <div>
-  {/* Existing content */}
-  {/* <button
-    onClick={() => setNavigateToCustardApple(true)}
-    className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition duration-300"
-  >
-    Go to cluster fig Apple
-  </button> */}
-</div>
+        <div className="absolute top-[4850px] left-[30px] w-[1440px] h-[440px] responsive-container">
+          <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center footer-image">
+            <div className="absolute top-[252px] left-[23px] w-[1374px] h-[178px] bg-white rounded-[12px] social-container">
+              <div className="flex justify-center space-x-4 mt-4 social-buttons">
+                 {/* Instagram Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.instagram.com")
+                }
+              >
+                Instagram
+              </button>
+
+              {/* Twitter Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.twitter.com")
+                }
+              >
+                Twitter
+              </button>
+
+              {/* Facebook Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.facebook.com")
+                }
+              >
+                Facebook
+              </button>
+
+              {/* Pinterest Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.pinterest.com")
+                }
+              >
+                Pinterest
+              </button>
+              </div>
+              <div className="mt-4 border-t border-gray-300"></div>
+              <div className="text-center mt-2">
+                <p className="text-xl text-gray-800">
+                  © 2024, All Rights Reserved
+                </p>
+              </div>
+            </div>
+            <p className="absolute top-[40px] left-[363px] text-[64px] font-normal text-center text-white heading-text">
+              Be the one with
+              <span className="text-red-500"> Nat</span>
+              <span className="text-[#B9DE00]">ur</span>
+              <span className="text-red-500">e</span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

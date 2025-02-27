@@ -14,7 +14,7 @@ import ClusterFig from './components/ClusterFigPage/ClusterFig';
 import CustardApple from './components/CustardApplePage/CustardApple';
 import TulsiPlant from './components/TulsiPlantPage/TulsiPlant';
 import AboutUs from './components/AboutUs';
-import zaWarudo from "../static/img/Stark.jpeg";
+import zaWarudo from "../static/img/skillverse.svg";
 import ExploreCourse from './components/ExploreCourse';
 import LoginPage2 from './components/LoginPage2';
 import SignUpPage2 from './components/SignUpPage2';

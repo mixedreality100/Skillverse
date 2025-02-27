@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import backArrow from '../assets/skillverse.svg';
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import backArrow from "../assets/skillverse.svg";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 import ProfileButton from "./profile";
+import Loader from "./Loader"; // Import the Loader component
 
 export const Plants = () => {
   const { courseId } = useParams();
@@ -10,18 +11,41 @@ export const Plants = () => {
   const [courseDetails, setCourseDetails] = useState(null);
   const [modules, setModules] = useState([]);
   const [error, setError] = useState(null);
-  const [isEnrollPopupOpen, setIsEnrollPopupOpen] = useState(false); // State to control popup visibility
+  const [isEnrollPopupOpen, setIsEnrollPopupOpen] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
+  const pageRef = useRef(null);
+
+  // Use this effect with higher priority to force scroll to top
+  useEffect(() => {
+    // Force immediate scroll to top right when component mounts
+    window.scrollTo(0, 0);
+
+    // Add a slight delay as a fallback in case the immediate scroll didn't work
+    const scrollTimer = setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: "instant",
+      });
+    }, 50);
+
+    return () => clearTimeout(scrollTimer);
+  }, []);
 
   useEffect(() => {
     const fetchCourseDetails = async () => {
+      setLoading(true); // Set loading to true when fetching starts
       try {
-        const courseResponse = await fetch(`http://localhost:3000/courses/${courseId}`);
+        const courseResponse = await fetch(
+          `http://localhost:3000/courses/${courseId}`
+        );
         if (!courseResponse.ok) {
           throw new Error(`HTTP error! status: ${courseResponse.status}`);
         }
         const courseData = await courseResponse.json();
 
-        const modulesResponse = await fetch(`http://localhost:3000/modules/${courseId}`);
+        const modulesResponse = await fetch(
+          `http://localhost:3000/modules/${courseId}`
+        );
         if (!modulesResponse.ok) {
           throw new Error(`HTTP error! status: ${modulesResponse.status}`);
         }
@@ -30,8 +54,10 @@ export const Plants = () => {
         setCourseDetails(courseData);
         setModules(modulesData);
       } catch (error) {
-        console.error('Error fetching course details:', error);
+        console.error("Error fetching course details:", error);
         setError(error.message);
+      } finally {
+        setLoading(false); // Set loading to false when fetching is done
       }
     };
 
@@ -45,60 +71,43 @@ export const Plants = () => {
   };
 
   const handleCourseClick = () => {
-    navigate('/');
+    navigate("/");
     setTimeout(() => {
-      const coursesSection = document.getElementById('courses');
+      const coursesSection = document.getElementById("courses");
       if (coursesSection) {
-        coursesSection.scrollIntoView({ behavior: 'smooth' });
+        coursesSection.scrollIntoView({ behavior: "smooth" });
       }
     }, 100);
   };
 
   const handleEnrollNow = async (moduleId) => {
     setIsEnrollPopupOpen(false);
-            navigate(`/aloepage/${moduleId}`);
-    // const userId = 1; // Assuming userInfo contains the user's ID
-    // const courseId = 6; // Assuming courseId is available in this context
-
-    // try {
-    //     const response = await fetch('http://localhost:3000/api/enroll', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({ userId, courseId }),
-    //     });
-
-    //     if (response.ok) {
-    //         setIsEnrollPopupOpen(false);
-    //         navigate(`/aloepage/${moduleId}`);
-    //     } else {
-    //         console.error('Enrollment failed');
-    //     }
-    // } catch (error) {
-    //     console.error('Error enrolling:', error);
-    // }
-};
+    navigate(`/aloepage/${moduleId}`);
+  };
 
   const handleCancel = () => {
     setIsEnrollPopupOpen(false);
   };
 
+  // Render the Loader while loading is true
+  if (loading) {
+    return <Loader />;
+  }
+
   return (
-    <div className="flex flex-row justify-center w-full bg-white">
-      <div className="bg-[#ffffff] overflow-hidden w-[1440px] h-[2000px] relative rounded-lg">
-        <div className="absolute top-0 left-0 w-[1426px] h-[824px]">
-          <div className="absolute top-0 left-0 w-full h-[calc(100vh-<desired_offset>)]">
-            {/* Hero Image */}
-          </div>
+    <div className="flex flex-row justify-center w-full bg-white" ref={pageRef}>
+      {/* Using a container with relative positioning and a reasonable height */}
+      <div className="bg-[#ffffff] overflow-x-hidden w-[1440px] relative rounded-lg">
+        <div className="relative w-[1426px] h-[824px]">
+          <div className="relative w-full">{/* Hero Image */}</div>
 
           <div className="absolute top-[22px] left-[30px] w-[60px] h-[60px]">
-              <img
-                className="w-[58px] aspect-square"
-                alt="Back Arrow"
-                src={backArrow}
-                onClick={() => navigate('/')}
-              />
+            <img
+              className="w-[58px] aspect-square"
+              alt="Back Arrow"
+              src={backArrow}
+              onClick={() => navigate("/")}
+            />
           </div>
 
           <div>
@@ -107,64 +116,65 @@ export const Plants = () => {
                 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
               `}
             </style>
-            <div className="absolute top-[70px] left-[92px] font-light text-[#94B5A0] text-[320px] text-center tracking-[1.71px] leading-[normal]" style={{ fontFamily: 'Bebas Neue, Helvetica' }}>
-              {courseDetails?.course_name || ''}
+            <div
+              className="absolute top-[420px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-light text-[#62BD69] text-[350px] text-center tracking-[1.71px] leading-[0.8]"
+              style={{ fontFamily: "Bebas Neue, Helvetica" }}
+            >
+              {courseDetails?.course_name || ""}
             </div>
           </div>
-        <div className='flex gap-9'>
-          <button 
-            className="absolute top-[30px] left-[550px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
-            onClick={handleCourseClick}
-          >
-            Courses
-          </button>
+          <div className="flex gap-9">
+            <button
+              className="absolute top-[30px] left-[550px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+              onClick={handleCourseClick}
+            >
+              Courses
+            </button>
 
-          <button 
-            className="absolute top-[30px] left-[659px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
-            onClick={() => navigate('/explore')}
-          >
-            Explore
-          </button>
+            <button
+              className="absolute top-[30px] left-[659px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+              onClick={() => navigate("/explore")}
+            >
+              Explore
+            </button>
 
-          <button 
-            className="absolute top-[30px] left-[762px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
-            onClick={() => navigate('/aboutus')}
-          >
-            About Us
-          </button>
+            <button
+              className="absolute top-[30px] left-[762px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+              onClick={() => navigate("/aboutus")}
+            >
+              About Us
+            </button>
 
-          <div className="absolute top-[30px] left-[1270px]">
-            <SignedOut>
-              <SignInButton>
-                <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
-                  Login
-                </button>
-              </SignInButton>
-            </SignedOut>
+            <div className="absolute top-[30px] left-[1270px]">
+              <SignedOut>
+                <SignInButton>
+                  <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
+                    Login
+                  </button>
+                </SignInButton>
+              </SignedOut>
 
-            <SignedIn>
-              <ProfileButton />
-            </SignedIn>
+              <SignedIn>
+                <ProfileButton />
+              </SignedIn>
+            </div>
           </div>
         </div>
-          
-        </div>
 
-        <div id="categories-section" className="absolute top-[900px] left-[50px] w-full">
+        <div id="categories-section" className="relative mt-[50px] mx-[50px] w-[90%]">
           <div>
             <style>
               {`
                 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
               `}
             </style>
-            <div className="text-left text-[#000000] text-[100px] font-bold mb-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            <div className="text-left text-[#000000] text-[100px] font-bold mb-4" style={{ fontFamily: 'Poppins, sans-serif', marginTop: '6' }}>
               Modules
             </div>
           </div>
-
           {/* Plant Cards */}
           <div 
-            className="mt-12 overflow-x-auto scrollbar-hide cards-container w-[92%]"
+            className="mt-12 overflow-x-auto scrollbar-hide cards-container w-full"
             style={{ scrollBehavior: 'smooth' }}
           >
             <div className="flex space-x-5 min-w-max">
@@ -189,20 +199,40 @@ export const Plants = () => {
           </div>
         </div>
 
-        <div className="absolute top-[1550px] left-[9px] w-[1422px] h-[440px]">
-          <div className="relative w-[1418px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
-            <div className="absolute top-[252px] left-[23px] w-[1374px] h-[178px] bg-white rounded-[12px]">
+        {/* Footer section - changed from absolute to relative positioning */}
+        <div className="relative mt-[150px] mx-auto w-[98%]">
+          <div className="relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
+            <div className="absolute top-[252px] left-[23px] right-[23px] h-[178px] bg-white rounded-[12px]">
               <div className="flex justify-center space-x-4 mt-4">
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200">
+                {/* Instagram Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() => (window.location.href = "https://www.instagram.com")}
+                >
                   Instagram
                 </button>
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200">
+
+                {/* Twitter Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() => (window.location.href = "https://www.twitter.com")}
+                >
                   Twitter
                 </button>
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200">
+
+                {/* Facebook Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() => (window.location.href = "https://www.facebook.com")}
+                >
                   Facebook
                 </button>
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200">
+
+                {/* Pinterest Button */}
+                <button
+                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
+                  onClick={() => (window.location.href = "https://www.pinterest.com")}
+                >
                   Pinterest
                 </button>
               </div>
@@ -210,11 +240,13 @@ export const Plants = () => {
               <div className="mt-4 border-t border-gray-300"></div>
 
               <div className="text-center mt-2">
-                <p className="text-xl text-gray-800">© 2024, All Rights Reserved</p>
+                <p className="text-xl text-gray-800">
+                  © 2024, All Rights Reserved
+                </p>
               </div>
             </div>
 
-            <p className="absolute top-[40px] left-[363px] text-[64px] font-normal text-center text-white">
+            <p className="absolute top-[40px] left-0 right-0 text-[64px] font-normal text-center text-white">
               Be the one with
               <span className="text-red-500"> Nat</span>
               <span className="text-[#B9DE00]">ur</span>
@@ -238,7 +270,7 @@ export const Plants = () => {
               </button>
               <button
                 className="bg-white border border-black text-black px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:border-green-500 hover:text-green-600 transition-colors duration-300 ease-in-out shadow-sm hover:shadow-md"
-                 onClick={() => handleEnrollNow(modules[0].id)} // Assuming the first module is selected
+                onClick={() => handleEnrollNow(modules[0]?.id)} // Added optional chaining
               >
                 Enroll Now
               </button>

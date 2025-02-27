@@ -89,7 +89,13 @@ export const AloePage = () => {
     }
     setIsLeavesPopupVisible(!isLeavesPopupVisible);
   };
+  const handelAboutUsClick = () => {
+    navigate('/aboutus');
+  };
 
+  const handelExploreCourseClick = () => {
+    navigate('/explore');
+  };
   const toggleGelPopup = () => {
     if (isLeavesPopupVisible) {
       setIsLeavesPopupVisible(false);
@@ -869,10 +875,14 @@ export const AloePage = () => {
               >
                 Courses
               </NavButton>
-              <NavButton className="transform transition-transform duration-300 hover:scale-110 text-black">
+              <NavButton className="transform transition-transform duration-300 hover:scale-110 text-black"
+                onClick={handelExploreCourseClick}>
+              
                 Explore
               </NavButton>
-              <NavButton className="transform transition-transform duration-300 hover:scale-110 text-black">
+              <NavButton className="transform transition-transform duration-300 hover:scale-110 text-black"
+                onClick={handelAboutUsClick}
+>
                 About Us
               </NavButton>
             </div>
@@ -938,18 +948,45 @@ export const AloePage = () => {
           <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center footer-image">
             <div className="absolute top-[252px] left-[23px] w-[1374px] h-[178px] bg-white rounded-[12px] social-container">
               <div className="flex justify-center space-x-4 mt-4 social-buttons">
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200 social-button">
-                  Instagram
-                </button>
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200 social-button">
-                  Twitter
-                </button>
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200 social-button">
-                  Facebook
-                </button>
-                <button className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200 social-button">
-                  Pinterest
-                </button>
+                 {/* Instagram Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.instagram.com")
+                }
+              >
+                Instagram
+              </button>
+
+              {/* Twitter Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.twitter.com")
+                }
+              >
+                Twitter
+              </button>
+
+              {/* Facebook Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.facebook.com")
+                }
+              >
+                Facebook
+              </button>
+
+              {/* Pinterest Button */}
+              <button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
+                onClick={() =>
+                  (window.location.href = "https://www.pinterest.com")
+                }
+              >
+                Pinterest
+              </button>
               </div>
               <div className="mt-4 border-t border-gray-300"></div>
               <div className="text-center mt-2">
