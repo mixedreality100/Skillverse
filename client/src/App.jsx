@@ -24,6 +24,8 @@ import ModuleViewer from './components/ModuleViewer';
 import JWTFetcher from './components/JWTfetcher';
 import Toggle from './components/toggle';
 import { SketchfabVR } from './components/modelvr';
+import CourseOverview from '../src/components/CourseOverview'; // Import the CourseOverview component
+
 
 function App() {
   useEffect(() => {
@@ -77,6 +79,8 @@ function App() {
         <Route path="Toggle" element={<Toggle/>}/>
         <Route path="/module-viewer" element={<ModuleViewer />} />
         <Route path="/modelvr" element={<SketchfabVR />} />
+
+        <Route path="/course/:courseId" element={<CourseOverview />} />
 
       </Routes>
     </div>

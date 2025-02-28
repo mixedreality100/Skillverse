@@ -6,7 +6,7 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
 
   const handleCardClick = () => {
     if (courseId) {
-      navigate(`/plants/${courseId}`); // Ensure only the path is used
+      navigate(`/course/${courseId}`); // Updated to navigate to `/course/:courseId`
     } else {
       console.error('Course ID is undefined');
     }
@@ -14,7 +14,7 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
 
   return (
     <div 
-      className="relative w-[445px] bg-white rounded-xl shadow-lg overflow-hidden transition-transform transform hover:scale-105 m-6"
+      className="relative w-[445px] bg-white rounded-xl shadow-lg overflow-hidden transition-transform transform hover:scale-105 m-6 cursor-pointer"
       onClick={handleCardClick}
     >
       {/* Card Media */}
@@ -42,7 +42,10 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
       {/* Card Actions */}
       <div className="px-4 pb-4 flex items-center justify-between">
         <div className="flex gap-10">
-          <button onClick={handleCardClick} className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+          <button 
+            onClick={handleCardClick} 
+            className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+          >
             Learn More
           </button>
         </div>

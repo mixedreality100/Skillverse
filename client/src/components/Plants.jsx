@@ -105,7 +105,7 @@ export const Plants = () => {
                           <img
                           src={medicinalhero}
                           alt="Hero image"
-                          className="absolute top-[105px] left-[0px] w-full h-[580px] opacity-100 z-0 rounded-[20px] object-cover blur-[4px]" // Custom blur 
+                          className="absolute top-[105px] left-[0px] w-full h-[580px] opacity-100 z-0 rounded-[20px] object-cover blur-[0px]" // Custom blur 
                         /></div>
 
           <div className="absolute top-[22px] left-[30px] w-[60px] h-[60px]">
