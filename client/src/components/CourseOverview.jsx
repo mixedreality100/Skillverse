@@ -82,18 +82,36 @@ const CourseOverview = () => {
           </SignedIn>
         </div>
       </nav>
-      {/* Enroll Button */}
-      <div className="absolute top-[500px] right-[150px]">
-        <button
-          className="text-white text-3xl bg-blue-500 transform-transition duration-300 hover:scale-110 rounded-10 border-2 border-white px-36 py-8"
-          onClick={handleEnrollClick} // Add onClick handler
-        >
-          Enroll now
-        </button>
-      </div>
       {/* Display course details here */}
       <h1>Course Overview</h1>
       <p>Course ID: {courseId}</p>
+      <div className="relative mt-20 mx-auto w-[100%]">
+        <div className="relative flex flex-col rounded-xl bg-white text-gray-700 shadow-md max-w-2xl mx-auto mt-5">
+          <div className="relative mx-4 -mt-6 h-40 overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40">
+            <h1 className="text-xl font-semibold leading-snug tracking-normal text-white p-4">
+              Course Overview: Unlocking the Healing Power of Medicinal Plants
+            </h1>
+          </div>
+          <div className="p-6">
+            <p className="mb-4">Welcome to an immersive journey into the world of medicinal plants! This course will guide you through the fascinating science and traditional wisdom behind nature's most powerful healers. You will explore how plants like Aloe vera, Hibiscus, and Tulsi have been used for centuries to treat ailments, boost immunity, and promote overall well-being.</p>
+            <p className="mb-4">Through interactive 3D models, engaging visuals, and real-world applications, you will learn:</p>
+            <ul className="list-disc list-inside mb-4">
+              <li>✅ Botanical Classification – Understand how medicinal plants are categorized based on their properties.</li>
+              <li>✅ Active Compounds & Benefits – Discover the healing components of plants and their effects on the body.</li>
+              <li>✅ Sustainable Cultivation & Harvesting – Explore ethical ways to grow and use medicinal plants.</li>
+            </ul>
+            <p>By the end of this course, you will not only appreciate the natural pharmacy around you but also gain the knowledge to incorporate these healing plants into everyday life. 🌿✨</p>
+          </div>
+          <div className="p-6 pt-0">
+            <button
+              className="select-none rounded-lg bg-blue-500 py-3 px-6 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+              onClick={handleEnrollClick} // Add onClick handler
+            >
+              Enroll now
+            </button>
+          </div>
+        </div>
+      </div>
       {/* Render additional course details here */}
      
       {/* Footer section - changed from absolute to relative positioning */}
