@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NavButton from "./NavButton";
+import ProfileButton from "./profile";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 
 export default function AboutUs() {
   const navigate = useNavigate();
@@ -69,19 +71,15 @@ export default function AboutUs() {
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-[url('/path/to/your/background.jpg')] bg-cover opacity-30"></div>
 
-      {/* Back Button */}
-      <div className="flex gap-9 mb-8 relative">
+      {/* Navigation Bar */}
+      <nav className="flex justify-between items-center w-full max-w-[1274px] mx-auto relative z-10">
         <img
-        src="./src/assets/skillverse.svg"
-        alt="Company logo"
-        className="w-[52px] aspect-square absolute left-0"
-        onClick={() => navigate("/")}
+          src="./src/assets/skillverse.svg"
+          alt="Company logo"
+          className="w-[58px] aspect-square"
+          onClick={() => navigate("/")}
         />
-        </div>
-
-      {/* Navigation Buttons */}
-      <section className="relative w-full h-[100px]">
-        <div className="absolute top-[30px] left-1/2 transform -translate-x-1/2 flex gap-9 items-center nav-buttons">
+        <div className="flex gap-9">
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
             onClick={handleCourses}
@@ -94,14 +92,20 @@ export default function AboutUs() {
           >
             Explore
           </NavButton>
-          {/* <NavButton 
-                        className="transform transition-transform duration-300 hover:scale-110 text-black"
-                        onClick={handleAboutUsClick}
-                    >
-                        About Us
-                    </NavButton> */}
         </div>
-      </section>
+        <div className="flex items-center gap-5">
+          <SignedOut>
+            <SignInButton>
+              <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
+                Login
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <ProfileButton />
+          </SignedIn>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <motion.div

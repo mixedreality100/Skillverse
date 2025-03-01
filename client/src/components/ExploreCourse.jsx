@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { Mic, MicOff } from 'lucide-react';
 import NavButton from "./NavButton";
+import ProfileButton from "./profile";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 
 const ExploreCourse = () => {
   const navigate = useNavigate();
@@ -115,42 +117,47 @@ const ExploreCourse = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-    
-      <div className="flex gap-9 mb-8 relative">
-      <img
+        {/* Navigation Bar */}
+        <nav className="flex justify-between items-center w-full max-w-[1274px] mx-auto mb-8">
+          <img
             src="./src/assets/skillverse.svg"
             alt="Company logo"
-            className="w-[58px] aspect-square absolute left-0"
+            className="w-[58px] aspect-square"
             onClick={() => navigate("/")}
           />
-      <div className="flex gap-9 justify-center w-full">
-        <NavButton 
-          className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={handleHomeClick}
-        >
-          Home
-        </NavButton>
-        <NavButton 
-          className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={handelCoursesClick}
-        >
-          Courses
-        </NavButton>
-        <NavButton 
-          className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={handelExploreCourseClick}
-        >
-          About Us
-        </NavButton>
-      </div>
-     </div>
-
-     {/* <div className='absolute top-[30px] left-[1280px]'>
-     <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
+          <div className="flex gap-9">
+            <NavButton 
+              className="transform transition-transform duration-300 hover:scale-110 text-black" 
+              onClick={handleHomeClick}
+            >
+              Home
+            </NavButton>
+            <NavButton 
+              className="transform transition-transform duration-300 hover:scale-110 text-black" 
+              onClick={handelCoursesClick}
+            >
+              Courses
+            </NavButton>
+            <NavButton 
+              className="transform transition-transform duration-300 hover:scale-110 text-black" 
+              onClick={handelExploreCourseClick}
+            >
+              About Us
+            </NavButton>
+          </div>
+          <div className="flex items-center gap-5">
+            <SignedOut>
+              <SignInButton>
+                <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
                   Login
                 </button>
-     </div> */}
-
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <ProfileButton />
+            </SignedIn>
+          </div>
+        </nav>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Explore Courses</h1>
 
