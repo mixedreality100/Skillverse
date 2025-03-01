@@ -1,20 +1,100 @@
-import React, { useEffect } from "react"; // Import useEffect
-import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import NavButton from './NavButton';
 import ProfileButton from "./profile";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import skillverselogo from "../assets/skillverse.svg";
 
 const CourseOverview = () => {
-  const { courseId } = useParams(); // Access the courseId from the URL
-  const navigate = useNavigate(); // Use the useNavigate hook
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+  const { openSignIn } = useClerk();
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Function to handle the Enroll button click
-  const handleEnrollClick = () => {
-    if (courseId) {
-      navigate(`/plants/${courseId}`); // Navigate to the Plants page with the courseId
-    } else {
-      console.error("Course ID is undefined");
+  // Effect to save user data when logged in
+  useEffect(() => {
+    const saveUser = async () => {
+      if (isSignedIn && user) {
+        try {
+          const response = await fetch('http://localhost:3001/api/saveUser', {
+            method: 'POST',
+            credentials: 'include'
+          });
+          
+          if (!response.ok) {
+            console.error('Failed to save user data');
+          }
+        } catch (error) {
+          console.error('Error saving user:', error);
+        }
+      }
+    };
+
+    if (isLoaded) {
+      saveUser();
+    }
+  }, [isSignedIn, isLoaded, user]);
+
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (isSignedIn && courseId) {
+        try {
+          const response = await fetch(`http://localhost:3001/api/checkEnrollment/${courseId}`, {
+            credentials: 'include'
+          });
+          const data = await response.json();
+          setIsEnrolled(data.isEnrolled);
+        } catch (error) {
+          console.error("Failed to check enrollment:", error);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    if (isLoaded) {
+      checkEnrollment();
+    }
+  }, [courseId, isSignedIn, isLoaded]);
+
+  const handleEnrollClick = async () => {
+    if (!isSignedIn) {
+      // Open Clerk's sign-in modal with redirect URL
+      openSignIn({
+        redirectUrl: `/course/${courseId}`,
+        appearance: {
+          elements: {
+            rootBox: {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center"
+            }
+          }
+        }
+      });
+      return;
+    }
+
+    if (isEnrolled) {
+      navigate(`/plants/${courseId}`);
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/enrollCourse/${courseId}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        navigate(`/plants/${courseId}`);
+      } else {
+        console.error("Failed to enroll");
+      }
+    } catch (error) {
+      console.error("Enrollment error:", error);
     }
   };
 
@@ -105,9 +185,10 @@ const CourseOverview = () => {
           <div className="p-6 pt-0">
             <button
               className="select-none rounded-lg bg-blue-500 py-3 px-6 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-              onClick={handleEnrollClick} // Add onClick handler
+              onClick={handleEnrollClick}
+              disabled={isLoading}
             >
-              Enroll now
+              {isLoading ? "Loading..." : isEnrolled ? "Continue Course" : "Enroll Now"}
             </button>
           </div>
         </div>
