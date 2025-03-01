@@ -85,8 +85,8 @@ const CourseOverview = () => {
       {/* Display course details here */}
       <h1>Course Overview</h1>
       <p>Course ID: {courseId}</p>
-      <div className="relative mt-20 mx-auto w-[100%]">
-        <div className="relative flex flex-col rounded-xl bg-white text-gray-700 shadow-md max-w-2xl mx-auto mt-5">
+      <div className="relative mt-8 mx-auto w-[100%]">
+        <div className="relative flex flex-col rounded-xl bg-white text-gray-700 shadow-md max-w-7xl mx-auto mt-5">
           <div className="relative mx-4 -mt-6 h-40 overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40">
             <h1 className="text-xl font-semibold leading-snug tracking-normal text-white p-4">
               Course Overview: Unlocking the Healing Power of Medicinal Plants
@@ -115,7 +115,7 @@ const CourseOverview = () => {
       {/* Render additional course details here */}
      
       {/* Footer section - changed from absolute to relative positioning */}
-      <div className="relative mt-[570px] mx-auto w-[100%]">
+      <div className="relative mt-[0px] mx-auto w-[100%]">
         <div className="relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
           <div className="absolute top-[252px] left-[23px] right-[23px] h-[178px] bg-white rounded-[12px]">
             <div className="flex justify-center space-x-4 mt-4">
