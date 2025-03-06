@@ -325,7 +325,6 @@ export default function LandingPage() {
         className="flex flex-col items-center px-5 pt-7 bg-white fade-in"
         ref={addToRefs}
       >
-
         <nav className="flex justify-between items-center w-full max-w-[1274px]">
           <img
             src="./src/assets/skillverse.svg"
@@ -368,15 +367,15 @@ export default function LandingPage() {
           <div className="flex items-center gap-5">
             <SignedOut>
               <SignInButton>
-              <button
-                    className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
-                    style={{
-                      boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
-                      border: "0.5px solid rgba(0, 0, 0, 0.33)",
-                    }}
-                  >
-                    Login
-                  </button>
+                <button
+                  className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                  style={{
+                    boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                    border: "0.5px solid rgba(0, 0, 0, 0.33)",
+                  }}
+                >
+                  Login
+                </button>
               </SignInButton>
             </SignedOut>
 
@@ -426,7 +425,6 @@ export default function LandingPage() {
 
       {/* Step Into the Future Section */}
       <section className="bg-black text-white py-0 fade-in" ref={addToRefs}>
-        
         <div className="carousel-container">
           <div className="flex flex-wrap justify-center gap-5 text-center ">
             {[".step .", ".in .", ".the .", ".future ."].map((text, index) => (
@@ -523,17 +521,59 @@ export default function LandingPage() {
             <div className="flex justify-center space-x-4 mt-4">
               {/* Instagram Button */}
               <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-200"
+                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                style={{
+                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
+                  backgroundImage: "none", // Ensure no gradient by default
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
+                  border: "none", // Remove the border for a cleaner look
+                  outline: "none", // Remove default outline
+                  cursor: "pointer",
+                  transition:
+                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease, background-image 0.3s ease", // Smooth transitions
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundImage =
+                    "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80)";
+                  e.currentTarget.style.boxShadow =
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.backgroundImage = "none"; // Remove gradient
+                  e.currentTarget.style.boxShadow =
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                }}
                 onClick={() =>
                   (window.location.href = "https://www.instagram.com")
                 }
+                aria-label="Visit Instagram"
               >
                 Instagram
               </button>
 
               {/* Twitter Button */}
               <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
+                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                style={{
+                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
+                  border: "none", // Remove the border for a cleaner look
+                  outline: "none", // Remove default outline
+                  cursor: "pointer",
+                  transition:
+                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease", // Smooth transitions
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#424240"; // Twitter color
+                  e.currentTarget.style.boxShadow =
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.boxShadow =
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                }}
                 onClick={() =>
                   (window.location.href = "https://www.twitter.com")
                 }
@@ -543,7 +583,26 @@ export default function LandingPage() {
 
               {/* Facebook Button */}
               <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
+                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                style={{
+                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
+                  border: "none", // Remove the border for a cleaner look
+                  outline: "none", // Remove default outline
+                  cursor: "pointer",
+                  transition:
+                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease", // Smooth transitions
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#1877F2"; // Facebook blue color
+                  e.currentTarget.style.boxShadow =
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.boxShadow =
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                }}
                 onClick={() =>
                   (window.location.href = "https://www.facebook.com")
                 }
@@ -553,7 +612,26 @@ export default function LandingPage() {
 
               {/* Pinterest Button */}
               <button
-                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
+                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                style={{
+                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
+                  border: "none", // Remove the border for a cleaner look
+                  outline: "none", // Remove default outline
+                  cursor: "pointer",
+                  transition:
+                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease", // Smooth transitions
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e94a22"; // Pinterest color
+                  e.currentTarget.style.boxShadow =
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.boxShadow =
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                }}
                 onClick={() =>
                   (window.location.href = "https://www.pinterest.com")
                 }
@@ -563,14 +641,12 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-4 border-t border-gray-300"></div>
-
             <div className="text-center mt-2">
               <p className="text-xl text-gray-800">
                 © 2024, All Rights Reserved
               </p>
             </div>
           </div>
-
           <p className="absolute top-[40px] left-[363px] text-[64px] font-normal text-center text-white">
             Be the one with
             <span className="text-red-500"> Nat</span>

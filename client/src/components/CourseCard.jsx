@@ -6,7 +6,7 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
 
   const handleCardClick = () => {
     if (courseId) {
-      navigate(`/course/${courseId}`); // Updated to navigate to `/course/:courseId`
+      navigate(`/course/${courseId}`);
     } else {
       console.error('Course ID is undefined');
     }
@@ -14,37 +14,112 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
 
   return (
     <div 
-      className="relative w-[445px] bg-white rounded-xl shadow-lg overflow-hidden transition-transform transform hover:scale-105 m-6 cursor-pointer"
+      style={{
+        position: 'relative',
+        width: '445px',
+        backgroundColor: '#e0e5ec',
+        borderRadius: '20px',
+        boxShadow: '20px 20px 60px #bebebe, -20px -20px 60px #ffffff',
+        overflow: 'hidden',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        transform: 'scale(1)',
+        margin: '24px',
+        cursor: 'pointer',
+      }}
+      className="hover:scale-105"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.05)';
+        e.currentTarget.style.boxShadow = '25px 25px 70px #bebebe, -25px -25px 70px #ffffff';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = '20px 20px 60px #bebebe, -20px -20px 60px #ffffff';
+      }}
       onClick={handleCardClick}
     >
       {/* Card Media */}
-      <div className="relative">
+      <div style={{ position: 'relative' }}>
         <img
           loading="lazy"
           src={image}
           alt={`${title} course thumbnail`}
-          className="object-cover w-full h-[170px]"
+          style={{
+            objectFit: 'cover',
+            width: '100%',
+            height: '170px',
+          }}
         />
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <h2 className="text-white text-2xl font-semibold tracking-wide">{title}</h2>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <h2 style={{
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            letterSpacing: '0.025em',
+          }}>
+            {title}
+          </h2>
         </div>
       </div>
 
       {/* Card Content */}
-      <div className="p-4">
-        <h3 className="text-xl font-medium mb-2">{title}</h3>
-        <p className="text-gray-600 text-sm mb-4">
+      <div style={{ padding: '16px' }}>
+        <h3 style={{
+          fontSize: '1.25rem',
+          fontWeight: '500',
+          marginBottom: '8px',
+        }}>
+          {title}
+        </h3>
+        <p style={{
+          color: '#4a5568',
+          fontSize: '0.875rem',
+          marginBottom: '16px',
+        }}>
           {status}
         </p>
       </div>
 
       {/* Card Actions */}
-      <div className="px-4 pb-4 flex items-center justify-between">
-        <div className="flex gap-10">
+      <div style={{
+        padding: '0 16px 16px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', gap: '40px' }}>
           <button 
             onClick={handleCardClick} 
-            className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            style={{
+              padding: '6px 16px',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#4a5568',
+              backgroundColor: '#e0e5ec',
+              borderRadius: '9999px',
+              border: 'none',
+              boxShadow: '5px 5px 10px #bebebe, -5px -5px 10px #ffffff',
+              transition: 'background-color 0.3s ease, transform 0.3s ease',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '8px 8px 15px #bebebe, -8px -8px 15px #ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '5px 5px 10px #bebebe, -5px -5px 10px #ffffff';
+            }}
           >
             Learn More
           </button>
