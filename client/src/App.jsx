@@ -25,7 +25,7 @@ import JWTFetcher from './components/JWTfetcher';
 import Toggle from './components/toggle';
 import { SketchfabVR } from './components/modelvr';
 import CourseOverview from '../src/components/CourseOverview'; // Import the CourseOverview component
-
+import { Leaderboard } from './components/Leaderboard'; // Import the Leaderboard component
 
 function App() {
   useEffect(() => {
@@ -48,11 +48,11 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/content-creator-dashboard" element={<ContentCreatorDashboard />} />
         <Route path="/learner-dashboard" element={<LearnerDashboard userId={9} />} />
+        
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/plants" element={<Plants />} />
         {/* <Route path="/coursepage" element={<CoursePage />} /> */}
         <Route path="/quizpage" element={<QuizPage />} />
-      
         <Route path="/custard-apple" element={<CustardApple />} />
         <Route path="/shoe-flower" element={<ShoeFlower />} />
         <Route path="/cluster-fig" element={<ClusterFig />} />
@@ -60,28 +60,19 @@ function App() {
         <Route path="/aboutus" element={<AboutUs/>}/>
         <Route path="/plants/:courseId" element={<Plants />} />
         <Route path="/explore" element={<ExploreCourse/>}/>
-      
         <Route path="/login2" element={<LoginPage2 />} /> {/* **New route for LoginPage2** */}
         <Route path="/sign-up" element={<SignUpPage2 />} /> {/* Sign Up page */}
         <Route path="/home" element={<Home />} />
-  
         <Route path="/plants/:courseId" element={<Plants />} />
         <Route path="/aloepage/:moduleId" element={<AloePage />} />
-
         <Route path="/quiz/:moduleId" element={<NewQuizPage />} />
-     
-        
         <Route path="/modules/:moduleId" element={<ModuleViewer />} />
-
-
-        
         <Route path="JWTfethcer" element={<JWTFetcher/>}/>
         <Route path="Toggle" element={<Toggle/>}/>
-        <Route path="/module-viewer" element={<ModuleViewer />} />
+        <Route path="/module-viewer" element={<ModuleViewer />} />
         <Route path="/modelvr" element={<SketchfabVR />} />
-
         <Route path="/course/:courseId" element={<CourseOverview />} />
-
+        <Route path="/leaderboard" element={<Leaderboard />} /> {/* New route for Leaderboard */}
       </Routes>
     </div>
   );

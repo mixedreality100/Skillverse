@@ -96,6 +96,10 @@ export default function LandingPage() {
     navigate("/explore");
   };
 
+  const handleLeaderboardClick = () => {
+    navigate("/leaderboard");
+  };
+
   const addToRefs = (el) => {
     if (el && !sectionsRef.current.includes(el)) {
       sectionsRef.current.push(el);
@@ -321,6 +325,7 @@ export default function LandingPage() {
         className="flex flex-col items-center px-5 pt-7 bg-white fade-in"
         ref={addToRefs}
       >
+
         <nav className="flex justify-between items-center w-full max-w-[1274px]">
           <img
             src="./src/assets/skillverse.svg"
@@ -351,6 +356,12 @@ export default function LandingPage() {
               onClick={handelAboutUsClick}
             >
               About Us
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={handleLeaderboardClick}
+            >
+              Leaderboard
             </NavButton>
           </div>
 

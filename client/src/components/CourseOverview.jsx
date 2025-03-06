@@ -113,7 +113,8 @@ const CourseOverview = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center px-5 pt-7">
+    <div className="flex flex-row justify-center w-full bg-white">
+    <div className="bg-[#ffffff] overflow-x-hidden w-[1440px] relative rounded-lg">
       <nav className="flex justify-between items-center w-full max-w-[1274px]">
         <img
           src={skillverselogo}
@@ -196,7 +197,7 @@ const CourseOverview = () => {
       {/* Render additional course details here */}
      
       {/* Footer section - changed from absolute to relative positioning */}
-      <div className="relative mt-[0px] mx-auto w-[100%]">
+      <div className="relative mt-[220px] mx-auto w-[98%]">
         <div className="relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
           <div className="absolute top-[252px] left-[23px] right-[23px] h-[178px] bg-white rounded-[12px]">
             <div className="flex justify-center space-x-4 mt-4">
@@ -207,6 +208,7 @@ const CourseOverview = () => {
               >
                 Instagram
               </button>
+  
               {/* Twitter Button */}
               <button
                 className="w-48 h-11 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 transition duration-200"
@@ -214,6 +216,7 @@ const CourseOverview = () => {
               >
                 Twitter
               </button>
+  
               {/* Facebook Button */}
               <button
                 className="w-48 h-11 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 transition duration-200"
@@ -221,6 +224,7 @@ const CourseOverview = () => {
               >
                 Facebook
               </button>
+  
               {/* Pinterest Button */}
               <button
                 className="w-48 h-11 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105 transition duration-200"
@@ -229,13 +233,16 @@ const CourseOverview = () => {
                 Pinterest
               </button>
             </div>
+  
             <div className="mt-4 border-t border-gray-300"></div>
+  
             <div className="text-center mt-2">
               <p className="text-xl text-gray-800">
                 © 2024, All Rights Reserved
               </p>
             </div>
           </div>
+  
           <p className="absolute top-[40px] left-0 right-0 text-[64px] font-normal text-center text-white">
             Be the one with
             <span className="text-red-500"> Nat</span>
@@ -243,6 +250,7 @@ const CourseOverview = () => {
             <span className="text-red-500">e</span>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );
