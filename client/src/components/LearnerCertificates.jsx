@@ -1,78 +1,111 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from "@clerk/clerk-react";
 
 const LearnerCertificates = () => {
-  const certificates = [
-    { 
-        id: 1,
-        title: "Medicinal Plants", 
-        issueDate: "2025-02-01", 
-        thumbnail: "./src/assets/certificate.png" 
-      },
-  //   { 
-  //       id: 2, 
-  //       title: "Ashvagandha", 
-  //       issueDate: "2025-01-05", 
-  //       thumbnail: "https://via.placeholder.com/150" 
-  //   },
-  //   { 
-  //       id: 3, 
-  //       title: "Tulsi", 
-  //       issueDate: "2025-01-10", 
-  //       thumbnail: "https://via.placeholder.com/150" },
-  //   { 
-  //       id: 4, 
-  //       title: "Haldi", 
-  //       issueDate: "2025-01-15", 
-  //       thumbnail: "https://via.placeholder.com/150" 
-  //   },
-  //   { 
-  //       id: 5, 
-  //       title: "Garlic", 
-  //       issueDate: "2025-01-20", 
-  //       thumbnail: "https://via.placeholder.com/150" 
-  //   },
-  //   { 
-  //       id: 6, 
-  //       title: "Ginger", 
-  //       issueDate: "2025-01-25", 
-  //       thumbnail: "https://via.placeholder.com/150" 
-  //   },
-  ];
+  const [completedCourses, setCompletedCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const auth = useAuth();
 
-  const Certificate = ({ title, issueDate, thumbnail, onDownload }) => (
-    <div className="bg-white rounded-lg shadow p-4 w-80">
-      <img
-        src={thumbnail}
-        alt={`${title} thumbnail`}
-        className="w-full h-40 object-cover rounded-md mb-4"
-      />
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600 text-sm mb-4">Issued on: {issueDate}</p>
-      <button
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        onClick={onDownload}
-      >
-        Download
-      </button>
-    </div>
-  );
+  useEffect(() => {
+    fetchCompletedCourses();
+  }, []);
 
-  const handleDownload = (title) => {
-    alert(`Downloading: ${title}`);
+  const fetchCompletedCourses = async () => {
+    try {
+      const token = await auth.getToken();
+      const response = await fetch('http://localhost:3001/api/my-courses', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch completed courses');
+      }
+
+      const courses = await response.json();
+      // Only show courses that are marked as completed
+      const completed = courses.filter(course => course.is_completed === true);
+      setCompletedCourses(completed);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleDownloadCertificate = async (enrollmentId) => {
+    try {
+      const token = await auth.getToken();
+      const response = await fetch(`http://localhost:3001/api/certificate/${enrollmentId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to download certificate');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificate-${enrollmentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading certificate:', err);
+      alert(err.message || 'Failed to download certificate. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-600 p-4">
+        Error: {error}
+      </div>
+    );
+  }
+
+  if (completedCourses.length === 0) {
+    return (
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold mb-4">No Certificates Available</h2>
+        <p className="text-gray-600">
+          Complete your enrolled courses to earn certificates.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-6">My Certificates</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-        {certificates.map((certificate) => (
-          <Certificate
-            key={certificate.id}
-            title={certificate.title}
-            issueDate={certificate.issueDate}
-            thumbnail={certificate.thumbnail}
-            onDownload={() => handleDownload(certificate.title)}
-          />
+      <h2 className="text-2xl font-bold mb-6">My Certificates</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {completedCourses.map((course) => (
+          <div key={course.id} className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+            <h3 className="text-xl font-semibold mb-3">Course ID: {course.course_id}</h3>
+            <p className="text-gray-600 mb-2">Enrollment Date: {new Date(course.enrollment_date).toLocaleDateString()}</p>
+            <button
+              onClick={() => handleDownloadCertificate(course.id)}
+              className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors duration-200"
+            >
+              Download Certificate
+            </button>
+          </div>
         ))}
       </div>
     </div>
