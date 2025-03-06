@@ -51,37 +51,51 @@ export const Leaderboard = () => {
             />
           </div>
 
-          <div className="flex gap-9">
+          <div className="flex gap-24">
             <button
-              className="absolute top-[30px] left-[550px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+              className="absolute top-[30px] left-[550px] px-5 py-4 whitespace-nowrap bg-zinc-50 rounded-[100px] text-xm text-black transform transition-transform duration-300 hover:scale-110 shadow-lg"
+              style={{
+                boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                border: "0.5px solid rgba(0, 0, 0, 0.33)",
+              }}
               onClick={handleCourseClick}
             >
               Courses
             </button>
-
             <button
-              className="absolute top-[30px] left-[659px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+              className="absolute top-[30px] left-[659px] px-5 py-4 whitespace-nowrap bg-zinc-50 rounded-[100px] text-xm text-black transform transition-transform duration-300 hover:scale-110 shadow-lg"
+              style={{
+                boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                border: "0.5px solid rgba(0, 0, 0, 0.33)",
+              }}
               onClick={() => navigate("/explore")}
             >
               Explore
             </button>
-
             <button
-              className="absolute top-[30px] left-[762px] px-5 py-4 whitespace-nowrap border-2 border-black border-solid bg-zinc-50 rounded-[100px] text-xs text-black transform transition-transform duration-300 hover:scale-110"
+              className="absolute top-[30px] left-[762px] px-5 py-4 whitespace-nowrap bg-zinc-50 rounded-[100px] text-xm text-black transform transition-transform duration-300 hover:scale-110 shadow-lg"
+              style={{
+                boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                border: "0.5px solid rgba(0, 0, 0, 0.33)",
+              }}
               onClick={() => navigate("/aboutus")}
             >
               About Us
             </button>
-
             <div className="absolute top-[30px] left-[1270px]">
               <SignedOut>
                 <SignInButton>
-                  <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
+                  <button
+                    className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                    style={{
+                      boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                      border: "0.5px solid rgba(0, 0, 0, 0.33)",
+                    }}
+                  >
                     Login
                   </button>
                 </SignInButton>
               </SignedOut>
-
               <SignedIn>
                 <ProfileButton />
               </SignedIn>

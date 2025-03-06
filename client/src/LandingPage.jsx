@@ -368,9 +368,15 @@ export default function LandingPage() {
           <div className="flex items-center gap-5">
             <SignedOut>
               <SignInButton>
-                <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
-                  Login
-                </button>
+              <button
+                    className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                    style={{
+                      boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                      border: "0.5px solid rgba(0, 0, 0, 0.33)",
+                    }}
+                  >
+                    Login
+                  </button>
               </SignInButton>
             </SignedOut>
 

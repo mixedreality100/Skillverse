@@ -217,7 +217,36 @@ export default function AboutUs() {
 
       {/* Footer Section */}
       <footer className="w-full mt-20 relative z-10">
-        <div className="relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
+        <style>
+          {`
+      .footer-bg-image {
+        border-radius: 20px; /* Rounded corners for both mobile and desktop */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Drop shadow */
+      }
+
+      @media (max-width: 768px) {
+        .nature-text {
+          font-size: 60px !important; /* Smaller font size for mobile */
+          left: 50% !important; /* Center the text horizontally */
+          transform: translateX(-50%) !important; /* Ensure proper centering */
+          white-space: normal !important; /* Allow text to wrap */
+          top: 20px !important; /* Adjust vertical positioning */
+          width: 90% !important; /* Limit width to prevent overflow */
+          text-align: center !important; /* Center-align the text */
+          line-height: 1.2 !important; /* Adjust line height for better readability */
+        }
+
+        .footer-bg-image {
+          background-size: cover !important; /* Ensure the image covers the container */
+          background-position: center !important; /* Center the image */
+          border-radius: 20px; /* Rounded corners for mobile */
+          box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.2); /* Drop shadow for mobile */
+        }
+      }
+    `}
+        </style>
+
+        <div className="footer-bg-image relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
           <div className="absolute bottom-0 left-0 right-0 w-full h-[178px] bg-white rounded-t-[12px]">
             <motion.div
               className="flex justify-center space-x-4 mt-4"
@@ -233,10 +262,20 @@ export default function AboutUs() {
               ].map((social) => (
                 <motion.button
                   key={social.name}
-                  className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white transition duration-200"
+                  className={`w-48 h-11 bg-white border border-black rounded-full hover:text-white transition duration-200 ${
+                    social.name === "Instagram"
+                      ? "hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500"
+                      : social.name === "Twitter"
+                      ? "hover:bg-gradient-to-r hover:from-black hover:to-gray-800"
+                      : social.name === "Facebook"
+                      ? "hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400"
+                      : social.name === "Pinterest"
+                      ? "hover:bg-gradient-to-r hover:from-red-600 hover:to-red-400"
+                      : ""
+                  }`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => (window.location.href = social.url)} // Redirect on click
+                  onClick={() => (window.location.href = social.url)}
                 >
                   {social.name}
                 </motion.button>
@@ -253,7 +292,7 @@ export default function AboutUs() {
           </div>
 
           <motion.p
-            className="absolute top-[40px] left-[400px] transform -translate-x-1/2 text-[64px] font-normal text-center text-white"
+            className="nature-text absolute top-[40px] left-[400px] transform -translate-x-1/2 text-[64px] font-normal text-center text-white"
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
