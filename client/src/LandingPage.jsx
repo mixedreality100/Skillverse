@@ -26,7 +26,9 @@ export default function LandingPage() {
   const rendererRef = useRef(null);
   const mixerRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const cameraRef = useRef(null); // Added cameraRef
   const [courses, setCourses] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const { user } = useUser();
   const [progress, setProgress] = useState(null);
@@ -158,6 +160,7 @@ export default function LandingPage() {
       const container = containerRef.current;
       const aspect = container.clientWidth / container.clientHeight;
       camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 1000);
+      cameraRef.current = camera; // Assign camera to ref
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       rendererRef.current = renderer;
@@ -257,10 +260,10 @@ export default function LandingPage() {
 
     const onWindowResize = () => {
       const container = containerRef.current;
-      if (!container) return; // Guard against null
+      if (!container) return;
 
       const camera = cameraRef.current;
-      if (!camera) return; // Guard against null
+      if (!camera) return;
 
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
@@ -300,6 +303,7 @@ export default function LandingPage() {
       rendererRef.current = null;
       mixerRef.current = null;
       animationFrameRef.current = null;
+      cameraRef.current = null; // Clean up cameraRef
     };
   }, []);
 
@@ -325,14 +329,114 @@ export default function LandingPage() {
         className="flex flex-col items-center px-5 pt-7 bg-white fade-in"
         ref={addToRefs}
       >
-        <nav className="flex justify-between items-center w-full max-w-[1274px]">
-          <img
-            src="./src/assets/skillverse.svg"
-            alt="Company logo"
-            className="w-[58px] aspect-square left-[30px]"
-          />
+        <nav className="flex flex-col md:flex-row justify-between items-center w-full max-w-[1274px] relative">
+          <div className="flex w-full md:w-auto justify-between items-center">
+            <img
+              src="./src/assets/skillverse.svg"
+              alt="Company logo"
+              className="w-[58px] aspect-square"
+            />
+            <div className="flex items-center gap-4 md:hidden">
+              <div className="flex-grow flex justify-center">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-2 text-black focus:outline-none"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    {isMenuOpen ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    )}
+                  </svg>
+                </button>
+              </div>
+              <div className="block md:hidden">
+                <SignedOut>
+                  <SignInButton>
+                    <button
+                      className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                      style={{
+                        boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                        border: "0.5px solid rgba(0, 0, 0, 0.33)",
+                      }}
+                    >
+                      Login
+                    </button>
+                  </SignInButton>
+                </SignedOut>
 
-          <div className="flex gap-9">
+                <SignedIn>
+                  <ProfileButton onClick={() => signOut()} />
+                </SignedIn>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Menu */}
+          <div
+            className={`${
+              isMenuOpen ? "flex" : "hidden"
+            } md:hidden flex-col absolute top-full left-0 right-0 bg-white mt-2 p-4 rounded-lg shadow-lg z-50 space-y-2`}
+          >
+            <NavButton
+              path="#courses"
+              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
+              onClick={() => {
+                document
+                  .getElementById("courses")
+                  .scrollIntoView({ behavior: "smooth" });
+                setIsMenuOpen(false);
+              }}
+            >
+              Courses
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
+              onClick={() => {
+                handelExploreCourseClick();
+                setIsMenuOpen(false);
+              }}
+            >
+              Explore
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
+              onClick={() => {
+                handelAboutUsClick();
+                setIsMenuOpen(false);
+              }}
+            >
+              About Us
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
+              onClick={() => {
+                handleLeaderboardClick();
+                setIsMenuOpen(false);
+              }}
+            >
+              Leaderboard
+            </NavButton>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex gap-9">
             <NavButton
               path="#courses"
               className="transform transition-transform duration-300 hover:scale-110 text-black"
@@ -364,7 +468,7 @@ export default function LandingPage() {
             </NavButton>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="hidden md:flex items-center gap-5">
             <SignedOut>
               <SignInButton>
                 <button
@@ -397,28 +501,30 @@ export default function LandingPage() {
 
     `}
           </style>
-          <div className="flex items-center justify-between w-full">
-            <h1 className="text-[8.5rem] font-bold text-black flex flex-col">
-              <span className="self-end poppins-font">Visualize</span>
-              <span className="text-yellow-500 self-end mr-[0.5em] poppins-font">
-                &
-              </span>
-              <span className="self-end relative poppins-font">
-                Learn
-                <h5
-                  className="text-gray-700 text-sm absolute left-[7em] top-full mt-3" // Adjusted left value
-                  style={{ textShadow: "none" }}
-                >
-                  Education is the kindling of a flame, not the filling of a
-                  vessel. <span className="italic">- Socrates</span>
-                </h5>
-              </span>
-            </h1>
+          <div className="flex flex-row items-center justify-between w-full px-4 md:px-0">
+            <div className="flex flex-col w-1/2 md:w-auto">
+              <h1 className="text-5xl md:text-9xl font-bold text-black flex flex-col">
+                <span className="self-start md:self-end poppins-font">Visualize</span>
+                <span className="text-yellow-500 self-start md:self-end md:mr-[0.5em] poppins-font">
+                  &
+                </span>
+                <span className="self-start md:self-end relative poppins-font">
+                  Learn
+                  <h5
+                    className="text-gray-700 text-xs md:text-sm relative md:absolute md:left-[7em] md:top-full md:mt-3 mt-2 max-w-[250px] md:max-w-none"
+                    style={{ textShadow: "none" }}
+                  >
+                    Education is the kindling of a flame, not the filling of a
+                    vessel. <span className="italic">- Socrates</span>
+                  </h5>
+                </span>
+              </h1>
+            </div>
             <img
               src="src/assets/Hero.png"
               alt="Hero"
-              className="ml-auto w-2/5 h-auto"
-            />{" "}
+              className="w-1/2 md:w-2/5 h-auto object-contain transform scale-105 md:scale-100"
+            />
           </div>
         </section>
       </header>
@@ -430,7 +536,7 @@ export default function LandingPage() {
             {[".step .", ".in .", ".the .", ".future ."].map((text, index) => (
               <h2
                 key={index}
-                className="text-9xl font-bold lowercase tracking-normal whitespace-nowrap"
+                className="text-4xl md:text-9xl font-bold lowercase tracking-normal whitespace-nowrap"
               >
                 {text}
               </h2>
@@ -442,7 +548,7 @@ export default function LandingPage() {
         <div className="flex justify-center">
           <div
             ref={containerRef}
-            style={{ width: "100%", height: "400px" }}
+            style={{ width: "100%", height: "50vh", maxHeight: "400px" }}
           ></div>
         </div>
 
@@ -454,7 +560,7 @@ export default function LandingPage() {
         </p>
 
         {/* Info Boxes */}
-        <div className="flex justify-around mt-10 text-center text-lg">
+        <div className="flex flex-col md:flex-row justify-around mt-10 text-center text-lg">
           <div className="flex-1 px-5 text-white text-center mb-5">
             Hands-on exploration with
             <br />
@@ -483,7 +589,7 @@ export default function LandingPage() {
         ref={addToRefs}
       >
         <h2
-          className="text-7xl font-bold text-center mb-10 text-yellow-500 px-16 py-4 w-fit mx-auto rounded-xl"
+          className="text-4xl md:text-7xl font-bold text-center mb-10 text-yellow-500 px-16 py-4 w-fit mx-auto rounded-xl"
           style={{
             textShadow:
               "1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black",
@@ -492,7 +598,7 @@ export default function LandingPage() {
           Courses
         </h2>
 
-        <div className="flex flex-nowrap gap-10 justify-center">
+        <div className="flex flex-col md:flex-row flex-wrap gap-10 justify-center">
           {courses.map((course, index) => (
             <CourseCard
               key={course.id}
@@ -502,47 +608,57 @@ export default function LandingPage() {
               courseId={course.id} // Pass courseId to CourseCard
               iconSrc={course.iconSrc}
               showOverlay={index === 0 || index === 1 || index === 2}
-              className="w-1/4 transition-transform transform hover:scale-105 fade-in cursor-pointer"
+              className="w-full md:w-1/4 transition-transform transform hover:scale-105 fade-in cursor-pointer"
               ref={addToRefs}
             />
           ))}
         </div>
       </section>
-      {/* className="w-1/4 transition-transform transform hover:scale-105 fade-in" ref={addToRefs} */}
-      {/* About Us Section */}
+
+      {/* Footer Section */}
       <footer
         id="footer"
-        className={`absolute top-[2290px] left-[10px] w-full h-[440px] fade-in ${
+        className={`relative w-full fade-in ${
           isVisible ? "visible" : ""
         }`}
       >
-        <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
-          <div className="absolute top-[252px] left-[0px] w-[1440px] h-[178px] bg-white rounded-[12px]">
-            <div className="flex justify-center space-x-4 mt-4">
+        <div className="relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center">
+          {/* Nature Text */}
+          <div className="absolute w-full top-[40px] px-4 md:px-0">
+            <p className="text-4xl md:text-[64px] font-normal text-center text-white">
+              Be the one with
+              <span className="text-red-500"> Nat</span>
+              <span className="text-[#B9DE00]">ur</span>
+              <span className="text-red-500">e</span>
+            </p>
+          </div>
+
+          {/* Social Media Section */}
+          <div className="absolute bottom-[20px] left-0 right-0 w-full md:w-[1440px] mx-auto bg-white rounded-t-[12px] md:rounded-[12px] py-6">
+            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 px-4 md:px-0">
               {/* Instagram Button */}
               <button
-                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
                 style={{
-                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
-                  backgroundImage: "none", // Ensure no gradient by default
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
-                  border: "none", // Remove the border for a cleaner look
-                  outline: "none", // Remove default outline
+                  backgroundColor: "#e0e5ec",
+                  backgroundImage: "none",
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
+                  border: "none",
+                  outline: "none",
                   cursor: "pointer",
-                  transition:
-                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease, background-image 0.3s ease", // Smooth transitions
+                  transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundImage =
                     "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80)";
                   e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
-                  e.currentTarget.style.backgroundImage = "none"; // Remove gradient
+                  e.currentTarget.style.backgroundColor = "#e0e5ec";
+                  e.currentTarget.style.backgroundImage = "none";
                   e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
                 }}
                 onClick={() =>
                   (window.location.href = "https://www.instagram.com")
@@ -554,25 +670,24 @@ export default function LandingPage() {
 
               {/* Twitter Button */}
               <button
-                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
                 style={{
-                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
-                  border: "none", // Remove the border for a cleaner look
-                  outline: "none", // Remove default outline
+                  backgroundColor: "#e0e5ec",
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
+                  border: "none",
+                  outline: "none",
                   cursor: "pointer",
-                  transition:
-                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease", // Smooth transitions
+                  transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#424240"; // Twitter color
+                  e.currentTarget.style.backgroundColor = "#424240";
                   e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.backgroundColor = "#e0e5ec";
                   e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
                 }}
                 onClick={() =>
                   (window.location.href = "https://www.twitter.com")
@@ -583,25 +698,24 @@ export default function LandingPage() {
 
               {/* Facebook Button */}
               <button
-                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
                 style={{
-                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
-                  border: "none", // Remove the border for a cleaner look
-                  outline: "none", // Remove default outline
+                  backgroundColor: "#e0e5ec",
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
+                  border: "none",
+                  outline: "none",
                   cursor: "pointer",
-                  transition:
-                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease", // Smooth transitions
+                  transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#1877F2"; // Facebook blue color
+                  e.currentTarget.style.backgroundColor = "#1877F2";
                   e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.backgroundColor = "#e0e5ec";
                   e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
                 }}
                 onClick={() =>
                   (window.location.href = "https://www.facebook.com")
@@ -612,25 +726,24 @@ export default function LandingPage() {
 
               {/* Pinterest Button */}
               <button
-                className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
+                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
                 style={{
-                  backgroundColor: "#e0e5ec", // Light gray background for neomorphism
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff", // Stronger shadows for depth
-                  border: "none", // Remove the border for a cleaner look
-                  outline: "none", // Remove default outline
+                  backgroundColor: "#e0e5ec",
+                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
+                  border: "none",
+                  outline: "none",
                   cursor: "pointer",
-                  transition:
-                    "box-shadow 0.3s ease, transform 0.3s ease, background-color 0.3s ease", // Smooth transitions
+                  transition: "all 0.3s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e94a22"; // Pinterest color
+                  e.currentTarget.style.backgroundColor = "#e94a22";
                   e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff"; // Enhanced shadow on hover
+                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec"; // Restore original background color
+                  e.currentTarget.style.backgroundColor = "#e0e5ec";
                   e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff"; // Restore original shadow
+                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
                 }}
                 onClick={() =>
                   (window.location.href = "https://www.pinterest.com")
@@ -647,12 +760,6 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
-          <p className="absolute top-[40px] left-[363px] text-[64px] font-normal text-center text-white">
-            Be the one with
-            <span className="text-red-500"> Nat</span>
-            <span className="text-[#B9DE00]">ur</span>
-            <span className="text-red-500">e</span>
-          </p>
         </div>
       </footer>
     </main>
