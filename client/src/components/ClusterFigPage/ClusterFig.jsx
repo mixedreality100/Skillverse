@@ -13,6 +13,7 @@ import PlusButton from '../PlusButton';
 import { Box4 } from '../Box4';
 import Paper from '@mui/material/Paper';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import MusicControl from "../MusicControl";
 
 function Model() {
   const { scene } = useGLTF('/model/fig.glb');
@@ -305,6 +306,9 @@ export const ClusterFig = () => {
               >
                 Go to Tulsi
               </button>
+            </div>
+            <div className="absolute top-[40px] left-[1320px]">
+              <MusicControl />
             </div>
           </section>
 

@@ -13,6 +13,7 @@ import PlusButton from "../PlusButton";
 import { Box5 } from "../Box5";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
+import MusicControl from "../MusicControl";
 
 function Model() {
   const { scene } = useGLTF("/model/aleovera.glb");
@@ -307,6 +308,9 @@ export const TulsiPlant = () => {
 
             <div className="absolute top-[4300px] left-[50%] transform -translate-x-1/2">
               <TakeQuizButton />
+            </div>
+            <div className="absolute top-[40px] left-[1320px]">
+              <MusicControl />
             </div>
           </section>
 

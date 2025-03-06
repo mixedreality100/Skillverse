@@ -14,6 +14,7 @@ import { Box2 } from "../Box2";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import custardAppleTree from "../CustardApplePage/custardappletree.png"; // Import the tree image
+import MusicControl from "../MusicControl";
 
 function Model() {
   const { scene } = useGLTF("/model/custardapple.glb");
@@ -430,6 +431,9 @@ export const CustardApple = () => {
               <Model />
             </Canvas>
           </div>
+          <div className="absolute top-[40px] left-[1320px]">
+              <MusicControl />
+            </div>
         </div>
         <div className="absolute top-[4850px] left-[30px] w-[1440px] h-[440px] responsive-container">
           <div className="relative w-[1440px] h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center footer-image">

@@ -19,6 +19,7 @@ import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { Menu, X } from "lucide-react"; // For icons
 import aloeverohero from "../plantsAssets/image1.jpg";
+import MusicControl from "./MusicControl";
 
 function Model() {
   const { scene } = useGLTF("/model/aleovera.glb");
@@ -893,6 +894,9 @@ export const AloePage = () => {
               >
                 About Us
               </NavButton>
+            </div>
+            <div className="absolute top-[40px] left-[1320px]">
+              <MusicControl />
             </div>
           </section>
 

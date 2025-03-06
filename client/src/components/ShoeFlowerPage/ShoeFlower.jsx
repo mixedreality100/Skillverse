@@ -13,6 +13,7 @@ import PlusButton from '../PlusButton';
 import { Box3 } from '../Box3';
 import Paper from '@mui/material/Paper';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import MusicControl from "../MusicControl";
 
 function Model() {
   const { scene } = useGLTF('/model/shoeflower.glb');
@@ -369,6 +370,9 @@ export const ShoeFlower = () => {
 
             <div className="absolute w-[521px] h-72 top-[2747px] left-[520px]">
               <Cards3 /> 
+            </div>
+            <div className="absolute top-[40px] left-[1320px]">
+              <MusicControl />
             </div>
           </section>
 
