@@ -98,7 +98,7 @@ app.post("/api/saveUser", async (req, res) => {
 
 app.get("/api/userProgress", async (req, res) => {
   try {
-    const { userId } = req.auth.sanitizedUser;
+    const userId = req.auth.userId;
     const userProgressResult = await db.query(
       "SELECT progress FROM users WHERE clerk_user_id = $1",
       [userId]
@@ -116,9 +116,8 @@ app.get("/api/userProgress", async (req, res) => {
 
 app.post("/api/enrollCourse/:courseId", async (req, res) => {
   try {
-    const { userId } = req.auth.sanitizedUser;
+    const userId = req.auth.userId;
     const { courseId } = req.params;
-
     // First get the database user_id from users table
     const userResult = await db.query(
       "SELECT id FROM users WHERE clerk_user_id = $1",
@@ -246,10 +245,10 @@ if (!fs.existsSync(certificatesDir)) {
   fs.mkdirSync(certificatesDir, { recursive: true });
 }
 
-// Get user's enrolled courses
+// Get user's enrolled courses with more details
 app.get('/api/my-courses', async (req, res) => {
   try {
-    const { userId } = req.auth.sanitizedUser;
+    const userId = req.auth.userId;
     
     // Get the database user_id
     const userResult = await db.query(
@@ -263,10 +262,23 @@ app.get('/api/my-courses', async (req, res) => {
 
     const dbUserId = userResult.rows[0].id;
     
+    // Updated query to match your courses table structure
     const result = await db.query(
-      `SELECT id, course_id, enrollment_date, is_completed, completion_date
-       FROM course_enrollment
-       WHERE user_id = $1`,
+      `SELECT 
+        ce.id as enrollment_id,
+        ce.course_id,
+        ce.enrollment_date,
+        ce.is_completed,
+        ce.completion_date,
+        c.course_name,
+        c.instructor_email,
+        c.primary_language,
+        c.level,
+        c.course_image,
+        c.number_of_modules
+       FROM course_enrollment ce
+       JOIN courses c ON ce.course_id = c.id
+       WHERE ce.user_id = $1`,
       [dbUserId]
     );
     
@@ -281,25 +293,40 @@ app.get('/api/my-courses', async (req, res) => {
 app.post('/api/complete-course/:enrollmentId', async (req, res) => {
   try {
     const { enrollmentId } = req.params;
-    const userId = req.auth.sanitizedUser.userId;
+    const userId = req.auth.userId;
     
-    // Verify the enrollment belongs to the user
-    const enrollment = await db.query(
-      "SELECT * FROM course_enrollment WHERE id = $1 AND user_id = $2",
-      [enrollmentId, userId]
+    // Get the database user_id first
+    const userResult = await db.query(
+      "SELECT id FROM users WHERE clerk_user_id = $1",
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const dbUserId = userResult.rows[0].id;
+    
+    // Update completion status with completion date
+    const currentDate = new Date().toISOString().split('T')[0];
+    const updateResult = await db.query(
+      `UPDATE course_enrollment 
+       SET is_completed = TRUE, 
+           completion_date = $1 
+       WHERE id = $2 AND user_id = $3
+       RETURNING *`,
+      [currentDate, enrollmentId, dbUserId]
     );
     
-    if (enrollment.rows.length === 0) {
+    if (updateResult.rows.length === 0) {
       return res.status(404).json({ error: "Enrollment not found or unauthorized" });
     }
     
-    // Update the completion status
-    await db.query(
-      "UPDATE course_enrollment SET is_completed = TRUE WHERE id = $1",
-      [enrollmentId]
-    );
-    
-    res.json({ success: true, message: "Course marked as completed" });
+    res.json({ 
+      success: true, 
+      message: "Course marked as completed",
+      enrollment: updateResult.rows[0]
+    });
   } catch (error) {
     console.error("Error completing course:", error);
     res.status(500).json({ error: "Failed to mark course as completed" });
@@ -310,14 +337,27 @@ app.post('/api/complete-course/:enrollmentId', async (req, res) => {
 app.get('/api/certificate/:enrollmentId/check', async (req, res) => {
   try {
     const { enrollmentId } = req.params;
-    const userId = req.auth.sanitizedUser.userId;
+    const userId = req.auth.userId;
     
+    // Get the database user_id first
+    const userResult = await db.query(
+      "SELECT id FROM users WHERE clerk_user_id = $1",
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const dbUserId = userResult.rows[0].id;
+
+    // Updated query to match your courses table structure
     const result = await db.query(
-      `SELECT ce.is_completed, c.title, c.instructor_name 
+      `SELECT ce.is_completed, c.course_name, c.instructor_email
        FROM course_enrollment ce
        JOIN courses c ON ce.course_id = c.id
        WHERE ce.id = $1 AND ce.user_id = $2`,
-      [enrollmentId, userId]
+      [enrollmentId, dbUserId]
     );
     
     if (result.rows.length === 0) {
@@ -341,8 +381,16 @@ app.get('/api/certificate/:enrollmentId/check', async (req, res) => {
 // Generate and download certificate
 app.get('/api/certificate/:enrollmentId/download', async (req, res) => {
   try {
-    const { enrollmentId } = req.params;
-    const { userId } = req.auth.sanitizedUser;
+    // Add validation for enrollmentId
+    const enrollmentId = parseInt(req.params.enrollmentId);
+    if (!enrollmentId || isNaN(enrollmentId)) {
+      return res.status(400).json({ error: "Invalid enrollment ID" });
+    }
+
+    const userId = req.auth.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
     
     // Get the database user_id
     const userResult = await db.query(
@@ -359,10 +407,12 @@ app.get('/api/certificate/:enrollmentId/download', async (req, res) => {
     
     // Check if the enrollment exists and is completed
     const enrollmentResult = await db.query(
-      `SELECT course_id, enrollment_date, is_completed
-       FROM course_enrollment
-       WHERE id = $1 AND user_id = $2`,
-      [enrollmentId, dbUserId]
+      `SELECT ce.course_id, ce.enrollment_date, ce.is_completed, 
+              c.course_name, c.instructor_email, c.primary_language, c.level
+       FROM course_enrollment ce
+       JOIN courses c ON ce.course_id = c.id
+       WHERE ce.id = $1 AND ce.user_id = $2`,
+      [enrollmentId, dbUserId] // Now using validated enrollmentId
     );
     
     if (enrollmentResult.rows.length === 0) {
@@ -378,7 +428,7 @@ app.get('/api/certificate/:enrollmentId/download', async (req, res) => {
     }
     
     // Create filename for certificate
-    const fileName = `certificate-${dbUserId}-${enrollmentId}.pdf`;
+    const fileName = `certificate-${dbUserId}-${req.params.enrollmentId}.pdf`;
     const filePath = path.join(certificatesDir, fileName);
     
     // Generate PDF certificate
@@ -430,10 +480,29 @@ app.get('/api/certificate/:enrollmentId/download', async (req, res) => {
     
     doc.fontSize(24)
        .font('Helvetica-Bold')
-       .text(`Course ID: ${enrollment.course_id}`, {
+       .text(enrollment.course_name, {
          align: 'center'
        })
        .moveDown(0.5);
+    
+    // Add instructor email instead of name
+    doc.fontSize(18)
+       .font('Helvetica')
+       .text(`Instructor: ${enrollment.instructor_email}`, {
+         align: 'center'
+       })
+       .moveDown(0.5);
+    
+    // Add additional course details
+    doc.fontSize(14)
+       .text(`Language: ${enrollment.primary_language}`, {
+         align: 'center'
+       })
+       .moveDown(0.5)
+       .text(`Level: ${enrollment.level}`, {
+         align: 'center'
+       })
+       .moveDown(1);
     
     // Date and signature
     const currentDate = new Date().toLocaleDateString('en-US', {

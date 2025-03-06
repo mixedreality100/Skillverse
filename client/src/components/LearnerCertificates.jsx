@@ -25,8 +25,11 @@ const LearnerCertificates = () => {
       }
 
       const courses = await response.json();
+      console.log('All courses:', courses); // Debug log
+
       // Only show courses that are marked as completed
       const completed = courses.filter(course => course.is_completed === true);
+      console.log('Completed courses:', completed); // Debug log
       setCompletedCourses(completed);
     } catch (err) {
       setError(err.message);
@@ -38,6 +41,8 @@ const LearnerCertificates = () => {
   const handleDownloadCertificate = async (enrollmentId) => {
     try {
       const token = await auth.getToken();
+      console.log('Downloading certificate for enrollment:', enrollmentId); // Debug log
+      
       const response = await fetch(`http://localhost:3001/api/certificate/${enrollmentId}/download`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -47,6 +52,12 @@ const LearnerCertificates = () => {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to download certificate');
+      }
+
+      // Check if the response is a PDF
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/pdf')) {
+        throw new Error('Invalid response format');
       }
 
       const blob = await response.blob();
@@ -60,7 +71,7 @@ const LearnerCertificates = () => {
       document.body.removeChild(a);
     } catch (err) {
       console.error('Error downloading certificate:', err);
-      alert(err.message || 'Failed to download certificate. Please try again.');
+      alert(`Failed to download certificate: ${err.message}`);
     }
   };
 
@@ -95,18 +106,32 @@ const LearnerCertificates = () => {
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-6">My Certificates</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {completedCourses.map((course) => (
-          <div key={course.id} className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-            <h3 className="text-xl font-semibold mb-3">Course ID: {course.course_id}</h3>
-            <p className="text-gray-600 mb-2">Enrollment Date: {new Date(course.enrollment_date).toLocaleDateString()}</p>
-            <button
-              onClick={() => handleDownloadCertificate(course.id)}
-              className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors duration-200"
-            >
-              Download Certificate
-            </button>
-          </div>
-        ))}
+        {completedCourses.map((course) => {
+          console.log('Rendering course:', course); // Debug log
+          return (
+            <div key={course.enrollment_id} className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+              <h3 className="text-xl font-semibold mb-3">{course.course_name}</h3>
+              <p className="text-sm text-gray-500 mb-2">Enrollment ID: {course.enrollment_id}</p>
+              <p className="text-gray-600 mb-2">
+                Enrollment Date: {new Date(course.enrollment_date).toLocaleDateString()}
+              </p>
+              {course.completion_date && (
+                <p className="text-gray-600 mb-2">
+                  Completed: {new Date(course.completion_date).toLocaleDateString()}
+                </p>
+              )}
+              <button
+                onClick={() => {
+                  console.log('Clicking download for enrollment_id:', course.enrollment_id); // Debug log
+                  handleDownloadCertificate(course.enrollment_id);
+                }}
+                className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors duration-200"
+              >
+                Download Certificate
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
