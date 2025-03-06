@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 import Loader from './Loader';
 import NavButton from './NavButton';
 import skillverseLogo from '../assets/skillverse.svg';
-import { useNavigate } from "react-router-dom";
 
 const NewQuizPage = () => {
   const { moduleId } = useParams();
+  const navigate = useNavigate();
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,6 +15,7 @@ const NewQuizPage = () => {
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [passingScore, setPassingScore] = useState(0.6); // 60%
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {
@@ -39,12 +41,12 @@ const NewQuizPage = () => {
     }
   }, [moduleId]);
 
-  const handleback = () => {
+  const handleBack = () => {
     window.history.back();
   };
 
   const handleCourses = () => {
-    useNavigate('/');
+    navigate('/');
     setTimeout(() => {
       const coursesSection = document.getElementById('courses');
       if (coursesSection) {
@@ -83,17 +85,37 @@ const NewQuizPage = () => {
     setQuizSubmitted(true);
   };
 
+  const goToNextQuestion = () => {
+    if (currentQuestionIndex < quizQuestions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+  const handelAboutUsClick = () => {
+    navigate("/aboutus");
+  };
+  
+  const handelExploreCourseClick = () => {
+    navigate("/explore");
+  };
+
+  const goToPreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
   if (quizSubmitted) {
     return (     
-      <div className="bg-gray-100 flex flex-col justify-center items-center w-full min-h-screen p-8">
-        <img 
-          className="absolute top-[22px] left-[30px] w-[60px] h-[60px]"
+      <PageContainer>
+        <Logo 
           src={skillverseLogo} 
           alt="logo" 
-          onClick={handleback}
+          onClick={handleBack}
         />
 
-        <div className='absolute top-[30px] left-1/2 transform -translate-x-1/2 flex gap-9'>
+        <NavBarContainer>
           <NavButton 
             className="transform transition-transform duration-300 hover:scale-110 text-black" 
             onClick={handleCourses}
@@ -102,72 +124,69 @@ const NewQuizPage = () => {
           </NavButton>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
+            onClick={() => navigate("/explore")}
           >
             Explore
           </NavButton>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
+            onClick={() => navigate("/aboutus")}
           >
             About Us
           </NavButton>
-        </div>
-        <h1 className="text-2xl font-bold mb-4 mt-20">Quiz Results</h1>
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl neomorphic">
+        </NavBarContainer>
+        
+        <PageTitle>Quiz Results</PageTitle>
+        
+        <ResultsContainer>
           {quizQuestions.map((question) => (
-            <div key={question.id} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-md">
-              <p className="text-lg font-bold">{question.question}</p>
-              <div className="mt-2">
-                {['A', 'B', 'C', 'D'].map((option) => (
-                  <div key={option} className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`question-${question.id}`}
-                      value={option}
-                      disabled
-                      checked={userAnswers[question.id] === option}
-                      className="mr-2"
-                    />
-                    <span
-                      className={
-                        userAnswers[question.id] === option
-                          ? userAnswers[question.id] === question.correct_answer
-                            ? 'text-green-500'
-                            : 'text-red-500'
-                          : ''
-                      }
+            <ResultCard key={question.id}>
+              <QuestionText>{question.question}</QuestionText>
+              <OptionsContainer>
+                {['A', 'B', 'C', 'D'].map((option) => {
+                  const isSelected = userAnswers[question.id] === option;
+                  const isCorrect = option === question.correct_answer;
+                  return (
+                    <OptionLabel 
+                      key={option}
+                      selected={isSelected}
+                      correct={isCorrect}
+                      incorrect={isSelected && !isCorrect}
                     >
                       {option}. {question[`option_${option.toLowerCase()}`]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-2">
-                <span className="font-bold">Correct Answer:</span> {question.correct_answer}
-              </div>
-            </div>
+                    </OptionLabel>
+                  );
+                })}
+              </OptionsContainer>
+              <CorrectAnswer>
+                <span>Correct Answer:</span> {question.correct_answer}
+              </CorrectAnswer>
+            </ResultCard>
           ))}
-        </div>
-        <div className="mt-4">
-          <p className="text-xl font-bold">Your Score: {score.toFixed(2)}%</p>
-          <p className={score >= passingScore * 100 ? 'text-green-500' : 'text-red-500'}>
+        </ResultsContainer>
+        
+        <ScoreContainer>
+          <ScoreText>Your Score: {score.toFixed(2)}%</ScoreText>
+          <ScoreResult passed={score >= passingScore * 100}>
             {score >= passingScore * 100 ? 'You passed!' : 'You did not pass.'}
-          </p>
-        </div>
-      </div>
+          </ScoreResult>
+        </ScoreContainer>
+      </PageContainer>
     );
   }
 
+  // Current question display
+  const currentQuestion = quizQuestions[currentQuestionIndex];
+  
   return (
-    <div className="bg-gray-100 flex flex-col justify-center items-center w-full min-h-screen p-8">
-      
-      <img 
-        className="absolute top-[22px] left-[30px] w-[60px] h-[60px]"
+    <PageContainer>
+      <Logo 
         src={skillverseLogo} 
         alt="logo" 
-        onClick={handleback}
+        onClick={handleBack}
       />
 
-      <div className='absolute top-[30px] left-1/2 transform -translate-x-1/2 flex gap-9'>
+      <NavBarContainer>
         <NavButton 
           className="transform transition-transform duration-300 hover:scale-110 text-black" 
           onClick={handleCourses}
@@ -184,44 +203,250 @@ const NewQuizPage = () => {
         >
           About Us
         </NavButton>
-      </div>
+      </NavBarContainer>
 
-      <h1 className="text-2xl font-bold mb-4 mt-20">Quiz</h1>
-      <form onSubmit={(e) => e.preventDefault()} className="w-full max-w-2xl">
-        <div className="bg-white p-6 rounded-lg shadow-lg neomorphic">
-          {quizQuestions.map((question) => (
-            <div key={question.id} className="mb-4 p-4 bg-gray-50 rounded-lg shadow-md">
-              <p className="text-lg font-bold">{question.question}</p>
-              <div className="mt-2">
-                {['A', 'B', 'C', 'D'].map((option) => (
-                  <div key={option} className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`question-${question.id}`}
-                      value={option}
-                      onChange={() => handleAnswerChange(question.id, option)}
-                      checked={userAnswers[question.id] === option}
-                      className="mr-2"
-                    />
-                    <span>{option}. {question[`option_${option.toLowerCase()}`]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="flex justify-center mt-6">
-            <button
-              type="submit"
-              className="px-6 py-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition duration-300"
-              onClick={handleSubmit}
+      <PageTitle>Quiz</PageTitle>
+      
+      {currentQuestion && (
+        <QuizCardContainer>
+          <InfoSection>
+            <QuestionText>{currentQuestion.question}</QuestionText>
+            <StepsIndicator>{`${currentQuestionIndex + 1}/${quizQuestions.length}`}</StepsIndicator>
+          </InfoSection>
+          
+          <RadioGroup>
+            {['A', 'B', 'C', 'D'].map((option) => (
+              <React.Fragment key={option}>
+                <RadioInput
+                  type="radio"
+                  id={`option-${currentQuestion.id}-${option}`}
+                  name={`question-${currentQuestion.id}`}
+                  value={option}
+                  checked={userAnswers[currentQuestion.id] === option}
+                  onChange={() => handleAnswerChange(currentQuestion.id, option)}
+                />
+                <RadioLabel 
+                  htmlFor={`option-${currentQuestion.id}-${option}`}
+                  selected={userAnswers[currentQuestion.id] === option}
+                >
+                  {option}. {currentQuestion[`option_${option.toLowerCase()}`]}
+                </RadioLabel>
+              </React.Fragment>
+            ))}
+          </RadioGroup>
+          
+          <NavigationButtons>
+            <NavButton 
+              onClick={goToPreviousQuestion}
+              disabled={currentQuestionIndex === 0}
+              className={`${currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''} bg-gray-200 hover:bg-gray-300`}
             >
-              Submit
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+              Previous
+            </NavButton>
+            
+            {currentQuestionIndex < quizQuestions.length - 1 ? (
+              <NavButton 
+                onClick={goToNextQuestion}
+                className="bg-yellow-500 text-white hover:bg-yellow-600"
+              >
+                Next
+              </NavButton>
+            ) : (
+              <NavButton 
+                onClick={handleSubmit}
+                className="bg-yellow-500 text-white hover:bg-yellow-600"
+              >
+                Submit
+              </NavButton>
+            )}
+          </NavigationButtons>
+        </QuizCardContainer>
+      )}
+    </PageContainer>
   );
 };
+
+// Styled Components
+const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 2rem;
+  background-color: #f3f4f6;
+`;
+
+const Logo = styled.img`
+  position: absolute;
+  top: 22px;
+  left: 30px;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+`;
+
+const NavBarContainer = styled.div`
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2.25rem;
+`;
+
+const PageTitle = styled.h1`
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  margin-top: 5rem;
+`;
+
+const QuizCardContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 320px;
+  padding: 0.75rem;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 10px;
+  box-shadow: 0px 87px 78px -39px rgba(0,0,0,0.4);
+`;
+
+const InfoSection = styled.div`
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const QuestionText = styled.span`
+  color: rgb(49, 49, 49);
+  font-size: 1rem;
+  line-height: 1rem;
+  font-weight: 800;
+`;
+
+const StepsIndicator = styled.span`
+  background-color: rgb(0, 0, 0);
+  padding: 4px;
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 12px;
+  font-weight: 600;
+`;
+
+const RadioGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const RadioInput = styled.input`
+  display: none;
+`;
+
+const RadioLabel = styled.label`
+  display: flex;
+  background-color: #ffffff;
+  padding: 14px;
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(187, 187, 187, 0.164);
+  color: #000000;
+  transition: 0.3s ease;
+
+  &:hover {
+    background-color: rgba(24, 24, 24, 0.13);
+    border: 1px solid #bbbbbb;
+  }
+
+  ${props => props.selected && `
+    border-color: rgb(22, 245, 22);
+    color: rgb(16, 184, 16);
+  `}
+`;
+
+const NavigationButtons = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+`;
+
+// Results page styled components
+const ResultsContainer = styled.div`
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 87px 78px -39px rgba(0,0,0,0.4);
+  padding: 1rem;
+`;
+
+const ResultCard = styled.div`
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+`;
+
+const OptionsContainer = styled.div`
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const OptionLabel = styled.div`
+  display: flex;
+  background-color: #ffffff;
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid rgba(187, 187, 187, 0.164);
+  color: #000000;
+
+  ${props => props.correct && `
+    border-color: rgb(22, 245, 22);
+    color: rgb(16, 184, 16);
+  `}
+
+  ${props => props.incorrect && `
+    border-color: red;
+    color: red;
+  `}
+`;
+
+const CorrectAnswer = styled.div`
+  margin-top: 0.5rem;
+  font-weight: 600;
+  font-size: 13px;
+
+  span {
+    font-weight: 800;
+  }
+`;
+
+const ScoreContainer = styled.div`
+  margin-top: 1rem;
+  text-align: center;
+`;
+
+const ScoreText = styled.p`
+  font-size: 1.25rem;
+  font-weight: 700;
+`;
+
+const ScoreResult = styled.p`
+  color: ${props => props.passed ? 'rgb(16, 184, 16)' : 'red'};
+  font-weight: 600;
+`;
 
 export default NewQuizPage;
