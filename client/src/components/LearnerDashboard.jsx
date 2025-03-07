@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiHome, FiAward, FiBook, FiSettings, FiLogOut } from 'react-icons/fi';
+import { FiHome, FiAward, FiBook, FiSettings, FiLogOut, FiMenu } from 'react-icons/fi';
 import { RiDashboardFill } from 'react-icons/ri';
 import { useUser, useAuth } from "@clerk/clerk-react"; // Add Clerk imports
 import LearnerMyCourses from './LearnerMyCourses';
@@ -9,6 +9,7 @@ import Settings from './LearnerSettings';
 
 export const LearnerDashboard = () => {
   const [currentComponent, setCurrentComponent] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar toggle
   const [userInfo, setUserInfo] = useState({
     id: 9,
     name: 'Dylan Frias',
@@ -164,7 +165,7 @@ export const LearnerDashboard = () => {
           {enrolledCourses.map((enrollment) => {
             const courseId = enrollment.course_id || 6; // Fallback to course ID 6 if undefined
             return (
-              <div key={enrollment.id} className="w-1/3 text-center border border-gray-300 rounded-lg shadow-lg p-3 relative">
+              <div key={enrollment.id} className="w-full md:w-1/3 text-center border border-gray-300 rounded-lg shadow-lg p-3 relative">
                 {courseId ? (
                   <React.Suspense fallback={<div className="w-full h-40 bg-gray-300 rounded-lg" />}>
                     <CourseImage courseId={courseId} />
@@ -211,14 +212,27 @@ export const LearnerDashboard = () => {
 
   return (
     <div className="flex h-screen bg-white font-poppins font-semibold">
-      <div className="fixed w-[247px] bg-black text-white h-full">
+      {/* Mobile Hamburger Menu (Right Side) */}
+      <div className="md:hidden fixed top-6 right-6 z-50">
+        <FiMenu
+          className="w-8 h-8 cursor-pointer text-white"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+      </div>
+
+      {/* Left Navigation Bar */}
+      <div
+        className={`fixed w-64 bg-black text-white h-full transform ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 transition-transform duration-300 ease-in-out z-40`}
+      >
         <div className="flex items-center p-6">
           <div className="w-20 h-15 rounded-full bg-white flex items-center justify-center">
-          <img
-            src="./src/assets/skillverse.svg"
-            alt="Company logo"
-            className="w-[47px] aspect-square"
-          />
+            <img
+              src="./src/assets/skillverse.svg"
+              alt="Company logo"
+              className="w-[47px] aspect-square"
+            />
           </div>
           <span className="ml-2 text-white flex items-center">
             <span className="text-green-500">●</span> Learner
@@ -233,7 +247,10 @@ export const LearnerDashboard = () => {
             className={`flex items-center px-6 py-3 cursor-pointer mb-[50px] ${
               currentComponent === 'dashboard' ? 'bg-yellow-600' : 'hover:bg-gray-800'
             }`}
-            onClick={() => setCurrentComponent('dashboard')}
+            onClick={() => {
+              setCurrentComponent('dashboard');
+              setIsSidebarOpen(false); // Close sidebar on mobile after selection
+            }}
           >
             <RiDashboardFill className="w-5 h-5 mr-3" />
             <span className="text-white">Dashboard</span>
@@ -242,7 +259,10 @@ export const LearnerDashboard = () => {
             className={`flex items-center px-6 py-3 cursor-pointer mb-[50px] ${
               currentComponent === 'certificates' ? 'bg-yellow-600' : 'hover:bg-gray-800'
             }`}
-            onClick={() => setCurrentComponent('certificates')}
+            onClick={() => {
+              setCurrentComponent('certificates');
+              setIsSidebarOpen(false); // Close sidebar on mobile after selection
+            }}
           >
             <FiAward className="w-5 h-5 mr-3" />
             <span className="text-white">Certificates</span>
@@ -251,12 +271,15 @@ export const LearnerDashboard = () => {
             className={`flex items-center px-6 py-3 cursor-pointer mb-[50px] ${
               currentComponent === 'settings' ? 'bg-yellow-600' : 'hover:bg-gray-800'
             }`}
-            onClick={() => setCurrentComponent('settings')}
+            onClick={() => {
+              setCurrentComponent('settings');
+              setIsSidebarOpen(false); // Close sidebar on mobile after selection
+            }}
           >
             <FiSettings className="w-5 h-5 mr-3" />
             <span className="text-white">Settings</span>
           </div>
-          <div className="absolute bottom-0 w-[247px] border-t border-gray-700">
+          <div className="absolute bottom-0 w-64 border-t border-gray-700">
             <div className="flex items-center px-6 py-3 cursor-pointer hover:bg-gray-800" onClick={handleLogout}>
               <FiLogOut className="w-5 h-5 mr-3" />
               <span className="text-red-500">Logout</span>
@@ -264,19 +287,21 @@ export const LearnerDashboard = () => {
           </div>
         </nav>
       </div>
-      <div className="flex-1 ml-[247px] bg-white overflow-y-auto px-20 py-6">
-        <header className="bg-[#ffc134] rounded-[15px] p-8 flex items-center">
-          <div className="w-[260px] h-[200px] bg-gray-200 rounded-full overflow-hidden">
+
+      {/* Main Content Area */}
+      <div className="flex-1 md:ml-64 bg-white overflow-y-auto px-4 md:px-20 py-6">
+        <header className="bg-[#555555] rounded-[15px] p-4 md:p-8 flex flex-col md:flex-row items-center">
+          <div className="w-40 h-40 md:w-64 md:h-64 bg-gray-200 rounded-full overflow-hidden">
             <img
               className="w-full h-full object-cover"
               src={userInfo.profilePicture}
               alt="Profile"
             />
           </div>
-          <div className="ml-10 flex justify-between w-full">
+          <div className="md:ml-10 mt-6 md:mt-0 flex flex-col md:flex-row justify-between w-full">
             <div>
-              <h1 className="text-[40px] font-bold tracking-[-2px]">{userInfo.name}</h1>
-              <p className="text-[22px] font-light mt-2">{userInfo.email}</p>
+              <h1 className="text-2xl md:text-4xl font-bold tracking-[-2px] text-white">{userInfo.name}</h1>
+              <p className="text-lg md:text-2xl font-light mt-2 text-white">{userInfo.email}</p>
             </div>
             {userProgress && (
               <div className="bg-white p-4 rounded-lg shadow-md">
@@ -296,7 +321,6 @@ export const LearnerDashboard = () => {
         </header>
         <main className="mt-8">
           {currentComponent === 'dashboard' && <DashboardContent />}
-          {currentComponent === 'my-courses' && <LearnerMyCourses />}
           {currentComponent === 'certificates' && <LearnerCertificates />}
           {currentComponent === 'settings' && 
             <Settings 
