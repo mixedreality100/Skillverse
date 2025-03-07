@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FiHome, FiPlusCircle, FiBook, FiSettings, FiLogOut } from 'react-icons/fi';
+import React, { useState } from "react";
+import { FiHome, FiPlusCircle, FiBook, FiSettings, FiLogOut, FiMenu } from 'react-icons/fi';
 import { useNavigate } from "react-router-dom";
 import AddCourse from './AddCourse';
 import AddModule from './AddModule';
@@ -10,33 +10,31 @@ import { RiDashboardFill } from 'react-icons/ri';
 
 export const ContentCreatorDashboard = () => {
   const [currentComponent, setCurrentComponent] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar toggle
   const [userInfo, setUserInfo] = useState(() => {
-    // Load userInfo from localStorage if available
     const savedUserInfo = localStorage.getItem('userInfo');
     return savedUserInfo ? JSON.parse(savedUserInfo) : {
       name: 'Content Creator',
       email: 'contentCreator@gmail.com',
       password: '',
-      profilePicture: 'https://via.placeholder.com/150' // Default profile picture
+      profilePicture: 'https://via.placeholder.com/150'
     };
   });
   const navigate = useNavigate();
-  
+
   const courses = [
     { id: 1, name: 'Medicinal Plants', enrolledStudents: 1 }
-    // Add more courses as needed
   ];
 
   // Dashboard component
   const DashboardContent = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <h2 className="text-3xl font-bold mb-6">Your Dashboard</h2>
-      {/* Dashboard Starts */}
       {courses.map(course => (
-        <div key={course.id} className="mb-4 absolute top-[400px]">
-          <p>
+        <div key={course.id} className="mb-4">
+          <p className="text-lg">
             <span>Course Name: {course.name}</span>
-            <span className="inline-block mx-80"> {/* Adjust mx-10 for more or less space */}
+            <span className="block md:inline-block md:ml-4">
               Enrolled Students: {course.enrolledStudents}
             </span>
           </p>
@@ -47,32 +45,43 @@ export const ContentCreatorDashboard = () => {
 
   // Function to handle logout
   const handleLogout = () => {
-    // Perform any logout logic here (e.g., clearing tokens)
-    navigate('/login'); // Navigate to LoginPage
+    navigate('/login');
   };
 
   // Function to update user info
   const updateUserInfo = (newInfo) => {
     setUserInfo(newInfo);
-    localStorage.setItem('userInfo', JSON.stringify(newInfo)); // Update localStorage
+    localStorage.setItem('userInfo', JSON.stringify(newInfo));
   };
 
   return (
     <div className="flex h-screen bg-white font-poppins font-semibold">
+      {/* Mobile Hamburger Menu (Right Side) */}
+      <div className="md:hidden fixed top-6 right-6 z-50">
+        <FiMenu
+          className="w-8 h-8 cursor-pointer text-white"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+      </div>
+
       {/* Left Navigation Bar */}
-      <div className="fixed w-[247px] bg-black text-white h-full">
+      <div
+        className={`fixed w-64 bg-black text-white h-full transform ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 transition-transform duration-300 ease-in-out z-40`}
+      >
         {/* Logo Area */}
         <div className="flex items-center p-6">
-        <div className="w-20 h-15 rounded-full bg-white flex items-center justify-center">
-          <img
-            src="./src/assets/skillverse.svg"
-            alt="Company logo"
-            className="w-[47px] aspect-square"
-          />
+          <div className="w-20 h-15 rounded-full bg-white flex items-center justify-center">
+            <img
+              src="./src/assets/skillverse.svg"
+              alt="Company logo"
+              className="w-12 aspect-square"
+            />
           </div>
           <span className="ml-2 text-white flex items-center">
             <span className="text-green-500">●</span> Trainer
-            <FiHome 
+            <FiHome
               className="ml-12 w-5 h-5 cursor-pointer hover:text-yellow-500 hover:scale-125 transition-all duration-200"
               onClick={() => navigate('/')}
             />
@@ -81,68 +90,29 @@ export const ContentCreatorDashboard = () => {
 
         {/* Navigation Menu */}
         <nav className="mt-10">
-          <div 
-            className={`flex items-center px-6 py-3 cursor-pointer mb-[20px] ${
-              currentComponent === 'dashboard' ? 'bg-yellow-600' : 'hover:bg-gray-800'
-            }`}
-            onClick={() => setCurrentComponent('dashboard')}
-          >
-            <RiDashboardFill className="w-5 h-5 mr-3" />
-            <span className="text-white">Dashboard</span>
-          </div>
-
-          <div 
-            className={`flex items-center px-6 py-3 cursor-pointer mb-[20px] ${
-              currentComponent === 'my-courses' ? 'bg-yellow-600' : 'hover:bg-gray-800'
-            }`}
-            onClick={() => setCurrentComponent('my-courses')}
-          >
-            <FiBook className="w-5 h-5 mr-3" />
-            <span className="text-white">My Courses</span>
-          </div>
-
-          <div 
-            className={`flex items-center px-6 py-3 cursor-pointer mb-[20px] ${
-              currentComponent === 'add-course' ? 'bg-yellow-600' : 'hover:bg-gray-800'
-            }`}
-            onClick={() => setCurrentComponent('add-course')}
-          >
-            <FiPlusCircle className="w-5 h-5 mr-3" />
-            <span className="text-white">Add Course</span>
-          </div>
-
-          {/* <div 
-            className={`flex items-center px-6 py-3 cursor-pointer mb-[20px] ${
-              currentComponent === 'add-module' ? 'bg-yellow-600' : 'hover:bg-gray-800'
-            }`}
-            onClick={() => setCurrentComponent('add-module')}
-          >
-            <FiPlusCircle className="w-5 h-5 mr-3" />
-            <span className="text-white">Add Module</span>
-          </div>
-
-          <div 
-            className={`flex items-center px-6 py-3 cursor-pointer mb-[20px] ${
-              currentComponent === 'add-quiz' ? 'bg-yellow-600' : 'hover:bg-gray-800'
-            }`}
-            onClick={() => setCurrentComponent('add-quiz')}
-          >
-            <FiPlusCircle className="w-5 h-5 mr-3" />
-            <span className="text-white">Add Quiz</span>
-          </div> */}
-
-          <div 
-            className={`flex items-center px-6 py-3 cursor-pointer mb-[20px] ${
-              currentComponent === 'settings' ? 'bg-yellow-600' : 'hover:bg-gray-800'
-            }`}
-            onClick={() => setCurrentComponent('settings')}
-          >
-            <FiSettings className="w-5 h-5 mr-3" />
-            <span className="text-white">Settings</span>
-          </div>
+          {[
+            { icon: <RiDashboardFill className="w-5 h-5 mr-3" />, label: 'Dashboard', component: 'dashboard' },
+            { icon: <FiBook className="w-5 h-5 mr-3" />, label: 'My Courses', component: 'my-courses' },
+            { icon: <FiPlusCircle className="w-5 h-5 mr-3" />, label: 'Add Course', component: 'add-course' },
+            { icon: <FiSettings className="w-5 h-5 mr-3" />, label: 'Settings', component: 'settings' },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className={`flex items-center px-6 py-3 cursor-pointer mb-5 ${
+                currentComponent === item.component ? 'bg-yellow-600' : 'hover:bg-gray-800'
+              }`}
+              onClick={() => {
+                setCurrentComponent(item.component);
+                setIsSidebarOpen(false); // Close sidebar on mobile after selection
+              }}
+            >
+              {item.icon}
+              <span className="text-white">{item.label}</span>
+            </div>
+          ))}
 
           {/* Logout at bottom */}
-          <div className="absolute bottom-0 w-[247px] border-t border-gray-700">
+          <div className="absolute bottom-0 w-64 border-t border-gray-700">
             <div className="flex items-center px-6 py-3 cursor-pointer hover:bg-gray-800" onClick={handleLogout}>
               <FiLogOut className="w-5 h-5 mr-3" />
               <span className="text-red-500">Logout</span>
@@ -152,25 +122,21 @@ export const ContentCreatorDashboard = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-[247px] bg-white overflow-y-auto px-20 py-6">
+      <div className="flex-1 md:ml-64 bg-white overflow-y-auto px-4 md:px-20 py-6">
         {/* Header */}
-        <header className="bg-[#555555] rounded-[15px] p-8 flex items-center">
-          <div className="w-[260px] h-[200px] bg-gray-200 rounded-full overflow-hidden">
+        <header className="bg-[#555555] rounded-[15px] p-4 md:p-8 flex flex-col md:flex-row items-center">
+          <div className="w-40 h-40 md:w-64 md:h-64 bg-gray-200 rounded-full overflow-hidden">
             <img
               className="w-full h-full object-cover"
               src={userInfo.profilePicture}
               alt="Profile"
             />
           </div>
-          <div className="ml-10 flex justify-between w-full">
+          <div className="md:ml-10 mt-6 md:mt-0 flex flex-col md:flex-row justify-between w-full">
             <div>
-              <h1 className="text-[40px] font-bold tracking-[-2px] text-white">{userInfo.name}</h1>
-              <p className="text-[22px] font-light mt-2 text-white">{userInfo.email}</p>
+              <h1 className="text-2xl md:text-4xl font-bold tracking-[-2px] text-white">{userInfo.name}</h1>
+              <p className="text-lg md:text-2xl font-light mt-2 text-white">{userInfo.email}</p>
             </div>
-            
-            {/* <div>
-              <h2 className="text-[50px] font-bold tracking-[-2px] px-[60px]">YOUR DASHBOARD</h2>
-            </div> */}
           </div>
         </header>
 
@@ -181,12 +147,9 @@ export const ContentCreatorDashboard = () => {
           {currentComponent === 'add-module' && <AddModule />}
           {currentComponent === 'add-quiz' && <AddQuiz />}
           {currentComponent === 'my-courses' && <MyCourses />}
-          {currentComponent === 'settings' && 
-            <Settings 
-              userInfo={userInfo} 
-              updateUserInfo={updateUserInfo} 
-            />
-          }
+          {currentComponent === 'settings' && (
+            <Settings userInfo={userInfo} updateUserInfo={updateUserInfo} />
+          )}
         </main>
       </div>
     </div>

@@ -16,7 +16,6 @@ export const Plants = () => {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false); // State for mobile menu
   const pageRef = useRef(null);
-  const userId=1;
 
   // Force scroll to top
   useEffect(() => {
@@ -32,6 +31,7 @@ export const Plants = () => {
     return () => clearTimeout(scrollTimer);
   }, []);
 
+  // Fetch course details
   useEffect(() => {
     const fetchCourseDetails = async () => {
       setLoading(true);
@@ -131,7 +131,7 @@ export const Plants = () => {
   }
 
   return (
-    <div className="flex flex-row justify-center w-full bg-white" ref={pageRef}>
+    <div className="flex flex-row justify-center w-full bg-white">
       <div className="bg-[#ffffff] overflow-x-hidden w-full max-w-[1440px] relative rounded-lg">
         {/* Hero Section */}
         <div className="relative w-full h-auto md:h-[824px]">
@@ -154,8 +154,28 @@ export const Plants = () => {
             />
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="absolute top-[22px] right-[15px] md:hidden z-20">
+          {/* Mobile Menu Button and Login Button Container */}
+          <div className="absolute top-[22px] right-[15px] md:hidden z-20 flex items-center gap-2">
+            {/* Login Button */}
+            <div>
+              <SignedOut>
+                <SignInButton>
+                  <button
+                    className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
+                    style={{
+                      boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
+                    }}
+                  >
+                    Login
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <ProfileButton />
+              </SignedIn>
+            </div>
+
+            {/* Menu Toggle Button */}
             <button
               onClick={toggleMenu}
               className="p-2 bg-[#f0f0f0] rounded-full shadow-neo"
@@ -184,92 +204,66 @@ export const Plants = () => {
             </button>
           </div>
 
-          {/* Mobile Menu Button and Login Button Container */}
-<div className="absolute top-[22px] right-[15px] md:hidden z-20 flex items-center gap-2">
-  {/* Login Button */}
-  <div>
-    <SignedOut>
-      <SignInButton>
-        <button
-          className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
-          style={{
-            boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
-          }}
-        >
-          Login
-        </button>
-      </SignInButton>
-    </SignedOut>
-    <SignedIn>
-      <ProfileButton />
-    </SignedIn>
-  </div>
-  
-  {/* Menu Toggle Button */}
-  <button
-    onClick={toggleMenu}
-    className="p-2 bg-[#f0f0f0] rounded-full shadow-neo"
-    style={{
-      boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
-    }}
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-6 w-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d={
-          menuOpen
-            ? "M6 18L18 6M6 6l12 12"
-            : "M4 6h16M4 12h16M4 18h16"
-        }
-      />
-    </svg>
-  </button>
-</div>
+          {/* Mobile Sidebar */}
+          <div
+            ref={sidebarRef}
+            className={`fixed top-0 right-0 h-full w-64 bg-white z-30 transform transition-transform duration-300 ease-in-out ${
+              menuOpen ? "translate-x-0" : "translate-x-full"
+            } md:hidden`}
+            style={{ boxShadow: "-4px 0 8px rgba(0, 0, 0, 0.1)" }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={toggleMenu}
+              className="absolute top-4 right-4 p-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
 
-{/* Make sure the dropdown menu is still present and correctly controlled by menuOpen state */}
-<div
-  className={`absolute top-[70px] right-[15px] z-20 bg-white p-4 rounded-lg shadow-lg transition-all duration-300 md:hidden ${
-    menuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-  }`}
->
-  <div className="flex flex-col space-y-3">
-    <button
-      className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
-      style={{
-        boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
-      }}
-      onClick={handleCourseClick}
-    >
-      Courses
-    </button>
-    <button
-      className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
-      style={{
-        boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
-      }}
-      onClick={() => navigate("/explore")}
-    >
-      Explore
-    </button>
-    <button
-      className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
-      style={{
-        boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
-      }}
-      onClick={() => navigate("/aboutus")}
-    >
-      About Us
-    </button>
-  </div>
-</div>
+            {/* Sidebar Content */}
+            <div className="flex flex-col space-y-4 p-4 mt-12">
+              <button
+                className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
+                style={{
+                  boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
+                }}
+                onClick={handleCourseClick}
+              >
+                Courses
+              </button>
+              <button
+                className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
+                style={{
+                  boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
+                }}
+                onClick={() => navigate("/explore")}
+              >
+                Explore
+              </button>
+              <button
+                className="px-4 py-2 whitespace-nowrap bg-[#f0f0f0] rounded-[100px] text-sm text-black"
+                style={{
+                  boxShadow: "4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff",
+                }}
+                onClick={() => navigate("/aboutus")}
+              >
+                About Us
+              </button>
+            </div>
+          </div>
 
           {/* Course Title */}
           <div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NavButton from "./NavButton";
@@ -7,10 +7,7 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 
 export default function AboutUs() {
   const navigate = useNavigate();
-
-  // const handleBackClick = () => {
-  //   navigate("/");
-  // };
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleCourses = () => {
     navigate("/");
@@ -20,15 +17,17 @@ export default function AboutUs() {
         coursesSection.scrollIntoView({ behavior: "smooth" });
       }
     }, 100);
+    setIsSidebarOpen(false); // Close sidebar after navigation
   };
 
   const handleExploreClick = () => {
     navigate("/explore");
+    setIsSidebarOpen(false); // Close sidebar after navigation
   };
 
-  // const handleAboutUsClick = () => {
-  //   navigate("/aboutus");
-  // };
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   // Animation variants
   const containerVariants = {
@@ -76,10 +75,12 @@ export default function AboutUs() {
         <img
           src="./src/assets/skillverse.svg"
           alt="Company logo"
-          className="w-[58px] aspect-square"
+          className="w-[58px] aspect-square cursor-pointer"
           onClick={() => navigate("/")}
         />
-        <div className="flex gap-9">
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex gap-9">
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
             onClick={handleCourses}
@@ -93,6 +94,8 @@ export default function AboutUs() {
             Explore
           </NavButton>
         </div>
+
+        {/* Login/Profile and Sidebar Toggle Section */}
         <div className="flex items-center gap-5">
           <SignedOut>
             <SignInButton>
@@ -104,10 +107,55 @@ export default function AboutUs() {
           <SignedIn>
             <ProfileButton />
           </SignedIn>
+
+          {/* Mobile Sidebar Toggle Button */}
+          <button
+            className="md:hidden text-black transform transition-transform duration-300 hover:scale-110"
+            onClick={toggleSidebar}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16m-7 6h7"
+              />
+            </svg>
+          </button>
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Mobile Sidebar */}
+      <motion.div
+        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        initial={{ x: "100%" }}
+        animate={{ x: isSidebarOpen ? 0 : "100%" }}
+      >
+        <div className="p-6">
+          <NavButton
+            className="block w-full text-left mb-4 text-black hover:bg-gray-100 rounded-lg p-3"
+            onClick={handleCourses}
+          >
+            Courses
+          </NavButton>
+          <NavButton
+            className="block w-full text-left text-black hover:bg-gray-100 rounded-lg p-3"
+            onClick={handleExploreClick}
+          >
+            Explore
+          </NavButton>
+        </div>
+      </motion.div>
+
+      {/* Rest of the content */}
       <motion.div
         className="text-center mb-20 pt-12 relative z-10"
         initial={{ y: -50, opacity: 0 }}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Mic, MicOff, Menu } from "lucide-react";
+import { Mic, MicOff, Menu, X } from "lucide-react";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
@@ -17,7 +17,7 @@ const ExploreCourse = () => {
   const [isSpeechSupported, setIsSpeechSupported] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar
 
   // Speech recognition setup
   useEffect(() => {
@@ -54,6 +54,19 @@ const ExploreCourse = () => {
       recognition.stop();
     };
   }, [isListening]);
+
+  // Effect to prevent body scrolling when sidebar is open
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isSidebarOpen]);
 
   // Fetch courses with filters
   useEffect(() => {
@@ -104,6 +117,7 @@ const ExploreCourse = () => {
 
   const handleCoursesClick = () => {
     navigate("/");
+    setIsSidebarOpen(false); // Close sidebar after navigation
     setTimeout(() => {
       const coursesSection = document.getElementById("courses");
       if (coursesSection) {
@@ -114,10 +128,11 @@ const ExploreCourse = () => {
 
   const handleAboutUsClick = () => {
     navigate("/aboutus");
+    setIsSidebarOpen(false); // Close sidebar after navigation
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
@@ -125,25 +140,29 @@ const ExploreCourse = () => {
       <div className="max-w-7xl mx-auto">
         {/* Navigation Bar */}
         <nav className="flex justify-between items-center w-full mb-8">
-          <img
-            src="./src/assets/skillverse.svg"
-            alt="Company logo"
-            className="w-[58px] aspect-square cursor-pointer"
-            onClick={() => navigate("/")}
-          />
+          {/* Logo and Mobile Menu Toggle */}
+          <div className="flex items-center">
+            <img
+              src="./src/assets/skillverse.svg"
+              alt="Company logo"
+              className="w-[58px] aspect-square cursor-pointer"
+              onClick={() => navigate("/")}
+            />
+          </div>
 
           {/* Mobile Menu Toggle */}
           <div className="md:hidden">
             <button
-              onClick={toggleMobileMenu}
+              onClick={toggleSidebar}
               className="p-2 focus:outline-none"
               style={{
                 boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
                 borderRadius: "50%",
                 border: "0.5px solid rgba(0, 0, 0, 0.1)",
               }}
+              aria-label="Toggle menu"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-8 h-8" />
             </button>
           </div>
 
@@ -184,35 +203,60 @@ const ExploreCourse = () => {
           </div>
         </nav>
 
-        {/* Mobile Dropdown Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-white rounded-lg shadow-lg p-4 mt-4">
-            <div className="flex flex-col gap-2">
+        {/* Mobile Sidebar */}
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300 ${
+            isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          onClick={toggleSidebar}
+        ></div>
+
+        <div
+          className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+            isSidebarOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex flex-col h-full">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-bold">Menu</h2>
               <button
-                className="px-4 py-2 text-left text-black rounded-lg hover:bg-gray-100"
-                style={{
-                  boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
-                  border: "0.5px solid rgba(0, 0, 0, 0.1)",
-                  borderRadius: "12px", // Added curved border
-                }}
-                onClick={handleCoursesClick}
+                onClick={toggleSidebar}
+                className="p-2 rounded-full hover:bg-gray-100"
+                aria-label="Close menu"
               >
-                Courses
-              </button>
-              <button
-                className="px-4 py-2 text-left text-black rounded-lg hover:bg-gray-100"
-                style={{
-                  boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
-                  border: "0.5px solid rgba(0, 0, 0, 0.1)",
-                  borderRadius: "12px", // Added curved border
-                }}
-                onClick={handleAboutUsClick}
-              >
-                About Us
+                <X className="w-6 h-6" />
               </button>
             </div>
+
+            <div className="flex-1 p-4">
+              <div className="flex flex-col gap-4">
+                <button
+                  className="w-full px-4 py-3 text-left text-black rounded-lg hover:bg-gray-100 flex items-center"
+                  style={{
+                    boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                    border: "0.5px solid rgba(0, 0, 0, 0.1)",
+                    borderRadius: "12px",
+                  }}
+                  onClick={handleCoursesClick}
+                >
+                  <span className="text-lg">Courses</span>
+                </button>
+
+                <button
+                  className="w-full px-4 py-3 text-left text-black rounded-lg hover:bg-gray-100 flex items-center"
+                  style={{
+                    boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                    border: "0.5px solid rgba(0, 0, 0, 0.1)",
+                    borderRadius: "12px",
+                  }}
+                  onClick={handleAboutUsClick}
+                >
+                  <span className="text-lg">About Us</span>
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
 
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">
           Explore Courses
@@ -265,7 +309,7 @@ const ExploreCourse = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border rounded-lg text-white bg-gray-700" // Added text-white and changed background
+            className="px-4 py-2 border rounded-lg text-white bg-gray-700"
           >
             <option value="">Sort by</option>
             <option value="name">Course Name</option>
@@ -276,7 +320,7 @@ const ExploreCourse = () => {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="px-4 py-2 border rounded-lg text-white bg-gray-700" // Added text-white and changed background
+              className="px-4 py-2 border rounded-lg text-white bg-gray-700"
             >
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
@@ -286,7 +330,7 @@ const ExploreCourse = () => {
           <select
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            className="px-4 py-2 border rounded-lg text-white bg-gray-700" // Added text-white and changed background
+            className="px-4 py-2 border rounded-lg text-white bg-gray-700"
           >
             <option value="">All Levels</option>
             <option value="Beginner">Beginner</option>
