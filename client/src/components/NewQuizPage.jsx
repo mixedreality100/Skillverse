@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import Loader from './Loader';
-import NavButton from './NavButton';
-import skillverseLogo from '../assets/skillverse.svg';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import Loader from "./Loader";
+import NavButton from "./NavButton";
+import Button from "./Button";
+import skillverseLogo from "../assets/skillverse.svg";
+
+// Add global font family
+const GlobalStyle = styled.div`
+  font-family: 'Poppins', sans-serif;
+`;
 
 const NewQuizPage = () => {
   const { moduleId } = useParams();
@@ -16,20 +22,38 @@ const NewQuizPage = () => {
   const [score, setScore] = useState(0);
   const [passingScore, setPassingScore] = useState(0.6); // 60%
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [nextModuleId, setNextModuleId] = useState(null);
+  const [courseId, setCourseId] = useState(null);
+
+  // Manually set userId for testing purposes
+  const userId = 1; // Replace with actual user ID from authentication
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:3000/api/modules/${moduleId}/quiz`);
+        const response = await fetch(
+          `http://localhost:3000/api/modules/${moduleId}/quiz`
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Fetched quiz questions:', data);
+        console.log("Fetched quiz questions:", data);
         setQuizQuestions(data);
+
+        // Fetch the courseId for the module
+        const courseResponse = await fetch(
+          `http://localhost:3000/api/modules/${moduleId}`
+        );
+        if (!courseResponse.ok) {
+          throw new Error(`HTTP error! status: ${courseResponse.status}`);
+        }
+        const courseData = await courseResponse.json();
+        console.log("Fetched course data:", courseData);
+        setCourseId(courseData.course_id); // Set the courseId
       } catch (error) {
-        console.error('Error fetching quiz questions:', error);
+        console.error("Error fetching quiz questions:", error);
         setError(error.message);
       } finally {
         setLoading(false);
@@ -46,13 +70,21 @@ const NewQuizPage = () => {
   };
 
   const handleCourses = () => {
-    navigate('/');
+    navigate("/");
     setTimeout(() => {
-      const coursesSection = document.getElementById('courses');
+      const coursesSection = document.getElementById("courses");
       if (coursesSection) {
-        coursesSection.scrollIntoView({ behavior: 'smooth' });
+        coursesSection.scrollIntoView({ behavior: "smooth" });
       }
     }, 100);
+  };
+
+  const handelAboutUsClick = () => {
+    navigate("/aboutus");
+  };
+
+  const handelExploreCourseClick = () => {
+    navigate("/explore");
   };
 
   if (loading) {
@@ -70,7 +102,7 @@ const NewQuizPage = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     let correctAnswersCount = 0;
     quizQuestions.forEach((question) => {
       if (userAnswers[question.id] === question.correct_answer) {
@@ -83,6 +115,108 @@ const NewQuizPage = () => {
     setScore(scorePercentage);
 
     setQuizSubmitted(true);
+
+    if (scorePercentage >= passingScore * 100) {
+      try {
+        console.log("Submitting quiz...", {
+          userId,
+          moduleId,
+          courseId,
+          answers: userAnswers,
+        });
+
+        const response = await fetch(`http://localhost:3000/api/submit-quiz`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId, // Use the manually set userId
+            moduleId: moduleId,
+            answers: userAnswers,
+          }),
+        });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Response data:", data);
+
+        if (data.success) {
+          let nextModuleId = data.nextModuleId;
+
+          // Check if the user has already completed the next module
+          while (nextModuleId) {
+            console.log("Fetching completion status for module:", nextModuleId);
+            const completionResponse = await fetch(
+              `http://localhost:3000/api/module-completion/${userId}/${nextModuleId}`
+            );
+            console.log(
+              "Completion response status:",
+              completionResponse.status
+            );
+
+            if (!completionResponse.ok) {
+              throw new Error(
+                `HTTP error! status: ${completionResponse.status}`
+              );
+            }
+
+            const completionData = await completionResponse.json();
+            console.log("Completion data:", completionData);
+
+            if (!completionData.completed) {
+              break; // User has not completed this module, so we can navigate to it
+            }
+
+            // Fetch the next module ID
+            console.log("Fetching next module ID for course:", courseId);
+            if (!courseId) {
+              throw new Error("courseId is undefined");
+            }
+
+            const nextModuleResponse = await fetch(
+              `http://localhost:3000/api/modules/next/${courseId}/${nextModuleId}`
+            );
+            console.log(
+              "Next module response status:",
+              nextModuleResponse.status
+            );
+
+            if (!nextModuleResponse.ok) {
+              throw new Error(
+                `HTTP error! status: ${nextModuleResponse.status}`
+              );
+            }
+
+            const nextModuleData = await nextModuleResponse.json();
+            console.log("Next module data:", nextModuleData);
+            nextModuleId = nextModuleData.nextModuleId;
+          }
+
+          if (nextModuleId) {
+            navigate(`/aloepage/${nextModuleId}`);
+          } else {
+            alert("You have completed all modules in this course!");
+          }
+        } else {
+          setError("Error fetching next module ID.");
+        }
+      } catch (error) {
+        console.error("Error submitting quiz:", error);
+        setError(error.message);
+      }
+    }
+  };
+
+  const handleRetake = () => {
+    setUserAnswers({});
+    setQuizSubmitted(false);
+    setCurrentQuestionIndex(0);
   };
 
   const goToNextQuestion = () => {
@@ -92,13 +226,6 @@ const NewQuizPage = () => {
       handleSubmit();
     }
   };
-  const handelAboutUsClick = () => {
-    navigate("/aboutus");
-  };
-  
-  const handelExploreCourseClick = () => {
-    navigate("/explore");
-  };
 
   const goToPreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
@@ -107,162 +234,194 @@ const NewQuizPage = () => {
   };
 
   if (quizSubmitted) {
-    return (     
+    return (
+      <GlobalStyle>
+        <PageContainer>
+          <BackButtonContainer>
+            <Button onClick={handleBack}>Back</Button>
+          </BackButtonContainer>
+
+          <NavBarContainer>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={handleCourses}
+            >
+              Courses
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={handelExploreCourseClick}
+            >
+              Explore
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={handelAboutUsClick}
+            >
+              About Us
+            </NavButton>
+          </NavBarContainer>
+
+          <PageTitle>Quiz Results</PageTitle>
+
+          <ResultsContainer>
+            {quizQuestions.map((question) => (
+              <ResultCard key={question.id}>
+                <QuestionText>{question.question}</QuestionText>
+                <OptionsContainer>
+                  {["A", "B", "C", "D"].map((option) => {
+                    const isSelected = userAnswers[question.id] === option;
+                    const isCorrect = option === question.correct_answer;
+                    return (
+                      <OptionLabel
+                        key={option}
+                        selected={isSelected}
+                        correct={isCorrect}
+                        incorrect={isSelected && !isCorrect}
+                      >
+                        {option}. {question[`option_${option.toLowerCase()}`]}
+                      </OptionLabel>
+                    );
+                  })}
+                </OptionsContainer>
+                <CorrectAnswer>
+                  <span>Correct Answer:</span> {question.correct_answer}
+                </CorrectAnswer>
+              </ResultCard>
+            ))}
+          </ResultsContainer>
+
+          <ScoreContainer>
+            <ScoreText>Your Score: {score.toFixed(2)}%</ScoreText>
+            <ScoreResult passed={score >= passingScore * 100}>
+              {score >= passingScore * 100 ? "You passed!" : "You did not pass."}
+            </ScoreResult>
+          </ScoreContainer>
+
+          {score >= passingScore * 100 ? (
+            nextModuleId ? (
+              <ActionButton
+                onClick={() => navigate(`/aloepage/${nextModuleId}`)}
+                className="bg-green-500 hover:bg-green-600"
+              >
+                Next Module
+              </ActionButton>
+            ) : (
+              <div className="text-red-500 mt-6">
+                Error fetching next module ID or you've completed all modules.
+              </div>
+            )
+          ) : (
+            <ActionButton
+              onClick={handleRetake}
+              className="bg-yellow-500 hover:bg-yellow-600"
+            >
+              Retake Quiz
+            </ActionButton>
+          )}
+        </PageContainer>
+      </GlobalStyle>
+    );
+  }
+
+  // Current question display
+  const currentQuestion = quizQuestions[currentQuestionIndex];
+
+  return (
+    <GlobalStyle>
       <PageContainer>
-        <Logo 
-          src={skillverseLogo} 
-          alt="logo" 
-          onClick={handleBack}
-        />
+        <BackButtonContainer>
+          <Button onClick={handleBack}>Back</Button>
+        </BackButtonContainer>
 
         <NavBarContainer>
-          <NavButton 
-            className="transform transition-transform duration-300 hover:scale-110 text-black" 
+          <NavButton
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
             onClick={handleCourses}
           >
             Courses
           </NavButton>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
-            onClick={() => navigate("/explore")}
+            onClick={handelExploreCourseClick}
           >
             Explore
           </NavButton>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
-            onClick={() => navigate("/aboutus")}
+            onClick={handelAboutUsClick}
           >
             About Us
           </NavButton>
         </NavBarContainer>
-        
-        <PageTitle>Quiz Results</PageTitle>
-        
-        <ResultsContainer>
-          {quizQuestions.map((question) => (
-            <ResultCard key={question.id}>
-              <QuestionText>{question.question}</QuestionText>
-              <OptionsContainer>
-                {['A', 'B', 'C', 'D'].map((option) => {
-                  const isSelected = userAnswers[question.id] === option;
-                  const isCorrect = option === question.correct_answer;
-                  return (
-                    <OptionLabel 
-                      key={option}
-                      selected={isSelected}
-                      correct={isCorrect}
-                      incorrect={isSelected && !isCorrect}
-                    >
-                      {option}. {question[`option_${option.toLowerCase()}`]}
-                    </OptionLabel>
-                  );
-                })}
-              </OptionsContainer>
-              <CorrectAnswer>
-                <span>Correct Answer:</span> {question.correct_answer}
-              </CorrectAnswer>
-            </ResultCard>
-          ))}
-        </ResultsContainer>
-        
-        <ScoreContainer>
-          <ScoreText>Your Score: {score.toFixed(2)}%</ScoreText>
-          <ScoreResult passed={score >= passingScore * 100}>
-            {score >= passingScore * 100 ? 'You passed!' : 'You did not pass.'}
-          </ScoreResult>
-        </ScoreContainer>
-      </PageContainer>
-    );
-  }
 
-  // Current question display
-  const currentQuestion = quizQuestions[currentQuestionIndex];
-  
-  return (
-    <PageContainer>
-      <Logo 
-        src={skillverseLogo} 
-        alt="logo" 
-        onClick={handleBack}
-      />
+        <PageTitle>Quiz</PageTitle>
 
-      <NavBarContainer>
-        <NavButton 
-          className="transform transition-transform duration-300 hover:scale-110 text-black" 
-          onClick={handleCourses}
-        >
-          Courses
-        </NavButton>
-        <NavButton
-          className="transform transition-transform duration-300 hover:scale-110 text-black"
-        >
-          Explore
-        </NavButton>
-        <NavButton
-          className="transform transition-transform duration-300 hover:scale-110 text-black"
-        >
-          About Us
-        </NavButton>
-      </NavBarContainer>
+        {currentQuestion && (
+          <QuizCardContainer>
+            <InfoSection>
+              <QuestionText>{currentQuestion.question}</QuestionText>
+              <StepsIndicator>{`${currentQuestionIndex + 1}/${
+                quizQuestions.length
+              }`}</StepsIndicator>
+            </InfoSection>
 
-      <PageTitle>Quiz</PageTitle>
-      
-      {currentQuestion && (
-        <QuizCardContainer>
-          <InfoSection>
-            <QuestionText>{currentQuestion.question}</QuestionText>
-            <StepsIndicator>{`${currentQuestionIndex + 1}/${quizQuestions.length}`}</StepsIndicator>
-          </InfoSection>
-          
-          <RadioGroup>
-            {['A', 'B', 'C', 'D'].map((option) => (
-              <React.Fragment key={option}>
-                <RadioInput
-                  type="radio"
-                  id={`option-${currentQuestion.id}-${option}`}
-                  name={`question-${currentQuestion.id}`}
-                  value={option}
-                  checked={userAnswers[currentQuestion.id] === option}
-                  onChange={() => handleAnswerChange(currentQuestion.id, option)}
-                />
-                <RadioLabel 
-                  htmlFor={`option-${currentQuestion.id}-${option}`}
-                  selected={userAnswers[currentQuestion.id] === option}
+            <RadioGroup>
+              {["A", "B", "C", "D"].map((option) => (
+                <React.Fragment key={option}>
+                  <RadioInput
+                    type="radio"
+                    id={`option-${currentQuestion.id}-${option}`}
+                    name={`question-${currentQuestion.id}`}
+                    value={option}
+                    checked={userAnswers[currentQuestion.id] === option}
+                    onChange={() =>
+                      handleAnswerChange(currentQuestion.id, option)
+                    }
+                  />
+                  <RadioLabel
+                    htmlFor={`option-${currentQuestion.id}-${option}`}
+                    selected={userAnswers[currentQuestion.id] === option}
+                  >
+                    {option}. {currentQuestion[`option_${option.toLowerCase()}`]}
+                  </RadioLabel>
+                </React.Fragment>
+              ))}
+            </RadioGroup>
+
+            <NavigationButtons>
+              <NavButton
+                onClick={goToPreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+                className={`${
+                  currentQuestionIndex === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                } bg-gray-200 hover:bg-gray-300`}
+              >
+                Previous
+              </NavButton>
+
+              {currentQuestionIndex < quizQuestions.length - 1 ? (
+                <NavButton
+                  onClick={goToNextQuestion}
+                  className="bg-yellow-500 text-white hover:bg-yellow-600"
                 >
-                  {option}. {currentQuestion[`option_${option.toLowerCase()}`]}
-                </RadioLabel>
-              </React.Fragment>
-            ))}
-          </RadioGroup>
-          
-          <NavigationButtons>
-            <NavButton 
-              onClick={goToPreviousQuestion}
-              disabled={currentQuestionIndex === 0}
-              className={`${currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''} bg-gray-200 hover:bg-gray-300`}
-            >
-              Previous
-            </NavButton>
-            
-            {currentQuestionIndex < quizQuestions.length - 1 ? (
-              <NavButton 
-                onClick={goToNextQuestion}
-                className="bg-yellow-500 text-white hover:bg-yellow-600"
-              >
-                Next
-              </NavButton>
-            ) : (
-              <NavButton 
-                onClick={handleSubmit}
-                className="bg-yellow-500 text-white hover:bg-yellow-600"
-              >
-                Submit
-              </NavButton>
-            )}
-          </NavigationButtons>
-        </QuizCardContainer>
-      )}
-    </PageContainer>
+                  Next
+                </NavButton>
+              ) : (
+                <NavButton
+                  onClick={handleSubmit}
+                  className="bg-yellow-500 text-white hover:bg-yellow-600"
+                >
+                  Submit
+                </NavButton>
+              )}
+            </NavigationButtons>
+          </QuizCardContainer>
+        )}
+      </PageContainer>
+    </GlobalStyle>
   );
 };
 
@@ -278,12 +437,10 @@ const PageContainer = styled.div`
   background-color: #f3f4f6;
 `;
 
-const Logo = styled.img`
+const BackButtonContainer = styled.div`
   position: absolute;
-  top: 22px;
+  top: 32px;
   left: 30px;
-  width: 60px;
-  height: 60px;
   cursor: pointer;
 `;
 
@@ -297,7 +454,7 @@ const NavBarContainer = styled.div`
 `;
 
 const PageTitle = styled.h1`
-  font-size: 1.5rem;
+  font-size: 1.75rem; // Increased font size
   font-weight: 700;
   margin-bottom: 1rem;
   margin-top: 5rem;
@@ -307,12 +464,13 @@ const QuizCardContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 320px;
-  padding: 0.75rem;
-  background: #ffffff;
+  max-width: 650px; // Increased width
+  padding: 1rem;
+  background: #e8e8e8;
   color: #000000;
-  border-radius: 10px;
-  box-shadow: 0px 87px 78px -39px rgba(0,0,0,0.4);
+  border-radius: 20px;
+  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5); // Neomorphism effect
 `;
 
 const InfoSection = styled.div`
@@ -324,8 +482,8 @@ const InfoSection = styled.div`
 
 const QuestionText = styled.span`
   color: rgb(49, 49, 49);
-  font-size: 1rem;
-  line-height: 1rem;
+  font-size: 1.1rem; // Increased font size
+  line-height: auto;
   font-weight: 800;
 `;
 
@@ -353,11 +511,11 @@ const RadioLabel = styled.label`
   background-color: #ffffff;
   padding: 14px;
   margin: 8px 0 0 0;
-  font-size: 13px;
+  font-size: 14px; // Increased font size
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-  border: 1px solid rgba(187, 187, 187, 0.164);
+  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
   color: #000000;
   transition: 0.3s ease;
 
@@ -366,7 +524,9 @@ const RadioLabel = styled.label`
     border: 1px solid #bbbbbb;
   }
 
-  ${props => props.selected && `
+  ${(props) =>
+    props.selected &&
+    `
     border-color: rgb(22, 245, 22);
     color: rgb(16, 184, 16);
   `}
@@ -381,10 +541,11 @@ const NavigationButtons = styled.div`
 // Results page styled components
 const ResultsContainer = styled.div`
   width: 100%;
-  max-width: 320px;
+  max-width: 600px; // Increased width
   background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0px 87px 78px -39px rgba(0,0,0,0.4);
+  border-radius: 20px;
+  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5); // Neomorphism effect
   padding: 1rem;
 `;
 
@@ -393,7 +554,7 @@ const ResultCard = styled.div`
   padding: 1rem;
   background-color: #f9fafb;
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 `;
 
 const OptionsContainer = styled.div`
@@ -401,24 +562,29 @@ const OptionsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  
 `;
 
 const OptionLabel = styled.div`
   display: flex;
   background-color: #ffffff;
   padding: 14px;
-  font-size: 13px;
+  font-size: 14px; // Increased font size
   font-weight: 600;
   border-radius: 10px;
-  border: 1px solid rgba(187, 187, 187, 0.164);
+  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
   color: #000000;
 
-  ${props => props.correct && `
+  ${(props) =>
+    props.correct &&
+    `
     border-color: rgb(22, 245, 22);
     color: rgb(16, 184, 16);
   `}
 
-  ${props => props.incorrect && `
+  ${(props) =>
+    props.incorrect &&
+    `
     border-color: red;
     color: red;
   `}
@@ -427,7 +593,8 @@ const OptionLabel = styled.div`
 const CorrectAnswer = styled.div`
   margin-top: 0.5rem;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
+  
 
   span {
     font-weight: 800;
@@ -445,8 +612,18 @@ const ScoreText = styled.p`
 `;
 
 const ScoreResult = styled.p`
-  color: ${props => props.passed ? 'rgb(16, 184, 16)' : 'red'};
+  color: ${(props) => (props.passed ? "rgb(16, 184, 16)" : "red")};
   font-weight: 600;
+`;
+
+const ActionButton = styled.button`
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  color: white;
+  transition: background-color 0.3s;
+  cursor: pointer;
 `;
 
 export default NewQuizPage;

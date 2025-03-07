@@ -72,6 +72,8 @@ const darkTheme = createTheme({ palette: { mode: "dark" } });
 const lightTheme = createTheme({ palette: { mode: "light" } });
 
 export const AloePage = () => {
+  const { moduleId } = useParams();
+
   const [loading, setLoading] = useState(true);
   const [isLeavesPopupVisible, setIsLeavesPopupVisible] = useState(false);
   const [isGelPopupVisible, setIsGelPopupVisible] = useState(false);
@@ -79,7 +81,34 @@ export const AloePage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false); // Track if speech
   const [isVisible, setIsVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
+  const [moduleName, setModuleName] = useState(""); // State to store module name
+
   const paperRef = useRef(null);
+
+  useEffect(() => {
+    const fetchModuleDetails = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/modules/${moduleId}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const moduleData = await response.json();
+        if (moduleData.length > 0) {
+          setModuleName(moduleData[0].module_name); // Set the module name
+        } else {
+          console.error("Module not found");
+        }
+      } catch (error) {
+        console.error("Error fetching module details:", error);
+      }
+    };
+
+    if (moduleId) {
+      fetchModuleDetails();
+    }
+  }, [moduleId]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -127,7 +156,6 @@ export const AloePage = () => {
   };
 
   const navigate = useNavigate();
-  const { moduleId } = useParams();
 
   const handleTakeQuiz = () => {
     navigate(`/quiz/${moduleId}`);
@@ -282,7 +310,7 @@ export const AloePage = () => {
   letter-spacing: 0.5rem;
   line-height: 1;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
-  font-size: clamp(24rem, 15vw, 6rem); /* Fixed the font size - was way too large */
+  font-size: clamp(20rem, 15vw, 6rem); /* Fixed the font size - was way too large */
   margin: 0;
   padding: 0;
   width: 100%;
@@ -650,7 +678,7 @@ export const AloePage = () => {
           <section className="hero-section">
             <img src={aloeverohero} alt="Aloe Vera" className="hero-image" />
             <div className="hero-text-container">
-              <h1 className="hero-title">AloeVera</h1>
+              <h1 className="hero-title">{moduleName}</h1>
               <p className="scientific-name">Aloe Barbadensis</p>
             </div>
           </section>
@@ -850,12 +878,12 @@ export const AloePage = () => {
               <TakeQuizButton />
             </div>
 
-            <button
+            {/* <button
               onClick={() => setNavigateToCustardApple(true)}
               className="px-6 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition duration-300 mt-8"
             >
-              Go to Custard Apple
-            </button>
+              Go to Custard Applexzs
+            </button> */}
           </div>
 
           {/* Footer */}

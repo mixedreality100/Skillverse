@@ -15,7 +15,7 @@ const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'xr',
-  password: 'post', // Replace with your PostgreSQL password
+  password: '1234', // Replace with your PostgreSQL password
   port: 5432,
 });
 
@@ -202,6 +202,30 @@ app.get('/modules/:courseId', async (req, res) => {
 
 
 // Endpoint to fetch modules by module ID
+// app.get('/api/modules/:moduleId', async (req, res) => {
+//   try {
+//     const moduleId = parseInt(req.params.moduleId, 10);
+//     const result = await pool.query(
+//       'SELECT * FROM modules WHERE id = $1',
+//       [moduleId]
+//     );
+
+//     const modulesWithImages = result.rows.map(module => {
+//       if (module.module_image) {
+//         const base64Image = Buffer.from(module.module_image, 'binary').toString('base64');
+//         module.module_image = `data:image/png;base64,${base64Image}`;
+//       } else {
+//         module.module_image = null;
+//       }
+//       return module;
+//     });
+
+//     res.status(200).json(modulesWithImages);
+//   } catch (error) {
+//     console.error('Error fetching modules:', error);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
 app.get('/api/modules/:moduleId', async (req, res) => {
   try {
     const moduleId = parseInt(req.params.moduleId, 10);
@@ -210,19 +234,14 @@ app.get('/api/modules/:moduleId', async (req, res) => {
       [moduleId]
     );
 
-    const modulesWithImages = result.rows.map(module => {
-      if (module.module_image) {
-        const base64Image = Buffer.from(module.module_image, 'binary').toString('base64');
-        module.module_image = `data:image/png;base64,${base64Image}`;
-      } else {
-        module.module_image = null;
-      }
-      return module;
-    });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
 
-    res.status(200).json(modulesWithImages);
+    const module = result.rows[0];
+    res.status(200).json(module); // Ensure this includes course_id
   } catch (error) {
-    console.error('Error fetching modules:', error);
+    console.error('Error fetching module:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -411,6 +430,123 @@ app.get('/users/:userId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
+  try {
+    const { courseId, moduleId } = req.params;
+    console.log('Fetching next module for course:', courseId, 'and module:', moduleId);
+
+    // Validate input
+    if (!courseId || !moduleId) {
+      return res.status(400).json({ error: 'Missing courseId or moduleId' });
+    }
+
+    // Convert to integers
+    const courseIdInt = parseInt(courseId, 10);
+    const moduleIdInt = parseInt(moduleId, 10);
+
+    if (isNaN(courseIdInt) ){
+      return res.status(400).json({ error: 'Invalid courseId' });
+    }
+
+    if (isNaN(moduleIdInt)) {
+      return res.status(400).json({ error: 'Invalid moduleId' });
+    }
+
+    const result = await pool.query(
+      'SELECT id FROM modules WHERE course_id = $1 AND id > $2 ORDER BY id ASC LIMIT 1',
+      [courseIdInt, moduleIdInt]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Next module not found' });
+    }
+
+    res.json({ nextModuleId: result.rows[0].id });
+  } catch (error) {
+    console.error('Error fetching next module ID:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+app.post('/api/submit-quiz', async (req, res) => {
+  const { userId, moduleId, answers } = req.body;
+
+  try {
+    console.log('Received quiz submission request:', { userId, moduleId, answers });
+
+    // Validate input
+    if (!userId || !moduleId || !answers) {
+      return res.status(400).json({ message: 'Missing required fields: userId, moduleId, or answers' });
+    }
+
+    // Fetch quiz questions for the module
+    const quizResult = await pool.query(
+      'SELECT * FROM quiz_questions WHERE module_id = $1',
+      [moduleId]
+    );
+    const quizQuestions = quizResult.rows;
+    console.log('Fetched quiz questions:', quizQuestions);
+
+    let correctAnswersCount = 0;
+    quizQuestions.forEach(question => {
+      if (answers[question.id] === question.correct_answer) {
+        correctAnswersCount++;
+      }
+    });
+
+    const totalQuestions = quizQuestions.length;
+    const scorePercentage = (correctAnswersCount / totalQuestions) * 100;
+    console.log('Calculated score:', scorePercentage);
+
+    // Check if the score is 60% or above
+    if (scorePercentage >= 60) {
+      // Mark the module as completed
+      await pool.query(
+        'INSERT INTO module_completion (user_id, module_id, completion_date) VALUES ($1, $2, CURRENT_DATE)',
+        [userId, moduleId]
+      );
+      console.log('Module marked as completed.');
+
+      // Fetch the next module ID
+      const nextModuleResult = await pool.query(
+        'SELECT id FROM modules WHERE course_id = (SELECT course_id FROM modules WHERE id = $1) AND id > $1 ORDER BY id ASC LIMIT 1',
+        [moduleId]
+      );
+      console.log('Next module result:', nextModuleResult.rows);
+
+      if (nextModuleResult.rows.length > 0) {
+        res.json({ success: true, nextModuleId: nextModuleResult.rows[0].id });
+      } else {
+        res.json({ success: true, nextModuleId: null });
+      }
+    } else {
+      res.json({ success: false, score: scorePercentage });
+    }
+  } catch (error) {
+    console.error('Error submitting quiz:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+app.get('/api/module-completion/:userId/:moduleId', async (req, res) => {
+  try {
+    const { userId, moduleId } = req.params;
+    const result = await pool.query(
+      'SELECT COUNT(*) AS completed FROM module_completion WHERE user_id = $1 AND module_id = $2',
+      [userId, moduleId]
+    );
+
+    res.json({ completed: result.rows[0].completed > 0 });
+  } catch (error) {
+    console.error('Error checking module completion:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+app
 
 
 app.listen(port, () => {
