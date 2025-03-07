@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import Button from "./Button";
 import TakeQuizButton from "./TakeQuizButton";
-import Switch from "./Switch";
 import Cards from "./Cards";
 import Cards2 from "./Cards2";
 import Cards3 from "./Cards3";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import Loader from "./Loader";
 import PlusButton from "./PlusButton";
-import { Box } from "./Box1";
-import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 import skillverseLogo from "../assets/skillverse.svg";
@@ -21,9 +17,25 @@ import { Menu, X } from "lucide-react"; // For icons
 import aloeverohero from "../plantsAssets/image1.jpg";
 import MusicControl from "./MusicControl";
 
+// Updated Model function with responsive scaling and positioning
 function Model() {
   const { scene } = useGLTF("/model/aleovera.glb");
   const modelRef = useRef();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if viewport is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkMobile();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -53,8 +65,8 @@ function Model() {
     <primitive
       ref={modelRef}
       object={scene}
-      scale={8}
-      position={[1.2, -0.2, 0]}
+      scale={isMobile ? 5 : 8} // Reduced scale for mobile
+      position={isMobile ? [0, -0.4, 0] : [1.2, -0.2, 0]} // Centered position for mobile
       rotation={[0, Math.PI / 2, 0]}
     />
   );
@@ -228,12 +240,14 @@ export const AloePage = () => {
       <div className="relative w-full max-w-screen-2xl mx-auto">
         <style>
           {`
-            @import url("https://fonts.googleapis.com/css?family=Poppins:700,400|Poly:400,italic|Bebas+Neue:400");
+             @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap");
 
-            /* Base styles */
-            * {
-              box-sizing: border-box;
-            }
+    /* Base styles */
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif; /* Apply Poppins globally */
+    }
+
             
             body {
               margin: 0;
@@ -280,6 +294,7 @@ export const AloePage = () => {
   max-width: 1440px;
   margin: 0 auto 2rem auto;
   overflow: hidden;
+  
 }
 
 .hero-image {
@@ -287,6 +302,11 @@ export const AloePage = () => {
   height: auto;
   border-radius: 20px;
   object-fit: cover;
+  border: 0.1px solid rgba(0, 0, 0, 0.1); /* Light black border */
+  background: #f0f0f0; /* Light background for neomorphism */
+  box-shadow: 
+    8px 8px 16px rgba(0, 0, 0, 0.1), /* Outer shadow */
+    -8px -8px 16px rgba(255, 255, 255, 0.8); /* Inner highlight */
 }
 
 .hero-text-container {
@@ -350,7 +370,8 @@ export const AloePage = () => {
             
             .info-card {
               background-color: white;
-              border-radius: 0.5rem;
+              border: 0.1px solid rgba(0, 0, 0, 0.14); /* Light black border */
+              border-radius: 1.5rem;
               padding: 1.5rem;
               box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
               flex: 1;
@@ -414,7 +435,7 @@ export const AloePage = () => {
               padding: 2rem 1rem;
               display: flex;
               flex-wrap: wrap;
-              gap: 2rem;
+              gap: 4rem;
               justify-content: center;
             }
             
@@ -424,7 +445,7 @@ export const AloePage = () => {
               display: flex;
               flex-wrap: wrap;
               justify-content: center;
-              gap: 2rem;
+              gap: 4rem;
               padding: 2rem 1rem;
             }
             
@@ -606,7 +627,8 @@ export const AloePage = () => {
               }
               
               .ar-vr-icon span {
-                margin-left: 150px;
+                margin-top: 200px;
+                margin-left: 20px;
                 font-size: 3.25rem;
                 font-weight: bold;
                 color: #333;
@@ -618,6 +640,7 @@ export const AloePage = () => {
                 opacity: 1;
               }
             }
+              
           `}
         </style>
 

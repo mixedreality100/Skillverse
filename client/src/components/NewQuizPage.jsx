@@ -24,6 +24,8 @@ const NewQuizPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [nextModuleId, setNextModuleId] = useState(null);
   const [courseId, setCourseId] = useState(null);
+  // State for mobile sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Manually set userId for testing purposes
   const userId = 1; // Replace with actual user ID from authentication
@@ -65,11 +67,34 @@ const NewQuizPage = () => {
     }
   }, [moduleId]);
 
+  // Close sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const sidebar = document.getElementById("mobile-sidebar");
+      const menuButton = document.getElementById("menu-button");
+      if (
+        sidebar && 
+        !sidebar.contains(event.target) && 
+        menuButton && 
+        !menuButton.contains(event.target) &&
+        isSidebarOpen
+      ) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
   const handleBack = () => {
-    window.history.back();
+    navigate(-1); // This uses react-router's navigate function to go back
   };
 
   const handleCourses = () => {
+    setIsSidebarOpen(false);
     navigate("/");
     setTimeout(() => {
       const coursesSection = document.getElementById("courses");
@@ -80,11 +105,17 @@ const NewQuizPage = () => {
   };
 
   const handelAboutUsClick = () => {
+    setIsSidebarOpen(false);
     navigate("/aboutus");
   };
 
   const handelExploreCourseClick = () => {
+    setIsSidebarOpen(false);
     navigate("/explore");
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   if (loading) {
@@ -237,11 +268,12 @@ const NewQuizPage = () => {
     return (
       <GlobalStyle>
         <PageContainer>
+          {/* Desktop Navigation */}
           <BackButtonContainer>
             <Button onClick={handleBack}>Back</Button>
           </BackButtonContainer>
 
-          <NavBarContainer>
+          <DesktopNavBarContainer>
             <NavButton
               className="transform transition-transform duration-300 hover:scale-110 text-black"
               onClick={handleCourses}
@@ -260,7 +292,24 @@ const NewQuizPage = () => {
             >
               About Us
             </NavButton>
-          </NavBarContainer>
+          </DesktopNavBarContainer>
+
+          {/* Mobile Menu Button */}
+          <MobileMenuButton id="menu-button" onClick={toggleSidebar}>
+            <MenuIcon>
+              <div></div>
+              <div></div>
+              <div></div>
+            </MenuIcon>
+          </MobileMenuButton>
+
+          {/* Mobile Sidebar */}
+          <MobileSidebar id="mobile-sidebar" isOpen={isSidebarOpen}>
+            <SidebarCloseButton onClick={() => setIsSidebarOpen(false)}>×</SidebarCloseButton>
+            <SidebarNavButton onClick={handleCourses}>Courses</SidebarNavButton>
+            <SidebarNavButton onClick={handelExploreCourseClick}>Explore</SidebarNavButton>
+            <SidebarNavButton onClick={handelAboutUsClick}>About Us</SidebarNavButton>
+          </MobileSidebar>
 
           <PageTitle>Quiz Results</PageTitle>
 
@@ -330,11 +379,12 @@ const NewQuizPage = () => {
   return (
     <GlobalStyle>
       <PageContainer>
+        {/* Desktop Navigation */}
         <BackButtonContainer>
           <Button onClick={handleBack}>Back</Button>
         </BackButtonContainer>
 
-        <NavBarContainer>
+        <DesktopNavBarContainer>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
             onClick={handleCourses}
@@ -353,7 +403,24 @@ const NewQuizPage = () => {
           >
             About Us
           </NavButton>
-        </NavBarContainer>
+        </DesktopNavBarContainer>
+
+        {/* Mobile Menu Button */}
+        <MobileMenuButton id="menu-button" onClick={toggleSidebar}>
+          <MenuIcon>
+            <div></div>
+            <div></div>
+            <div></div>
+          </MenuIcon>
+        </MobileMenuButton>
+
+        {/* Mobile Sidebar */}
+        <MobileSidebar id="mobile-sidebar" isOpen={isSidebarOpen}>
+          <SidebarCloseButton onClick={() => setIsSidebarOpen(false)}>×</SidebarCloseButton>
+          <SidebarNavButton onClick={handleCourses}>Courses</SidebarNavButton>
+          <SidebarNavButton onClick={handelExploreCourseClick}>Explore</SidebarNavButton>
+          <SidebarNavButton onClick={handelAboutUsClick}>About Us</SidebarNavButton>
+        </MobileSidebar>
 
         <PageTitle>Quiz</PageTitle>
 
@@ -435,6 +502,13 @@ const PageContainer = styled.div`
   width: 100%;
   padding: 2rem;
   background-color: #f3f4f6;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    padding: 1rem 0.5rem;
+    justify-content: flex-start;
+    padding-top: 6rem;
+  }
 `;
 
 const BackButtonContainer = styled.div`
@@ -442,49 +516,163 @@ const BackButtonContainer = styled.div`
   top: 32px;
   left: 30px;
   cursor: pointer;
+  z-index: 10;
+  
+  @media (max-width: 768px) {
+    top: 20px;
+    left: 15px;
+  }
 `;
 
-const NavBarContainer = styled.div`
+const DesktopNavBarContainer = styled.div`
   position: absolute;
   top: 30px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 2.25rem;
+  
+  @media (max-width: 768px) {
+    display: none; /* Hide on mobile */
+  }
+`;
+
+// Mobile menu button
+const MobileMenuButton = styled.button`
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 15px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
+const MenuIcon = styled.div`
+  width: 30px;
+  height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  
+  div {
+    width: 100%;
+    height: 3px;
+    background-color: #000;
+    border-radius: 3px;
+  }
+`;
+
+// Mobile sidebar
+const MobileSidebar = styled.div`
+  position: fixed;
+  top: 0;
+  right: ${(props) => (props.isOpen ? '0' : '-250px')};
+  width: 250px;
+  height: 100vh;
+  background-color: #fff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  padding-top: 60px;
+  
+  @media (max-width: 768px) {
+    display: flex;
+  }
+`;
+
+const SidebarCloseButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+`;
+
+const SidebarNavButton = styled.button`
+  padding: 15px 20px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
 `;
 
 const PageTitle = styled.h1`
-  font-size: 1.75rem; // Increased font size
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 1rem;
   margin-top: 5rem;
+  text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+  }
 `;
 
 const QuizCardContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 650px; // Increased width
-  padding: 1rem;
+  max-width: 650px;
+  padding: 1.5rem;
   background: #e8e8e8;
   color: #000000;
   border-radius: 20px;
-  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5); // Neomorphism effect
+  border: 1px solid rgba(47, 44, 44, 0.24);
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5);
+  
+  @media (max-width: 768px) {
+    max-width: 95%;
+    padding: 1rem;
+    border-radius: 15px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1), -5px -5px 10px rgba(255, 255, 255, 0.5);
+  }
 `;
 
 const InfoSection = styled.div`
   margin-bottom: 10px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const QuestionText = styled.span`
   color: rgb(49, 49, 49);
-  font-size: 1.1rem; // Increased font size
-  line-height: auto;
+  font-size: 1.1rem;
+  line-height: 1.4;
   font-weight: 800;
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
 `;
 
 const StepsIndicator = styled.span`
@@ -495,6 +683,11 @@ const StepsIndicator = styled.span`
   font-size: 12px;
   line-height: 12px;
   font-weight: 600;
+  white-space: nowrap;
+  
+  @media (max-width: 480px) {
+    align-self: flex-end;
+  }
 `;
 
 const RadioGroup = styled.div`
@@ -511,14 +704,15 @@ const RadioLabel = styled.label`
   background-color: #ffffff;
   padding: 14px;
   margin: 8px 0 0 0;
-  font-size: 14px; // Increased font size
+  font-size: 14px;
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
+  border: 1px solid rgba(47, 44, 44, 0.24);
   color: #000000;
   transition: 0.3s ease;
-
+  word-wrap: break-word;
+  
   &:hover {
     background-color: rgba(24, 24, 24, 0.13);
     border: 1px solid #bbbbbb;
@@ -530,23 +724,52 @@ const RadioLabel = styled.label`
     border-color: rgb(22, 245, 22);
     color: rgb(16, 184, 16);
   `}
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    font-size: 13px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px;
+    font-size: 12px;
+  }
 `;
 
 const NavigationButtons = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 1.5rem;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    & > button {
+      width: 100%;
+      margin: 0;
+    }
+  }
 `;
 
 // Results page styled components
 const ResultsContainer = styled.div`
   width: 100%;
-  max-width: 600px; // Increased width
+  max-width: 600px;
   background: #ffffff;
   border-radius: 20px;
-  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5); // Neomorphism effect
+  border: 1px solid rgba(47, 44, 44, 0.24);
+  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5);
   padding: 1rem;
+  overflow-y: auto;
+  max-height: 60vh;
+  
+  @media (max-width: 768px) {
+    max-width: 95%;
+    padding: 0.75rem;
+    border-radius: 15px;
+    max-height: 50vh;
+  }
 `;
 
 const ResultCard = styled.div`
@@ -555,6 +778,10 @@ const ResultCard = styled.div`
   background-color: #f9fafb;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+  }
 `;
 
 const OptionsContainer = styled.div`
@@ -562,18 +789,18 @@ const OptionsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  
 `;
 
 const OptionLabel = styled.div`
   display: flex;
   background-color: #ffffff;
   padding: 14px;
-  font-size: 14px; // Increased font size
+  font-size: 14px;
   font-weight: 600;
   border-radius: 10px;
-  border: 1px solid rgba(47, 44, 44, 0.24); // Added border
+  border: 1px solid rgba(47, 44, 44, 0.24);
   color: #000000;
+  word-wrap: break-word;
 
   ${(props) =>
     props.correct &&
@@ -588,6 +815,16 @@ const OptionLabel = styled.div`
     border-color: red;
     color: red;
   `}
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    font-size: 13px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 10px;
+    font-size: 12px;
+  }
 `;
 
 const CorrectAnswer = styled.div`
@@ -595,25 +832,37 @@ const CorrectAnswer = styled.div`
   font-weight: 600;
   font-size: 15px;
   
-
   span {
     font-weight: 800;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 14px;
   }
 `;
 
 const ScoreContainer = styled.div`
   margin-top: 1rem;
   text-align: center;
+  padding: 0 1rem;
 `;
 
 const ScoreText = styled.p`
   font-size: 1.25rem;
   font-weight: 700;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
 `;
 
 const ScoreResult = styled.p`
   color: ${(props) => (props.passed ? "rgb(16, 184, 16)" : "red")};
   font-weight: 600;
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const ActionButton = styled.button`
@@ -624,6 +873,11 @@ const ActionButton = styled.button`
   color: white;
   transition: background-color 0.3s;
   cursor: pointer;
+  
+  @media (max-width: 768px) {
+    padding: 0.5rem 1.25rem;
+    margin-top: 1rem;
+  }
 `;
 
 export default NewQuizPage;

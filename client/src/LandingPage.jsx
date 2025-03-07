@@ -26,15 +26,26 @@ export default function LandingPage() {
   const rendererRef = useRef(null);
   const mixerRef = useRef(null);
   const animationFrameRef = useRef(null);
-  const cameraRef = useRef(null); // Added cameraRef
+  const cameraRef = useRef(null);
   const [courses, setCourses] = useState([]);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar visibility
 
   const { user } = useUser();
   const [progress, setProgress] = useState(null);
   const auth = useAuth();
   const getToken = auth?.getToken;
   const signOut = auth?.signOut;
+
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Close sidebar when a link is clicked
+  const handleSidebarLinkClick = () => {
+    setIsSidebarOpen(false);
+  };
+
 
   useEffect(() => {
     if (user) {
@@ -339,7 +350,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4 md:hidden">
               <div className="flex-grow flex justify-center">
                 <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  onClick={toggleSidebar} // Toggle sidebar on button click
                   className="p-2 text-black focus:outline-none"
                 >
                   <svg
@@ -348,7 +359,7 @@ export default function LandingPage() {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    {isMenuOpen ? (
+                    {isSidebarOpen ? (
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -386,53 +397,6 @@ export default function LandingPage() {
                 </SignedIn>
               </div>
             </div>
-          </div>
-
-          {/* Mobile Menu */}
-          <div
-            className={`${
-              isMenuOpen ? "flex" : "hidden"
-            } md:hidden flex-col absolute top-full left-0 right-0 bg-white mt-2 p-4 rounded-lg shadow-lg z-50 space-y-2`}
-          >
-            <NavButton
-              path="#courses"
-              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
-              onClick={() => {
-                document
-                  .getElementById("courses")
-                  .scrollIntoView({ behavior: "smooth" });
-                setIsMenuOpen(false);
-              }}
-            >
-              Courses
-            </NavButton>
-            <NavButton
-              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
-              onClick={() => {
-                handelExploreCourseClick();
-                setIsMenuOpen(false);
-              }}
-            >
-              Explore
-            </NavButton>
-            <NavButton
-              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
-              onClick={() => {
-                handelAboutUsClick();
-                setIsMenuOpen(false);
-              }}
-            >
-              About Us
-            </NavButton>
-            <NavButton
-              className="transform transition-transform duration-300 hover:scale-110 text-black w-full text-center py-2"
-              onClick={() => {
-                handleLeaderboardClick();
-                setIsMenuOpen(false);
-              }}
-            >
-              Leaderboard
-            </NavButton>
           </div>
 
           {/* Desktop Menu */}
@@ -528,6 +492,74 @@ export default function LandingPage() {
           </div>
         </section>
       </header>
+       {/* Mobile Sidebar */}
+       <div
+        className={`fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
+          isSidebarOpen ? "translate-x-0" : "translate-x-full"
+        } md:hidden`}
+      >
+        <div className="p-4">
+          <button
+            onClick={toggleSidebar}
+            className="p-2 text-black focus:outline-none"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <nav className="flex flex-col space-y-4 p-4">
+          <NavButton
+            path="#courses"
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
+            onClick={() => {
+              document
+                .getElementById("courses")
+                .scrollIntoView({ behavior: "smooth" });
+              handleSidebarLinkClick();
+            }}
+          >
+            Courses
+          </NavButton>
+          <NavButton
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
+            onClick={() => {
+              handelExploreCourseClick();
+              handleSidebarLinkClick();
+            }}
+          >
+            Explore
+          </NavButton>
+          <NavButton
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
+            onClick={() => {
+              handelAboutUsClick();
+              handleSidebarLinkClick();
+            }}
+          >
+            About Us
+          </NavButton>
+          <NavButton
+            className="transform transition-transform duration-300 hover:scale-110 text-black"
+            onClick={() => {
+              handleLeaderboardClick();
+              handleSidebarLinkClick();
+            }}
+          >
+            Leaderboard
+          </NavButton>
+        </nav>
+      </div>
 
       {/* Step Into the Future Section */}
       <section className="bg-black text-white py-0 fade-in" ref={addToRefs}>
