@@ -16,6 +16,7 @@ export const Plants = () => {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false); // State for mobile menu
   const pageRef = useRef(null);
+  const userId=1;
 
   // Force scroll to top
   useEffect(() => {
@@ -66,8 +67,40 @@ export const Plants = () => {
     }
   }, [courseId]);
 
-  const handleEnrollClick = (moduleId) => {
-    navigate(`/aloepage/${moduleId}`);
+  const handleEnrollClick = async (moduleId) => {
+    try {
+      // Check if the user has already completed this module
+      const completionResponse = await fetch(
+        `http://localhost:3000/api/module-completion/${userId}/${moduleId}`
+      );
+      if (!completionResponse.ok) {
+        throw new Error(`HTTP error! status: ${completionResponse.status}`);
+      }
+      const completionData = await completionResponse.json();
+  
+      if (completionData.completed) {
+        // User has already completed this module, navigate to the next module
+        const nextModuleResponse = await fetch(
+          `http://localhost:3000/api/modules/next/${courseId}/${moduleId}`
+        );
+        if (!nextModuleResponse.ok) {
+          throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
+        }
+        const nextModuleData = await nextModuleResponse.json();
+  
+        if (nextModuleData.nextModuleId) {
+          navigate(`/aloepage/${nextModuleData.nextModuleId}`);
+        } else {
+          alert("You have completed all modules in this course!");
+        }
+      } else {
+        // User has not completed this module, navigate to the module page
+        navigate(`/aloepage/${moduleId}`);
+      }
+    } catch (error) {
+      console.error("Error checking module completion:", error);
+      setError(error.message);
+    }
   };
 
   const handleCourseClick = () => {

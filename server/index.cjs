@@ -134,24 +134,24 @@ app.get('/courses', async (req, res) => {
 
 
 // Endpoint to fetch all courses
-app.get('/courses', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT id, course_name, primary_language, level, course_image FROM courses');
-    const coursesWithImages = result.rows.map(course => {
-      if (course.course_image) {
-        const base64Image = course.course_image.toString('base64');
-        course.course_image = `data:image/png;base64,${base64Image}`;
-      } else {
-        course.course_image = null;
-      }
-      return course;
-    });
-    res.status(200).json(coursesWithImages);
-  } catch (error) {
-    console.error('Error fetching courses:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
+// app.get('/courses', async (req, res) => {
+//   try {
+//     const result = await pool.query('SELECT id, course_name, primary_language, level, course_image FROM courses');
+//     const coursesWithImages = result.rows.map(course => {
+//       if (course.course_image) {
+//         const base64Image = course.course_image.toString('base64');
+//         course.course_image = `data:image/png;base64,${base64Image}`;
+//       } else {
+//         course.course_image = null;
+//       }
+//       return course;
+//     });
+//     res.status(200).json(coursesWithImages);
+//   } catch (error) {
+//     console.error('Error fetching courses:', error);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
 
 // Endpoint to fetch course by course ID
 app.get('/courses/:id', async (req, res) => {
@@ -202,30 +202,6 @@ app.get('/modules/:courseId', async (req, res) => {
 
 
 // Endpoint to fetch modules by module ID
-// app.get('/api/modules/:moduleId', async (req, res) => {
-//   try {
-//     const moduleId = parseInt(req.params.moduleId, 10);
-//     const result = await pool.query(
-//       'SELECT * FROM modules WHERE id = $1',
-//       [moduleId]
-//     );
-
-//     const modulesWithImages = result.rows.map(module => {
-//       if (module.module_image) {
-//         const base64Image = Buffer.from(module.module_image, 'binary').toString('base64');
-//         module.module_image = `data:image/png;base64,${base64Image}`;
-//       } else {
-//         module.module_image = null;
-//       }
-//       return module;
-//     });
-
-//     res.status(200).json(modulesWithImages);
-//   } catch (error) {
-//     console.error('Error fetching modules:', error);
-//     res.status(500).json({ message: error.message });
-//   }
-// });
 app.get('/api/modules/:moduleId', async (req, res) => {
   try {
     const moduleId = parseInt(req.params.moduleId, 10);
@@ -234,14 +210,19 @@ app.get('/api/modules/:moduleId', async (req, res) => {
       [moduleId]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Module not found' });
-    }
+    const modulesWithImages = result.rows.map(module => {
+      if (module.module_image) {
+        const base64Image = Buffer.from(module.module_image, 'binary').toString('base64');
+        module.module_image = `data:image/png;base64,${base64Image}`;
+      } else {
+        module.module_image = null;
+      }
+      return module;
+    });
 
-    const module = result.rows[0];
-    res.status(200).json(module); // Ensure this includes course_id
+    res.status(200).json(modulesWithImages);
   } catch (error) {
-    console.error('Error fetching module:', error);
+    console.error('Error fetching modules:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -402,17 +383,26 @@ app.post('/api/enroll', async (req, res) => {
 
 
 app.get('/api/enrollments/:userId', async (req, res) => {
-  const { userId } = req.params;
-
   try {
-      const result = await pool.query(
-          'SELECT c.id, c.course_name AS title, c.course_image AS image FROM enrollments e JOIN courses c ON e.course_id = c.id WHERE e.user_id = $1',
-          [userId]
-      );
-      res.json(result.rows);
+    const { userId } = req.params;
+    const result = await pool.query(
+      `
+        SELECT ce.course_id, c.course_name, c.course_image, 
+               COUNT(mc.module_id) AS completed_modules, 
+               (SELECT COUNT(*) FROM modules WHERE course_id = ce.course_id) AS total_modules
+        FROM course_enrollment ce
+        LEFT JOIN module_completion mc ON ce.course_id = mc.course_id AND mc.user_id = ce.user_id
+        LEFT JOIN courses c ON ce.course_id = c.id
+        WHERE ce.user_id = $1
+        GROUP BY ce.course_id, c.course_name, c.course_image
+      `,
+      [userId]
+    );
+
+    res.json(result.rows);
   } catch (error) {
-      console.error('Error fetching enrollments:', error);
-      res.status(500).send('Error fetching enrollments');
+    console.error('Error fetching enrolled courses and progress:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -546,7 +536,25 @@ app.get('/api/module-completion/:userId/:moduleId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-app
+
+
+app.post('/api/submit-feedback', async (req, res) => {
+  try {
+    const { userId, courseId, feedback } = req.body;
+
+    await pool.query(
+      'INSERT INTO feedback (user_id, course_id, feedback_text, feedback_date) VALUES ($1, $2, $3, CURRENT_DATE)',
+      [userId, courseId, feedback]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
 
 
 app.listen(port, () => {

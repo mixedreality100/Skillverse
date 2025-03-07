@@ -1,3 +1,4 @@
+// NewQuizPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -5,8 +6,8 @@ import Loader from "./Loader";
 import NavButton from "./NavButton";
 import Button from "./Button";
 import skillverseLogo from "../assets/skillverse.svg";
+import FeedbackHandler from "./FeedbackHandler"; // Import the FeedbackHandler
 
-// Add global font family
 const GlobalStyle = styled.div`
   font-family: 'Poppins', sans-serif;
 `;
@@ -24,9 +25,16 @@ const NewQuizPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [nextModuleId, setNextModuleId] = useState(null);
   const [courseId, setCourseId] = useState(null);
-
-  // Manually set userId for testing purposes
   const userId = 1; // Replace with actual user ID from authentication
+
+  // Initialize FeedbackHandler
+  const {
+    feedbackFormVisible,
+    setFeedbackFormVisible,
+    feedback,
+    setFeedback,
+    handleFeedbackSubmit,
+  } = FeedbackHandler({ userId, courseId });
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {
@@ -42,7 +50,6 @@ const NewQuizPage = () => {
         console.log("Fetched quiz questions:", data);
         setQuizQuestions(data);
 
-        // Fetch the courseId for the module
         const courseResponse = await fetch(
           `http://localhost:3000/api/modules/${moduleId}`
         );
@@ -51,7 +58,8 @@ const NewQuizPage = () => {
         }
         const courseData = await courseResponse.json();
         console.log("Fetched course data:", courseData);
-        setCourseId(courseData.course_id); // Set the courseId
+        setCourseId(courseData[0].course_id); // Set the courseId
+        console.log("Set courseId:", courseData[0].course_id); // Log the courseId
       } catch (error) {
         console.error("Error fetching quiz questions:", error);
         setError(error.message);
@@ -65,44 +73,12 @@ const NewQuizPage = () => {
     }
   }, [moduleId]);
 
-  const handleBack = () => {
-    window.history.back();
-  };
-
-  const handleCourses = () => {
-    navigate("/");
-    setTimeout(() => {
-      const coursesSection = document.getElementById("courses");
-      if (coursesSection) {
-        coursesSection.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
-  };
-
-  const handelAboutUsClick = () => {
-    navigate("/aboutus");
-  };
-
-  const handelExploreCourseClick = () => {
-    navigate("/explore");
-  };
-
-  if (loading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-
-  const handleAnswerChange = (questionId, option) => {
-    setUserAnswers((prevAnswers) => ({
-      ...prevAnswers,
-      [questionId]: option,
-    }));
-  };
-
   const handleSubmit = async () => {
+    if (!courseId) {
+      setError("Course ID is not available. Please try again later.");
+      return;
+    }
+
     let correctAnswersCount = 0;
     quizQuestions.forEach((question) => {
       if (userAnswers[question.id] === question.correct_answer) {
@@ -131,7 +107,7 @@ const NewQuizPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            userId: userId, // Use the manually set userId
+            userId: userId,
             moduleId: moduleId,
             answers: userAnswers,
           }),
@@ -147,61 +123,12 @@ const NewQuizPage = () => {
         console.log("Response data:", data);
 
         if (data.success) {
-          let nextModuleId = data.nextModuleId;
+          setNextModuleId(data.nextModuleId);
 
-          // Check if the user has already completed the next module
-          while (nextModuleId) {
-            console.log("Fetching completion status for module:", nextModuleId);
-            const completionResponse = await fetch(
-              `http://localhost:3000/api/module-completion/${userId}/${nextModuleId}`
-            );
-            console.log(
-              "Completion response status:",
-              completionResponse.status
-            );
-
-            if (!completionResponse.ok) {
-              throw new Error(
-                `HTTP error! status: ${completionResponse.status}`
-              );
-            }
-
-            const completionData = await completionResponse.json();
-            console.log("Completion data:", completionData);
-
-            if (!completionData.completed) {
-              break; // User has not completed this module, so we can navigate to it
-            }
-
-            // Fetch the next module ID
-            console.log("Fetching next module ID for course:", courseId);
-            if (!courseId) {
-              throw new Error("courseId is undefined");
-            }
-
-            const nextModuleResponse = await fetch(
-              `http://localhost:3000/api/modules/next/${courseId}/${nextModuleId}`
-            );
-            console.log(
-              "Next module response status:",
-              nextModuleResponse.status
-            );
-
-            if (!nextModuleResponse.ok) {
-              throw new Error(
-                `HTTP error! status: ${nextModuleResponse.status}`
-              );
-            }
-
-            const nextModuleData = await nextModuleResponse.json();
-            console.log("Next module data:", nextModuleData);
-            nextModuleId = nextModuleData.nextModuleId;
-          }
-
-          if (nextModuleId) {
-            navigate(`/aloepage/${nextModuleId}`);
-          } else {
-            alert("You have completed all modules in this course!");
+          // Check if all modules are completed
+          const allModulesCompleted = data.nextModuleId === null;
+          if (allModulesCompleted) {
+            setFeedbackFormVisible(true); // Show feedback form
           }
         } else {
           setError("Error fetching next module ID.");
@@ -211,6 +138,37 @@ const NewQuizPage = () => {
         setError(error.message);
       }
     }
+  };
+
+  const handleBack = () => {
+    window.history.back();
+  };
+
+  const handleCourses = () => {
+    navigate("/courses");
+  };
+
+  const handelAboutUsClick = () => {
+    navigate("/aboutus");
+  };
+
+  const handelExploreCourseClick = () => {
+    navigate("/explore");
+  };
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center">Error: {error}</div>;
+  }
+
+  const handleAnswerChange = (questionId, option) => {
+    setUserAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [questionId]: option,
+    }));
   };
 
   const handleRetake = () => {
@@ -298,19 +256,27 @@ const NewQuizPage = () => {
             </ScoreResult>
           </ScoreContainer>
 
-          {score >= passingScore * 100 ? (
-            nextModuleId ? (
-              <ActionButton
-                onClick={() => navigate(`/aloepage/${nextModuleId}`)}
-                className="bg-green-500 hover:bg-green-600"
-              >
-                Next Module
-              </ActionButton>
-            ) : (
-              <div className="text-red-500 mt-6">
-                Error fetching next module ID or you've completed all modules.
-              </div>
-            )
+          {score >= passingScore * 100 && nextModuleId ? (
+            <ActionButton
+              onClick={() => navigate(`/aloepage/${nextModuleId}`)}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              Next Module
+            </ActionButton>
+          ) : score >= passingScore * 100 && feedbackFormVisible ? (
+            <div>
+              <h2>Feedback</h2>
+              <textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Please provide your feedback..."
+              />
+              <button onClick={handleFeedbackSubmit}>Submit Feedback</button>
+            </div>
+          ) : score >= passingScore * 100 ? (
+            <div className="text-red-500 mt-6">
+              Error fetching next module ID or you've completed all modules.
+            </div>
           ) : (
             <ActionButton
               onClick={handleRetake}
@@ -562,7 +528,6 @@ const OptionsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  
 `;
 
 const OptionLabel = styled.div`
@@ -594,7 +559,6 @@ const CorrectAnswer = styled.div`
   margin-top: 0.5rem;
   font-weight: 600;
   font-size: 15px;
-  
 
   span {
     font-weight: 800;

@@ -52,7 +52,7 @@ function App() {
         />
         <Route
           path="/learner-dashboard"
-          element={<LearnerDashboard userId={9} />}
+          element={<LearnerDashboard userId={1} />}
         />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/plants" element={<Plants />} />
