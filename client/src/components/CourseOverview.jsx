@@ -201,7 +201,7 @@ const CourseOverview = () => {
         `}
       </style>
       <div className="course-overview-container bg-[#ffffff] overflow-x-hidden w-[1440px] relative rounded-lg">
-        <nav className="flex justify-between items-center w-full max-w-[1274px]">
+        <nav className="flex justify-between items-center w-full max-w-[1440px] mt-[30px] ml-[80px]">
           <img
             src={skillverselogo}
             alt="logo"

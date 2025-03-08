@@ -273,7 +273,7 @@ export const Plants = () => {
               `}
             </style>
             <div
-              className="absolute top-[240px] md:top-[420px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-light text-[#85C86A] text-[100px] md:text-[350px] text-center tracking-[1.71px] leading-[0.8] drop-shadow-[2px_2px_4px_rgba(0,0,0,0.5)]"
+              className="absolute top-[240px] md:top-[420px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 font-light text-[#85C86A] text-[100px] md:text-[270px] text-center tracking-[1.71px] leading-[0.8] drop-shadow-[2px_2px_4px_rgba(0,0,0,0.5)]"
               style={{ fontFamily: "Bebas Neue, Helvetica" }}
             >
               {courseDetails?.course_name || ""}

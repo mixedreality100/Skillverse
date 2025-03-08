@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
@@ -8,6 +8,35 @@ import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 export default function AboutUs() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Close sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSidebarOpen && !event.target.closest('.mobile-sidebar') && 
+          !event.target.closest('.sidebar-toggle')) {
+        setIsSidebarOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
+  // Close sidebar on resize if screen becomes large enough
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isSidebarOpen]);
 
   const handleCourses = () => {
     navigate("/");
@@ -17,12 +46,12 @@ export default function AboutUs() {
         coursesSection.scrollIntoView({ behavior: "smooth" });
       }
     }, 100);
-    setIsSidebarOpen(false); // Close sidebar after navigation
+    setIsSidebarOpen(false);
   };
 
   const handleExploreClick = () => {
     navigate("/explore");
-    setIsSidebarOpen(false); // Close sidebar after navigation
+    setIsSidebarOpen(false);
   };
 
   const toggleSidebar = () => {
@@ -49,6 +78,49 @@ export default function AboutUs() {
         duration: 0.5,
       },
     },
+  };
+
+  // Sidebar animation variants
+  const sidebarVariants = {
+    closed: { 
+      x: "100%",
+      opacity: 0,
+      transition: { 
+        type: "tween", 
+        duration: 0.3,
+        ease: "easeInOut"
+      }
+    },
+    open: { 
+      x: 0,
+      opacity: 1,
+      transition: { 
+        type: "tween", 
+        duration: 0.3,
+        ease: "easeInOut",
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const sidebarItemVariants = {
+    closed: { 
+      x: 20,
+      opacity: 0
+    },
+    open: { 
+      x: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.3
+      }
+    }
+  };
+
+  const overlayVariants = {
+    closed: { opacity: 0 },
+    open: { opacity: 1 }
   };
 
   const developers = [
@@ -110,50 +182,165 @@ export default function AboutUs() {
 
           {/* Mobile Sidebar Toggle Button */}
           <button
-            className="md:hidden text-black transform transition-transform duration-300 hover:scale-110"
+            className="md:hidden text-black transform transition-transform duration-300 hover:scale-110 sidebar-toggle"
             onClick={toggleSidebar}
+            aria-label="Toggle mobile menu"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
-            </svg>
+            {!isSidebarOpen ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16m-7 6h7"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            )}
           </button>
         </div>
       </nav>
-
-      {/* Mobile Sidebar */}
-      <motion.div
-        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-        initial={{ x: "100%" }}
-        animate={{ x: isSidebarOpen ? 0 : "100%" }}
-      >
-        <div className="p-6">
-          <NavButton
-            className="block w-full text-left mb-4 text-black hover:bg-gray-100 rounded-lg p-3"
-            onClick={handleCourses}
-          >
-            Courses
-          </NavButton>
-          <NavButton
-            className="block w-full text-left text-black hover:bg-gray-100 rounded-lg p-3"
-            onClick={handleExploreClick}
-          >
-            Explore
-          </NavButton>
-        </div>
-      </motion.div>
+      
+      {/* Mobile Menu Overlay and Sidebar */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={overlayVariants}
+              onClick={() => setIsSidebarOpen(false)}
+            />
+            
+            {/* Sidebar */}
+            <motion.div
+              className="mobile-sidebar fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 md:hidden flex flex-col"
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={sidebarVariants}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                <p className="font-bold text-lg text-black">Menu</p>
+                <button 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1 rounded-full hover:bg-gray-100"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Links */}
+              <div className="p-5 flex flex-col gap-2">
+                <motion.div variants={sidebarItemVariants}>
+                  <NavButton
+                    className="block w-full text-left mb-4 text-black hover:bg-gray-100 rounded-lg p-3 transition-colors"
+                    onClick={handleCourses}
+                  >
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
+                      Courses
+                    </span>
+                  </NavButton>
+                </motion.div>
+                
+                <motion.div variants={sidebarItemVariants}>
+                  <NavButton
+                    className="block w-full text-left text-black hover:bg-gray-100 rounded-lg p-3 transition-colors"
+                    onClick={handleExploreClick}
+                  >
+                    <span className="flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                        />
+                      </svg>
+                      Explore
+                    </span>
+                  </NavButton>
+                </motion.div>
+              </div>
+              
+              {/* Footer */}
+              <div className="mt-auto p-5 border-t border-gray-100">
+                <SignedOut>
+                  <SignInButton>
+                    <button className="w-full rounded-full border-2 border-black py-3 text-center font-medium transition-all hover:bg-black hover:text-white">
+                      Login
+                    </button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <p className="text-sm text-gray-500 mb-2">Signed in as:</p>
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 mr-3"></div>
+                    <div>User Account</div>
+                  </div>
+                </SignedIn>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Rest of the content */}
       <motion.div

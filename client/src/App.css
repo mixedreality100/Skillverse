@@ -149,9 +149,8 @@ body {
 
 /* Specific styles for the "Login" button */
 .login-button {
-  background-color: black;
+  background-color: rgb(255, 255, 255);
   color: white;
-  border: 1px solid #ddd;
   padding: 12px 20px;
   border-radius: 30px;
   font-size: 16px;
@@ -162,10 +161,7 @@ body {
   margin-left: 70px;
 }
 
-.login-button:hover {
-  background-color: #333;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+
 
 .divider {
   display: flex;
