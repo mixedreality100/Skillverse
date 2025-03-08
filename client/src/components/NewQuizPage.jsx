@@ -25,6 +25,7 @@ const NewQuizPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [nextModuleId, setNextModuleId] = useState(null);
   const [courseId, setCourseId] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile sidebar
 
   // Manually set userId for testing purposes
   const userId = 1; // Replace with actual user ID from authentication
@@ -89,21 +90,17 @@ const NewQuizPage = () => {
     }, 100);
   };
 
-  const handelAboutUsClick = () => {
+  const handleAboutUsClick = () => {
     navigate("/aboutus");
   };
 
-  const handelExploreCourseClick = () => {
+  const handleExploreCourseClick = () => {
     navigate("/explore");
   };
 
-  if (loading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   const handleAnswerChange = (questionId, option) => {
     setUserAnswers((prevAnswers) => ({
@@ -179,37 +176,6 @@ const NewQuizPage = () => {
     }
   };
 
-  const handleBack = () => {
-    window.history.back();
-  };
-
-  const handleCourses = () => {
-    navigate("/courses");
-  };
-
-  const handelAboutUsClick = () => {
-    navigate("/aboutus");
-  };
-
-  const handelExploreCourseClick = () => {
-    navigate("/explore");
-  };
-
-  if (loading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-
-  const handleAnswerChange = (questionId, option) => {
-    setUserAnswers((prevAnswers) => ({
-      ...prevAnswers,
-      [questionId]: option,
-    }));
-  };
-
   const handleRetake = () => {
     setUserAnswers({});
     setQuizSubmitted(false);
@@ -230,6 +196,14 @@ const NewQuizPage = () => {
     }
   };
 
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center">Error: {error}</div>;
+  }
+
   if (quizSubmitted) {
     return (
       <GlobalStyle>
@@ -248,13 +222,13 @@ const NewQuizPage = () => {
             </NavButton>
             <NavButton
               className="transform transition-transform duration-300 hover:scale-110 text-black"
-              onClick={handelExploreCourseClick}
+              onClick={handleExploreCourseClick}
             >
               Explore
             </NavButton>
             <NavButton
               className="transform transition-transform duration-300 hover:scale-110 text-black"
-              onClick={handelAboutUsClick}
+              onClick={handleAboutUsClick}
             >
               About Us
             </NavButton>
@@ -273,8 +247,8 @@ const NewQuizPage = () => {
           <MobileSidebar id="mobile-sidebar" isOpen={isSidebarOpen}>
             <SidebarCloseButton onClick={() => setIsSidebarOpen(false)}>×</SidebarCloseButton>
             <SidebarNavButton onClick={handleCourses}>Courses</SidebarNavButton>
-            <SidebarNavButton onClick={handelExploreCourseClick}>Explore</SidebarNavButton>
-            <SidebarNavButton onClick={handelAboutUsClick}>About Us</SidebarNavButton>
+            <SidebarNavButton onClick={handleExploreCourseClick}>Explore</SidebarNavButton>
+            <SidebarNavButton onClick={handleAboutUsClick}>About Us</SidebarNavButton>
           </MobileSidebar>
 
           <PageTitle>Quiz Results</PageTitle>
@@ -367,13 +341,13 @@ const NewQuizPage = () => {
           </NavButton>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
-            onClick={handelExploreCourseClick}
+            onClick={handleExploreCourseClick}
           >
             Explore
           </NavButton>
           <NavButton
             className="transform transition-transform duration-300 hover:scale-110 text-black"
-            onClick={handelAboutUsClick}
+            onClick={handleAboutUsClick}
           >
             About Us
           </NavButton>
@@ -392,8 +366,8 @@ const NewQuizPage = () => {
         <MobileSidebar id="mobile-sidebar" isOpen={isSidebarOpen}>
           <SidebarCloseButton onClick={() => setIsSidebarOpen(false)}>×</SidebarCloseButton>
           <SidebarNavButton onClick={handleCourses}>Courses</SidebarNavButton>
-          <SidebarNavButton onClick={handelExploreCourseClick}>Explore</SidebarNavButton>
-          <SidebarNavButton onClick={handelAboutUsClick}>About Us</SidebarNavButton>
+          <SidebarNavButton onClick={handleExploreCourseClick}>Explore</SidebarNavButton>
+          <SidebarNavButton onClick={handleAboutUsClick}>About Us</SidebarNavButton>
         </MobileSidebar>
 
         <PageTitle>Quiz</PageTitle>

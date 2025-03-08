@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import backArrow from "../assets/skillverse.svg";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, useUser } from "@clerk/clerk-react"; // Import useUser
 import ProfileButton from "./profile";
 import Loader from "./Loader";
 import medicinalhero from "../plantsAssets/image2.jpg";
@@ -14,8 +14,13 @@ export const Plants = () => {
   const [error, setError] = useState(null);
   const [isEnrollPopupOpen, setIsEnrollPopupOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false); // State for mobile menu
+  const [menuOpen, setMenuOpen] = useState(false);
   const pageRef = useRef(null);
+  const sidebarRef = useRef(null);
+
+  // Fetch userId using Clerk's useUser hook
+  const { user } = useUser();
+  const userId = 11; // Get userId from the authenticated user
 
   // Force scroll to top
   useEffect(() => {
@@ -68,6 +73,11 @@ export const Plants = () => {
   }, [courseId]);
 
   const handleEnrollClick = async (moduleId) => {
+    if (!userId) {
+      console.error("User ID is not available. Please log in.");
+      return;
+    }
+
     try {
       // Check if the user has already completed this module
       const completionResponse = await fetch(
@@ -77,7 +87,7 @@ export const Plants = () => {
         throw new Error(`HTTP error! status: ${completionResponse.status}`);
       }
       const completionData = await completionResponse.json();
-  
+
       if (completionData.completed) {
         // User has already completed this module, navigate to the next module
         const nextModuleResponse = await fetch(
@@ -87,7 +97,7 @@ export const Plants = () => {
           throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
         }
         const nextModuleData = await nextModuleResponse.json();
-  
+
         if (nextModuleData.nextModuleId) {
           navigate(`/aloepage/${nextModuleData.nextModuleId}`);
         } else {
@@ -206,7 +216,7 @@ export const Plants = () => {
 
           {/* Mobile Sidebar */}
           <div
-            ref={sidebarRef}
+            ref={sidebarRef} // Attach sidebarRef here
             className={`fixed top-0 right-0 h-full w-64 bg-white z-30 transform transition-transform duration-300 ease-in-out ${
               menuOpen ? "translate-x-0" : "translate-x-full"
             } md:hidden`}

@@ -699,12 +699,24 @@ export const AloePage = () => {
 
           {/* Hero Section */}
           <section className="hero-section">
-            <img src={aloeverohero} alt="Aloe Vera" className="hero-image" />
-            <div className="hero-text-container">
-              <h1 className="hero-title">{moduleName}</h1>
-              <p className="scientific-name">Aloe Barbadensis</p>
-            </div>
-          </section>
+      {/* Import Bebas Neue font */}
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+        `}
+      </style>
+
+      <img src={aloeverohero} alt="Aloe Vera" className="hero-image" />
+      <div className="hero-text-container">
+        <h1
+          className="hero-title"
+          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+        >
+          {moduleName}
+        </h1>
+        <p className="scientific-name">Aloe Barbadensis</p>
+      </div>
+    </section>
 
           {/* Info Cards */}
           <section className="info-cards-section">
