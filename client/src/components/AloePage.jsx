@@ -110,6 +110,7 @@ export const AloePage = () => {
         const moduleData = await response.json();
         if (moduleData.length > 0) {
           setModuleName(moduleData[0].module_name); // Set the module name
+          console.log(moduleName)
         } else {
           console.error("Module not found");
         }
@@ -338,12 +339,13 @@ export const AloePage = () => {
   letter-spacing: 0.5rem;
   line-height: 1;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
-  font-size: clamp(15rem, 15vw, 6rem); /* Adjust as needed */
+  font-size: clamp(18rem, 15vw, 6rem); /* Adjust as needed */
   margin: 0;
   padding: 0;
   width: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
+    z-index: 1000; 
 }
 
 .scientific-name {
@@ -729,7 +731,7 @@ export const AloePage = () => {
             <div className="hero-text-container">
               {/* Use GradualSpacing for the hero text */}
               <div className="hero-title">
-                <GradualSpacing text={moduleName} />
+                {moduleName}
               </div>
               <p className="scientific-name">Aloe Barbadensis</p>
             </div>
@@ -831,6 +833,7 @@ export const AloePage = () => {
                     <p className="text-[#725c5c]">
                       {revealedFacts.includes(4) ? (
                         "Some Aloe Vera plants can live for many, many years! That’s why people love growing them at home! "
+
                       ) : (
                         <span className="text-gray-400">
                           Tap to reveal fun fact 4

@@ -139,6 +139,20 @@ export default function AboutUs() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Include Poppins font from Google Fonts */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+
+      {/* Apply Poppins font globally using internal CSS */}
+      <style>
+        {`
+          body, h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select {
+            font-family: 'Poppins', sans-serif !important;
+          }
+        `}
+      </style>
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-[url('/path/to/your/background.jpg')] bg-cover opacity-30"></div>
 
