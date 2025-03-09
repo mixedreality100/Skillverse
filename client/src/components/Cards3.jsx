@@ -23,35 +23,11 @@ const Card = () => {
         >
           <g id="Layer_x0020_1">
             <g id="plant">
-             {/* 
-              <polygon
-                fill="#6B8E23"
-                fillRule="nonzero"
-                points="240,400 260,400 250,300 240,300"
-              />
-              <polygon
-                fill="#228B22"
-                fillRule="nonzero"
-                points="250,300 200,250 220,230 250,270"
-              />
-              <polygon
-                fill="#228B22"
-                fillRule="nonzero"
-                points="250,300 300,250 280,230 250,270"
-              />
-              <polygon
-                fill="#32CD32"
-                fillRule="nonzero"
-                points="250,270 230,200 270,200"
-              />
-              */}
+              {/* SVG content can be added here if needed */}
             </g>
           </g>
         </svg>
-        <div className="initialText">Wound Healing</div>
         <div className="textBox">
-          {/* <p className="text head">Wound Healing:</p> */}
-          <span></span>
           <p className="text price" style={{ marginLeft: '10px', padding: '0 20px' }}>
             Aloe vera contains compounds that may help speed up the healing process of minor wounds.
           </p>
@@ -74,7 +50,6 @@ const StyledWrapper = styled.div`
     align-items: center;
     justify-content: center;
     color: white;
-    transition: 0.2s ease-in-out;
     position: relative;
   }
 
@@ -82,7 +57,6 @@ const StyledWrapper = styled.div`
     height: 110%;
     position: absolute;
     top: 5%;
-    transition: 0.2s ease-in-out;
     z-index: 1;
   }
 
@@ -92,68 +66,31 @@ const StyledWrapper = styled.div`
     color: white;
     font-weight: bold;
     z-index: 2;
-    transition: 0.2s ease-in-out;
   }
 
   .textBox {
-    opacity: 0;
+    opacity: 1; /* Always visible */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 15px;
-    transition: 0.2s ease-in-out;
     z-index: 2;
-    transform: translateY(50px);
+    transform: translateY(0); /* No initial translation */
   }
 
   .textBox > .text {
     font-weight: bold;
-    
   }
 
   .textBox > .head {
     font-size: 40px;
-    color:white;
+    color: white;
   }
 
   .textBox > .price {
     font-size: 22px;
-    color:white;
-  }
-
-  .card:hover .initialText {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-
-  .card:hover .textBox {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .card:hover > .img {
-    height: 75%;
-    filter: blur(2px);
-    animation: anim 3s infinite;
-  }
-
-  @keyframes anim {
-    0% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-100px);
-    }
-
-    100% {
-      transform: translateY(0);
-    }
-  }
-
-  .card:hover {
-    transform: scale(1.04) rotate(0deg);
+    color: white;
   }
 `;
 

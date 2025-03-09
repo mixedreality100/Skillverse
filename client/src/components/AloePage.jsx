@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import TakeQuizButton from "./TakeQuizButton";
+import { GradualSpacing } from "./GradualSpacing"; // Adjust the path as necessary
 import Cards from "./Cards";
 import Cards2 from "./Cards2";
 import Cards3 from "./Cards3";
@@ -94,7 +95,7 @@ export const AloePage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
   const [moduleName, setModuleName] = useState(""); // State to store module name
-
+  const [revealedFacts, setRevealedFacts] = useState([]);
   const paperRef = useRef(null);
 
   useEffect(() => {
@@ -139,6 +140,12 @@ export const AloePage = () => {
 
   const handelExploreCourseClick = () => {
     navigate("/explore");
+  };
+
+  const revealFunFact = (factId) => {
+    if (!revealedFacts.includes(factId)) {
+      setRevealedFacts([...revealedFacts, factId]);
+    }
   };
 
   const toggleGelPopup = () => {
@@ -321,6 +328,7 @@ export const AloePage = () => {
   align-items: center;
   padding: 1rem;
   box-sizing: border-box;
+  font-family: 'Bebas Neue', sans-serif;
 }
 
 .hero-title {
@@ -330,7 +338,7 @@ export const AloePage = () => {
   letter-spacing: 0.5rem;
   line-height: 1;
   filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
-  font-size: clamp(20rem, 15vw, 6rem); /* Fixed the font size - was way too large */
+  font-size: clamp(15rem, 15vw, 6rem); /* Adjust as needed */
   margin: 0;
   padding: 0;
   width: 100%;
@@ -355,6 +363,18 @@ export const AloePage = () => {
 @media (max-width: 768px) {
   .hero-title {
     letter-spacing: 0.3rem;
+  }
+  
+  .hero-text-container {
+    padding: 0.5rem;
+  }
+  
+  .hero-title {
+    font-size: clamp(3rem, 12vw, 8rem);
+  }
+  
+  .scientific-name {
+    font-size: 1rem;
   }
 }
             
@@ -699,59 +719,235 @@ export const AloePage = () => {
 
           {/* Hero Section */}
           <section className="hero-section">
-      {/* Import Bebas Neue font */}
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-        `}
-      </style>
+            <style>
+              {`
+      @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+    `}
+            </style>
 
-      <img src={aloeverohero} alt="Aloe Vera" className="hero-image" />
-      <div className="hero-text-container">
-        <h1
-          className="hero-title"
-          style={{ fontFamily: "'Bebas Neue', sans-serif" }}
-        >
-          {moduleName}
-        </h1>
-        <p className="scientific-name">Aloe Barbadensis</p>
-      </div>
-    </section>
-
-          {/* Info Cards */}
-          <section className="info-cards-section">
-            <div
-              ref={paperRef}
-              className="info-card"
-              style={{
-                transform: isVisible ? "translateX(0)" : "translateX(-100%)",
-                opacity: isVisible ? 1 : 0,
-              }}
-            >
-              <h3 className="font-bold text-center mb-4">
-                BOTANICAL DESCRIPTION
-              </h3>
-              <p className="text-[#725c5c] whitespace-pre-line">
-                Aloe vera is a perennial plant that can grow up to 4 ft tall The
-                leaves are triangular, fleshy, and have serrated edges The
-                leaves are grey to green and sometimes have white spots The
-                leaves have sharp, pinkish spines along their edges The flowers
-                are yellow, tube-like, and cluster on a stem
-              </p>
+            <img src={aloeverohero} alt="Aloe Vera" className="hero-image" />
+            <div className="hero-text-container">
+              {/* Use GradualSpacing for the hero text */}
+              <div className="hero-title">
+                <GradualSpacing text={moduleName} />
+              </div>
+              <p className="scientific-name">Aloe Barbadensis</p>
             </div>
+          </section>
 
-            <div
-              className="info-card"
-              style={{
-                transform: isVisible ? "translateX(0)" : "translateX(100%)",
-                opacity: isVisible ? 1 : 0,
-              }}
-            >
-              <h3 className="font-bold text-center mb-4">IMPORTANT PARTS</h3>
-              <p className="text-[#725c5c] whitespace-pre-line">
-                Leaves: Contains gel and latex. Gel: Found in inner parts of
-                leaf. Latex: Found in the green outer layer of the leaf
-              </p>
+          <section className="info-cards-section">
+            <div className="flex flex-col md:flex-row items-center gap-8 px-4 py-8">
+              {/* Image Section */}
+              <div className="w-full md:w-1/2">
+                <img
+                  src="../src/plantsAssets/Aloeverahero.png" // Replace with the actual path to the Aloe Vera image
+                  alt="Aloe Vera"
+                  className="w-80 h-80 rounded-lg shadow-lg ml-[120px]"
+                />
+              </div>
+
+              {/* Information Section */}
+              <div className="w-full md:w-1/2">
+                <h3 className="font-bold text-center md:text-left text-4xl mb-9">
+                <GradualSpacing text="What is Aloe Vera?"/>
+                </h3>
+                <p className="text-[#725c5c] whitespace-pre-line text-lg">
+                  Aloe Vera is a green, spiky plant 🌿 that is super cool
+                  because it has a special gel inside its leaves. This gel is
+                  like nature's magic—it helps heal cuts and burns 🔥, makes
+                  skin soft, and even soothes sunburns! ☀️
+                  <br />
+                  <br />
+                  People also use aloe vera in drinks 🥤 and shampoos because it
+                  is good for the body and hair. It’s like a superhero plant
+                  that takes care of you! 💚✨
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Fun Facts Section */}
+          <section className="info-cards-section ">
+            <div className="flex flex-col md:flex-row items-center gap-8 px-8 py-8 ">
+              {/* Text Section (Left Side) */}
+              <div className="w-full md:w-1/2 ">
+                <h3 className="font-bold text-center md:text- text-7xl mb-8">
+                <GradualSpacing text="Fun Facts"/>
+                </h3>
+                <div className="space-y-4">
+                  {/* Fun Fact 1 */}
+                  <div
+                    className="cursor-pointer p-4 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
+                    onClick={() => revealFunFact(1)}
+                  >
+                    <p className="text-[#725c5c]">
+                      {revealedFacts.includes(1) ? (
+                        "A long time ago, people called Aloe Vera the 'Plant of Immortality' because it stays fresh for a long time and has so many benefits! Even Egyptian queens loved it! 👑🌿"
+                      ) : (
+                        <span className="text-gray-400">
+                          Tap to reveal fun fact 1
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Fun Fact 2 */}
+                  <div
+                    className="cursor-pointer p-4 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
+                    onClick={() => revealFunFact(2)}
+                  >
+                    <p className="text-[#725c5c]">
+                      {revealedFacts.includes(2) ? (
+                        "Aloe Vera is super tough! It doesn’t even need soil to grow—just water and air! It’s like a superhero plant! 💦🦸‍♂️"
+                      ) : (
+                        <span className="text-gray-400">
+                          Tap to reveal fun fact 2
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Fun Fact 3 */}
+                  <div
+                    className="cursor-pointer p-4 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
+                    onClick={() => revealFunFact(3)}
+                  >
+                    <p className="text-[#725c5c]">
+                      {revealedFacts.includes(3) ? (
+                        "If you ever get a hot sunburn from playing outside, Aloe Vera gel can cool it down and make it feel better. It's like a plant-made ice pack! 🧊🌿"
+                      ) : (
+                        <span className="text-gray-400">
+                          Tap to reveal fun fact 3
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Fun Fact 4 */}
+                  <div
+                    className="cursor-pointer p-4 bg-white rounded-lg shadow-md transition-transform duration-300 hover:scale-105"
+                    onClick={() => revealFunFact(4)}
+                  >
+                    <p className="text-[#725c5c]">
+                      {revealedFacts.includes(4) ? (
+                        "Some Aloe Vera plants can live for many, many years! That’s why people love growing them at home! "
+                      ) : (
+                        <span className="text-gray-400">
+                          Tap to reveal fun fact 4
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Section (Right Side) */}
+              <div className="w-full ">
+                <img
+                  src="../src/plantsAssets/Sample.svg" // Replace with the actual path to the image
+                  alt="Aloe Vera Fun Facts"
+                  className="w-100 h-100 rounded-lg shadow-lg ml-[400px]"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Parts Used with Description Section */}
+          <section className="info-cards-section">
+            <div className="space-y-8 px-24 py-8">
+              {/* Heading */}
+              <h3 className="font-bold text-left text-7xl mb-10 ">
+              <GradualSpacing text="Parts Used"/>
+                </h3>
+              {/* Image-Text Pair 1 */}
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Image */}
+                <div className="w-full md:w-1/2">
+                  <img
+                    src="../src/plantsAssets/aloegel.jpg" // Replace with the actual path to the first image
+                    alt="Aloe Vera Gel Part 1"
+                    className="w-80 h-80 rounded-lg shadow-lg"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="w-full ml-[-120px]">
+                  <p className="text-[#725c5c] whitespace-pre-line ">
+                    <strong className="text-5xl">✨ 1. Gel 🏥</strong> <br />:
+                    The inside of the Aloe Vera leaf has a special jelly-like
+                    gel! It’s super cool because it can help with cuts, burns,
+                    and itchy skin. It’s like nature’s magic healing potion!
+                    ✨💧
+                  </p>
+                </div>
+              </div>
+              <br />
+              {/* Image-Text Pair 2 */}
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Image */}
+                <div className="w-full md:w-1/2">
+                  <img
+                    src="../src/plantsAssets/aloeleaf.jpg" // Replace with the actual path to the second image
+                    alt="Aloe Vera Leaf"
+                    className="w-80 h-80 rounded-lg shadow-lg"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="w-full ml-[-120px]">
+                  <p className="text-[#725c5c] whitespace-pre-line">
+                    <strong className="text-5xl">🍃 2. Leaf 💦</strong>
+                    <br />
+                    :The Aloe Vera leaves are big and thick because they store
+                    water and food inside. That’s why the plant can survive even
+                    when it’s super hot! ☀️🌵
+                  </p>
+                </div>
+              </div>
+              <br />
+              {/* Image-Text Pair 3 */}
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Image */}
+                <div className="w-full md:w-1/2">
+                  <img
+                    src="../src/plantsAssets/aloeflower.jpg" // Replace with the actual path to the third image
+                    alt="Aloe Vera Flower"
+                    className="w-80 h-80 rounded-lg shadow-lg"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="w-full ml-[-120px]">
+                  <p className="text-[#725c5c] whitespace-pre-line">
+                    <strong className="text-5xl">🌸 3. Flower 🌻</strong>
+                    <br /> Aloe Vera can grow tall, beautiful flowers in yellow
+                    or orange colors. While we mostly use the leaves, the
+                    flowers make the plant look extra pretty! 🎨🐝
+                  </p>
+                </div>
+              </div>
+              <br />
+              {/* Image-Text Pair 4 */}
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Image */}
+                <div className="w-full md:w-1/2">
+                  <img
+                    src="../src/plantsAssets/aloeroot.jpg" // Replace with the actual path to the fourth image
+                    alt="Aloe Vera Roots"
+                    className="w-80 h-80 rounded-lg shadow-lg"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="w-full ml-[-120px]">
+                  <p className="text-[#725c5c] whitespace-pre-line">
+                    <strong className="text-5xl">🌱 4. Roots 🌍</strong> <br />
+                    :The roots hold the plant tight in the soil so it doesn’t
+                    fall over. They also drink water from the ground, like how
+                    we drink juice with a straw! 🥤💚
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -857,7 +1053,7 @@ export const AloePage = () => {
           {/* Benefits Section */}
           <div className="section-header">
             <h2 className="section-title">Benefits</h2>
-            <p className="section-subtitle">(Hover to reveal)</p>
+            {/* <p className="section-subtitle">(Hover to reveal)</p> */}
           </div>
 
           <div className="benefits-container">

@@ -27,6 +27,7 @@ import { SketchfabVR } from "./components/modelvr";
 import CourseOverview from "../src/components/CourseOverview"; // Import the CourseOverview component
 import { Leaderboard } from "./components/Leaderboard"; // Import the Leaderboard component
 
+
 function App() {
   useEffect(() => {
     const link = document.createElement("link");

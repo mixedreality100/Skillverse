@@ -2,15 +2,59 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { motion } from "framer-motion"; // Added for animation
 import Loader from "./Loader";
 import NavButton from "./NavButton";
 import Button from "./Button";
 import skillverseLogo from "../assets/skillverse.svg";
-import FeedbackHandler from "./FeedbackHandler"; // Import the FeedbackHandler
 
 const GlobalStyle = styled.div`
   font-family: 'Poppins', sans-serif;
 `;
+
+// Custom feedback component replacing FeedbackHandler
+const FeedbackPopover = ({ userId, courseId, onFeedbackSubmit }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  
+  const togglePopover = () => setIsOpen(!isOpen);
+  
+  const handleSubmit = async () => {
+    if (onFeedbackSubmit) {
+      await onFeedbackSubmit(feedback);
+    }
+    setFeedback("");
+    setIsOpen(false);
+  };
+  
+  return (
+    <div className="relative flex justify-center items-center">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: isOpen ? 1 : 0.8, opacity: isOpen ? 1 : 0 }}
+        transition={{ type: "spring", stiffness: 200 }}
+        className="absolute bottom-16 right-16 bg-white p-4 rounded-2xl shadow-lg w-80"
+      >
+        {isOpen && (
+          <>
+            <FeedbackTextarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Enter your feedback..."
+            />
+            <FeedbackButtonContainer>
+              <FeedbackButton onClick={togglePopover} cancel>Cancel</FeedbackButton>
+              <FeedbackButton onClick={handleSubmit}>Submit</FeedbackButton>
+            </FeedbackButtonContainer>
+          </>
+        )}
+      </motion.div>
+      <FeedbackTriggerButton onClick={togglePopover}>
+        {isOpen ? "Close" : "Give Feedback"}
+      </FeedbackTriggerButton>
+    </div>
+  );
+};
 
 const NewQuizPage = () => {
   const { moduleId } = useParams();
@@ -26,18 +70,38 @@ const NewQuizPage = () => {
   const [nextModuleId, setNextModuleId] = useState(null);
   const [courseId, setCourseId] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile sidebar
+  const [feedbackFormVisible, setFeedbackFormVisible] = useState(false);
 
   // Manually set userId for testing purposes
   const userId = 1; // Replace with actual user ID from authentication
 
-  // Initialize FeedbackHandler
-  const {
-    feedbackFormVisible,
-    setFeedbackFormVisible,
-    feedback,
-    setFeedback,
-    handleFeedbackSubmit,
-  } = FeedbackHandler({ userId, courseId });
+  // Feedback handling logic preserved from original implementation
+  const handleFeedbackSubmit = async (feedbackText) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          courseId: courseId,
+          feedback: feedbackText,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Feedback submitted successfully:', data);
+      // You can add a success message or redirect here
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setError(error.message);
+    }
+  };
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {
@@ -77,7 +141,7 @@ const NewQuizPage = () => {
   }, [moduleId]);
 
   const handleBack = () => {
-    window.history.back();
+    navigate(-1); // Navigate back to the previous page
   };
 
   const handleCourses = () => {
@@ -210,7 +274,7 @@ const NewQuizPage = () => {
         <PageContainer>
           {/* Desktop Navigation */}
           <BackButtonContainer>
-            <Button onClick={handleBack}>Back</Button>
+          <Button onClick={handleBack}>Go Back</Button>
           </BackButtonContainer>
 
           <DesktopNavBarContainer>
@@ -295,15 +359,13 @@ const NewQuizPage = () => {
               Next Module
             </ActionButton>
           ) : score >= passingScore * 100 && feedbackFormVisible ? (
-            <div>
-              <h2>Feedback</h2>
-              <textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Please provide your feedback..."
+            <FeedbackContainer>
+              <FeedbackPopover 
+                userId={userId} 
+                courseId={courseId} 
+                onFeedbackSubmit={handleFeedbackSubmit} 
               />
-              <button onClick={handleFeedbackSubmit}>Submit Feedback</button>
-            </div>
+            </FeedbackContainer>
           ) : score >= passingScore * 100 ? (
             <div className="text-red-500 mt-6">
               Error fetching next module ID or you've completed all modules.
@@ -826,6 +888,72 @@ const ActionButton = styled.button`
   @media (max-width: 768px) {
     padding: 0.5rem 1.25rem;
     margin-top: 1rem;
+  }
+`;
+
+// New styled components for feedback UI
+const FeedbackContainer = styled.div`
+  margin-top: 2rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
+const FeedbackTextarea = styled.textarea`
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  min-height: 100px;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  resize: vertical;
+  color: #FFFFFF
+`;
+
+const FeedbackButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+`;
+
+const FeedbackButton = styled.button`
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  ${props => props.cancel ? `
+    background-color: transparent;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  ` : `
+    background-color: #3b82f6;
+    border: none;
+    color: white;
+    &:hover {
+      background-color: #2563eb;
+    }
+  `}
+`;
+
+const FeedbackTriggerButton = styled.button`
+  padding: 0.625rem 1.25rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #2563eb;
   }
 `;
 
