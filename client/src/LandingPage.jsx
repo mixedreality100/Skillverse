@@ -215,7 +215,7 @@ export default function LandingPage() {
           const scale = 9;
           astronaut.scale.setScalar(scale);
 
-          astronaut.position.set(0, -15.0, -1);
+          astronaut.position.set(0, -10.0, -1);
           scene.add(astronaut);
 
           if (gltf.animations && gltf.animations.length) {
@@ -599,7 +599,7 @@ export default function LandingPage() {
         <div className="flex justify-center">
           <div
             ref={containerRef}
-            style={{ width: "100%", height: "50vh", maxHeight: "400px" }}
+            style={{ width: "100%", height: "50vh", maxHeight: "400px", transform: "translateY(-350px)" }}
           ></div>
         </div>
 
