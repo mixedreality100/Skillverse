@@ -163,7 +163,7 @@ app.post("/api/enrollCourse/:courseId", async (req, res) => {
 
 app.get("/api/checkEnrollment/:courseId", async (req, res) => {
   try {
-    const { userId } = req.auth.sanitizedUser;
+    const userId = req.auth.userId;
     const { courseId } = req.params;
 
     // First get the database user_id
