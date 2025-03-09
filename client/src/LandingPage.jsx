@@ -16,6 +16,7 @@ import {
 } from "@clerk/clerk-react";
 import Home from "./components/Home";
 import JWTFetcher from "./components/JWTfetcher";
+import { motion, useAnimation } from 'framer-motion';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ export default function LandingPage() {
   const cameraRef = useRef(null);
   const [courses, setCourses] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar visibility
+  const [animationStarted, setAnimationStarted] = useState(false);
+  const textAnimationControls = useAnimation();
 
   const { user } = useUser();
   const [progress, setProgress] = useState(null);
@@ -222,20 +225,8 @@ export default function LandingPage() {
 
             action.setLoop(THREE.LoopOnce);
             action.clampWhenFinished = true;
-
-            const observer = new IntersectionObserver(
-              (entries) => {
-                entries.forEach((entry) => {
-                  if (entry.isIntersecting) {
-                    action.play();
-                    observer.disconnect();
-                  }
-                });
-              },
-              { threshold: 0.5 }
-            );
-
-            observer.observe(containerRef.current);
+            action.play();
+            setAnimationStarted(true);
           }
 
           animate();
@@ -317,6 +308,12 @@ export default function LandingPage() {
       cameraRef.current = null; // Clean up cameraRef
     };
   }, []);
+
+  useEffect(() => {
+    if (animationStarted) {
+      textAnimationControls.start({ marginLeft: 0 });
+    }
+  }, [animationStarted, textAnimationControls]);
 
   const handleSignIn = async () => {
     if (user) {
@@ -468,20 +465,39 @@ export default function LandingPage() {
           <div className="flex flex-row items-center justify-between w-full px-4 md:px-0">
             <div className="flex flex-col w-1/2 md:w-auto">
               <h1 className="text-5xl md:text-9xl font-bold text-black flex flex-col">
-                <span className="self-start md:self-end poppins-font">Visualize</span>
-                <span className="text-yellow-500 self-start md:self-end md:mr-[0.5em] poppins-font">
+                <motion.span
+                  className="self-start md:self-end poppins-font"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  Visualize
+                </motion.span>
+                <motion.span
+                  className="text-yellow-500 self-start md:self-end md:mr-[0.5em] poppins-font"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
                   &
-                </span>
-                <span className="self-start md:self-end relative poppins-font">
+                </motion.span>
+                <motion.span
+                  className="self-start md:self-end relative poppins-font"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                >
                   Learn
-                  <h5
+                  <motion.h5
                     className="text-gray-700 text-xs md:text-sm relative md:absolute md:left-[7em] md:top-full md:mt-3 mt-2 max-w-[250px] md:max-w-none"
                     style={{ textShadow: "none" }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
                   >
-                    Education is the kindling of a flame, not the filling of a
-                    vessel. <span className="italic">- Socrates</span>
-                  </h5>
-                </span>
+                    Education is the kindling of a flame, not the filling of a vessel. <span className="italic">- Socrates</span>
+                  </motion.h5>
+                </motion.span>
               </h1>
             </div>
             <img
@@ -562,16 +578,19 @@ export default function LandingPage() {
       </div>
 
       {/* Step Into the Future Section */}
-      <section className="bg-black text-white py-0 fade-in" ref={addToRefs}>
+      <section className="bg-black text-white py-0 fade-in" ref={addToRefs} style={{ marginTop: '-35px' }}>
         <div className="carousel-container">
-          <div className="flex flex-wrap justify-center gap-5 text-center ">
-            {[".step .", ".in .", ".the .", ".future ."].map((text, index) => (
-              <h2
+          <div className="flex flex-wrap justify-center gap-5 text-center "style={{ marginTop: '-20px' }}>
+            {[".step .", ".in .", ".the .", ".future ."].map((text, index, arr) => (
+              <motion.h2
                 key={index}
                 className="text-4xl md:text-9xl font-bold lowercase tracking-normal whitespace-nowrap"
+                initial={{ marginLeft: -50 * (arr.length - index) }}
+                animate={textAnimationControls}
+                transition={{ delay: 0.2 * index, type: 'spring', stiffness: 120 }}
               >
                 {text}
-              </h2>
+              </motion.h2>
             ))}
           </div>
         </div>
