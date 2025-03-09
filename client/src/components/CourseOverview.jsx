@@ -298,13 +298,13 @@ const CourseOverview = () => {
           ></div>
         )}
         {/* Rest of the content */}
-        <h1>Course Overview</h1>
-        <p>Course ID: {courseId}</p>
+        
         <div className="relative mt-8 mx-auto w-[100%]">
           <div className="relative flex flex-col rounded-xl bg-white text-gray-700 shadow-md max-w-7xl mx-auto mt-5">
             <div className="relative mx-4 -mt-6 h-40 overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40">
               <h1 className="text-3xl font-semibold leading-snug tracking-normal text-white p-4">
-                Course Overview: Unlocking the Healing Power of Medicinal Plants
+                Course Overview: Unlocking the Healing Power of Medicinal Plants <br />
+                Course ID: {courseId}
               </h1>
             </div>
             <div className="p-6">
