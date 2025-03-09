@@ -144,22 +144,6 @@ export const LearnerDashboard = () => {
 
     return (
       <div>
-        {/* User Progress Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h4 className="text-xl font-semibold mb-3">My Learning Progress</h4>
-          <div className="w-full bg-gray-200 rounded-full h-6 mb-2">
-            <div 
-              className="bg-green-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-sm font-medium" 
-              style={{ width: `${progressPercentage}%` }}
-            >
-              {progressPercentage.toFixed(0)}%
-            </div>
-          </div>
-          <p className="text-gray-700">
-            {userProgress ? `${userProgress.completedLessons} of ${userProgress.totalLessons} lessons completed` : 'No progress data available'}
-          </p>
-        </div>
-
         <h3 className="text-3xl font-bold mb-4">Enrolled Courses</h3>
         <div className="flex flex-wrap gap-4">
           {enrolledCourses.map((enrollment) => {
@@ -303,20 +287,6 @@ export const LearnerDashboard = () => {
               <h1 className="text-2xl md:text-4xl font-bold tracking-[-2px] text-white">{userInfo.name}</h1>
               <p className="text-lg md:text-2xl font-light mt-2 text-white">{userInfo.email}</p>
             </div>
-            {userProgress && (
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h3 className="font-bold text-lg mb-2">My Progress</h3>
-                <div className="w-64 bg-gray-200 rounded-full h-4">
-                  <div 
-                    className="bg-green-600 h-4 rounded-full" 
-                    style={{ width: `${progressPercentage}%` }}
-                  ></div>
-                </div>
-                <p className="mt-2 text-sm">
-                  {userProgress.completedLessons} of {userProgress.totalLessons} lessons completed ({progressPercentage.toFixed(0)}%)
-                </p>
-              </div>
-            )}
           </div>
         </header>
         <main className="mt-8">
