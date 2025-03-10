@@ -1,60 +1,16 @@
-// NewQuizPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { motion } from "framer-motion"; // Added for animation
+import { motion } from "framer-motion";
 import Loader from "./Loader";
 import NavButton from "./NavButton";
 import Button from "./Button";
-import skillverseLogo from "../assets/skillverse.svg";
+import Confetti from "react-confetti";
+import PopupModal from "./PopupModal"; // Import the PopupModal component
 
 const GlobalStyle = styled.div`
   font-family: 'Poppins', sans-serif;
 `;
-
-// Custom feedback component replacing FeedbackHandler
-const FeedbackPopover = ({ userId, courseId, onFeedbackSubmit }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [feedback, setFeedback] = useState("");
-  
-  const togglePopover = () => setIsOpen(!isOpen);
-  
-  const handleSubmit = async () => {
-    if (onFeedbackSubmit) {
-      await onFeedbackSubmit(feedback);
-    }
-    setFeedback("");
-    setIsOpen(false);
-  };
-  
-  return (
-    <div className="relative flex justify-center items-center">
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: isOpen ? 1 : 0.8, opacity: isOpen ? 1 : 0 }}
-        transition={{ type: "spring", stiffness: 200 }}
-        className="absolute bottom-16 right-16 bg-white p-4 rounded-2xl shadow-lg w-80"
-      >
-        {isOpen && (
-          <>
-            <FeedbackTextarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Enter your feedback..."
-            />
-            <FeedbackButtonContainer>
-              <FeedbackButton onClick={togglePopover} cancel>Cancel</FeedbackButton>
-              <FeedbackButton onClick={handleSubmit}>Submit</FeedbackButton>
-            </FeedbackButtonContainer>
-          </>
-        )}
-      </motion.div>
-      <FeedbackTriggerButton onClick={togglePopover}>
-        {isOpen ? "Close" : "Give Feedback"}
-      </FeedbackTriggerButton>
-    </div>
-  );
-};
 
 const NewQuizPage = () => {
   const { moduleId } = useParams();
@@ -69,39 +25,11 @@ const NewQuizPage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [nextModuleId, setNextModuleId] = useState(null);
   const [courseId, setCourseId] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for mobile sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [feedbackFormVisible, setFeedbackFormVisible] = useState(false);
+  const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
 
-  // Manually set userId for testing purposes
   const userId = 1; // Replace with actual user ID from authentication
-
-  // Feedback handling logic preserved from original implementation
-  const handleFeedbackSubmit = async (feedbackText) => {
-    try {
-      const response = await fetch('http://localhost:3000/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId,
-          courseId: courseId,
-          feedback: feedbackText,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Feedback submitted successfully:', data);
-      // You can add a success message or redirect here
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      setError(error.message);
-    }
-  };
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {
@@ -114,7 +42,6 @@ const NewQuizPage = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Fetched quiz questions:", data);
         setQuizQuestions(data);
 
         const courseResponse = await fetch(
@@ -124,9 +51,7 @@ const NewQuizPage = () => {
           throw new Error(`HTTP error! status: ${courseResponse.status}`);
         }
         const courseData = await courseResponse.json();
-        console.log("Fetched course data:", courseData);
-        setCourseId(courseData[0].course_id); // Set the courseId
-        console.log("Set courseId:", courseData[0].course_id); // Log the courseId
+        setCourseId(courseData[0].course_id);
       } catch (error) {
         console.error("Error fetching quiz questions:", error);
         setError(error.message);
@@ -173,6 +98,19 @@ const NewQuizPage = () => {
     }));
   };
 
+  // Add these missing functions
+  const goToPreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const goToNextQuestion = () => {
+    if (currentQuestionIndex < quizQuestions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!courseId) {
       setError("Course ID is not available. Please try again later.");
@@ -194,13 +132,6 @@ const NewQuizPage = () => {
 
     if (scorePercentage >= passingScore * 100) {
       try {
-        console.log("Submitting quiz...", {
-          userId,
-          moduleId,
-          courseId,
-          answers: userAnswers,
-        });
-
         const response = await fetch(`http://localhost:3000/api/submit-quiz`, {
           method: "POST",
           headers: {
@@ -213,22 +144,15 @@ const NewQuizPage = () => {
           }),
         });
 
-        console.log("Response status:", response.status);
-
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("Response data:", data);
-
         if (data.success) {
           setNextModuleId(data.nextModuleId);
-
-          // Check if all modules are completed
-          const allModulesCompleted = data.nextModuleId === null;
-          if (allModulesCompleted) {
-            setFeedbackFormVisible(true); // Show feedback form
+          if (data.nextModuleId === null) {
+            setFeedbackFormVisible(true);
           }
         } else {
           setError("Error fetching next module ID.");
@@ -238,25 +162,22 @@ const NewQuizPage = () => {
         setError(error.message);
       }
     }
+
+    // Show the popup after quiz submission
+    setShowPopup(true);
   };
 
   const handleRetake = () => {
     setUserAnswers({});
     setQuizSubmitted(false);
     setCurrentQuestionIndex(0);
+    setShowPopup(false); // Hide the popup when retaking the quiz
   };
 
-  const goToNextQuestion = () => {
-    if (currentQuestionIndex < quizQuestions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      handleSubmit();
-    }
-  };
-
-  const goToPreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    if (nextModuleId) {
+      navigate(`/aloepage/${nextModuleId}`);
     }
   };
 
@@ -266,121 +187,6 @@ const NewQuizPage = () => {
 
   if (error) {
     return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-
-  if (quizSubmitted) {
-    return (
-      <GlobalStyle>
-        <PageContainer>
-          {/* Desktop Navigation */}
-          <BackButtonContainer>
-          <Button onClick={handleBack}>Go Back</Button>
-          </BackButtonContainer>
-
-          <DesktopNavBarContainer>
-            <NavButton
-              className="transform transition-transform duration-300 hover:scale-110 text-black"
-              onClick={handleCourses}
-            >
-              Courses
-            </NavButton>
-            <NavButton
-              className="transform transition-transform duration-300 hover:scale-110 text-black"
-              onClick={handleExploreCourseClick}
-            >
-              Explore
-            </NavButton>
-            <NavButton
-              className="transform transition-transform duration-300 hover:scale-110 text-black"
-              onClick={handleAboutUsClick}
-            >
-              About Us
-            </NavButton>
-          </DesktopNavBarContainer>
-
-          {/* Mobile Menu Button */}
-          <MobileMenuButton id="menu-button" onClick={toggleSidebar}>
-            <MenuIcon>
-              <div></div>
-              <div></div>
-              <div></div>
-            </MenuIcon>
-          </MobileMenuButton>
-
-          {/* Mobile Sidebar */}
-          <MobileSidebar id="mobile-sidebar" isOpen={isSidebarOpen}>
-            <SidebarCloseButton onClick={() => setIsSidebarOpen(false)}>×</SidebarCloseButton>
-            <SidebarNavButton onClick={handleCourses}>Courses</SidebarNavButton>
-            <SidebarNavButton onClick={handleExploreCourseClick}>Explore</SidebarNavButton>
-            <SidebarNavButton onClick={handleAboutUsClick}>About Us</SidebarNavButton>
-          </MobileSidebar>
-
-          <PageTitle>Quiz Results</PageTitle>
-
-          <ResultsContainer>
-            {quizQuestions.map((question) => (
-              <ResultCard key={question.id}>
-                <QuestionText>{question.question}</QuestionText>
-                <OptionsContainer>
-                  {["A", "B", "C", "D"].map((option) => {
-                    const isSelected = userAnswers[question.id] === option;
-                    const isCorrect = option === question.correct_answer;
-                    return (
-                      <OptionLabel
-                        key={option}
-                        selected={isSelected}
-                        correct={isCorrect}
-                        incorrect={isSelected && !isCorrect}
-                      >
-                        {option}. {question[`option_${option.toLowerCase()}`]}
-                      </OptionLabel>
-                    );
-                  })}
-                </OptionsContainer>
-                <CorrectAnswer>
-                  <span>Correct Answer:</span> {question.correct_answer}
-                </CorrectAnswer>
-              </ResultCard>
-            ))}
-          </ResultsContainer>
-
-          <ScoreContainer>
-            <ScoreText>Your Score: {score.toFixed(2)}%</ScoreText>
-            <ScoreResult passed={score >= passingScore * 100}>
-              {score >= passingScore * 100 ? "You passed!" : "You did not pass."}
-            </ScoreResult>
-          </ScoreContainer>
-
-          {score >= passingScore * 100 && nextModuleId ? (
-            <ActionButton
-              onClick={() => navigate(`/aloepage/${nextModuleId}`)}
-              className="bg-green-500 hover:bg-green-600"
-            >
-              Next Module
-            </ActionButton>
-          ) : score >= passingScore * 100 && feedbackFormVisible ? (
-            <FeedbackContainer>
-              <FeedbackPopover 
-                userId={userId} 
-                courseId={courseId} 
-                onFeedbackSubmit={handleFeedbackSubmit} 
-              />
-            </FeedbackContainer>
-          ) : score >= passingScore * 100 ? (
-            <div className="text-red-500 mt-6">
-              Error fetching next module ID or you've completed all modules.
-            </div>
-          ) : (
-            <ActionButton
-              onClick={handleRetake}
-              className="bg-yellow-500 hover:bg-yellow-600"
-            >
-              Retake Quiz
-            </ActionButton>
-          )}
-        </PageContainer>
-      </GlobalStyle>
-    );
   }
 
   // Current question display
@@ -467,7 +273,7 @@ const NewQuizPage = () => {
             </RadioGroup>
 
             <NavigationButtons>
-              <NavButton
+              <NavigationButton
                 onClick={goToPreviousQuestion}
                 disabled={currentQuestionIndex === 0}
                 className={`${
@@ -477,32 +283,43 @@ const NewQuizPage = () => {
                 } bg-gray-200 hover:bg-gray-300`}
               >
                 Previous
-              </NavButton>
+              </NavigationButton>
 
               {currentQuestionIndex < quizQuestions.length - 1 ? (
-                <NavButton
+                <NavigationButton
                   onClick={goToNextQuestion}
                   className="bg-yellow-500 text-white hover:bg-yellow-600"
                 >
                   Next
-                </NavButton>
+                </NavigationButton>
               ) : (
-                <NavButton
+                <NavigationButton
                   onClick={handleSubmit}
                   className="bg-yellow-500 text-white hover:bg-yellow-600"
                 >
                   Submit
-                </NavButton>
+                </NavigationButton>
               )}
             </NavigationButtons>
           </QuizCardContainer>
+        )}
+
+        {/* Popup Modal */}
+        {quizSubmitted && (
+          <PopupModal
+            isOpen={showPopup}
+            onClose={handleClosePopup}
+            score={score}
+            passed={score >= passingScore * 100}
+            onRetake={handleRetake}
+          />
         )}
       </PageContainer>
     </GlobalStyle>
   );
 };
 
-// Styled Components
+// Styled Components (unchanged from your original code)
 const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -513,7 +330,7 @@ const PageContainer = styled.div`
   padding: 2rem;
   background-color: #f3f4f6;
   position: relative;
-  
+
   @media (max-width: 768px) {
     padding: 1rem 0.5rem;
     justify-content: flex-start;
@@ -527,7 +344,7 @@ const BackButtonContainer = styled.div`
   left: 30px;
   cursor: pointer;
   z-index: 10;
-  
+
   @media (max-width: 768px) {
     top: 20px;
     left: 15px;
@@ -541,13 +358,12 @@ const DesktopNavBarContainer = styled.div`
   transform: translateX(-50%);
   display: flex;
   gap: 2.25rem;
-  
+
   @media (max-width: 768px) {
     display: none; /* Hide on mobile */
   }
 `;
 
-// Mobile menu button
 const MobileMenuButton = styled.button`
   display: none;
   position: absolute;
@@ -557,7 +373,7 @@ const MobileMenuButton = styled.button`
   border: none;
   cursor: pointer;
   z-index: 10;
-  
+
   @media (max-width: 768px) {
     display: block;
   }
@@ -569,7 +385,7 @@ const MenuIcon = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  
+
   div {
     width: 100%;
     height: 3px;
@@ -578,7 +394,6 @@ const MenuIcon = styled.div`
   }
 `;
 
-// Mobile sidebar
 const MobileSidebar = styled.div`
   position: fixed;
   top: 0;
@@ -592,7 +407,7 @@ const MobileSidebar = styled.div`
   display: none;
   flex-direction: column;
   padding-top: 60px;
-  
+
   @media (max-width: 768px) {
     display: flex;
   }
@@ -618,7 +433,7 @@ const SidebarNavButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.3s;
-  
+
   &:hover {
     background-color: #f5f5f5;
   }
@@ -630,7 +445,7 @@ const PageTitle = styled.h1`
   margin-bottom: 1rem;
   margin-top: 5rem;
   text-align: center;
-  
+
   @media (max-width: 768px) {
     font-size: 1.5rem;
     margin-top: 2rem;
@@ -648,7 +463,7 @@ const QuizCardContainer = styled.div`
   border-radius: 20px;
   border: 1px solid rgba(47, 44, 44, 0.24);
   box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5);
-  
+
   @media (max-width: 768px) {
     max-width: 95%;
     padding: 1rem;
@@ -664,7 +479,7 @@ const InfoSection = styled.div`
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem;
-  
+
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: flex-start;
@@ -679,7 +494,7 @@ const QuestionText = styled.span`
   flex: 1;
   min-width: 0;
   word-wrap: break-word;
-  
+
   @media (max-width: 768px) {
     font-size: 1rem;
   }
@@ -694,7 +509,7 @@ const StepsIndicator = styled.span`
   line-height: 12px;
   font-weight: 600;
   white-space: nowrap;
-  
+
   @media (max-width: 480px) {
     align-self: flex-end;
   }
@@ -722,7 +537,7 @@ const RadioLabel = styled.label`
   color: #000000;
   transition: 0.3s ease;
   word-wrap: break-word;
-  
+
   &:hover {
     background-color: rgba(24, 24, 24, 0.13);
     border: 1px solid #bbbbbb;
@@ -734,226 +549,43 @@ const RadioLabel = styled.label`
     border-color: rgb(22, 245, 22);
     color: rgb(16, 184, 16);
   `}
-  
+
   @media (max-width: 768px) {
     padding: 12px;
     font-size: 13px;
   }
-  
+
   @media (max-width: 480px) {
     padding: 10px;
     font-size: 12px;
+  }
+`;
+
+// Created a custom NavigationButton component for styling
+const NavigationButton = styled(NavButton)`
+  min-width: 120px;
+  padding: 8px 16px;
+  
+  @media (max-width: 480px) {
+    min-height: 44px;
+    margin-bottom: 10px;
   }
 `;
 
 const NavigationButtons = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: 1.5rem;
-  
+  margin-top: 3.5rem;
+  gap: 1rem;
+
   @media (max-width: 480px) {
     flex-direction: column;
-    gap: 0.5rem;
-    
+    gap: 1.75rem;
+
     & > button {
       width: 100%;
       margin: 0;
     }
-  }
-`;
-
-// Results page styled components
-const ResultsContainer = styled.div`
-  width: 100%;
-  max-width: 600px;
-  background: #ffffff;
-  border-radius: 20px;
-  border: 1px solid rgba(47, 44, 44, 0.24);
-  box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.1), -10px -10px 20px rgba(255, 255, 255, 0.5);
-  padding: 1rem;
-  overflow-y: auto;
-  max-height: 60vh;
-  
-  @media (max-width: 768px) {
-    max-width: 95%;
-    padding: 0.75rem;
-    border-radius: 15px;
-    max-height: 50vh;
-  }
-`;
-
-const ResultCard = styled.div`
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  
-  @media (max-width: 768px) {
-    padding: 0.75rem;
-  }
-`;
-
-const OptionsContainer = styled.div`
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const OptionLabel = styled.div`
-  display: flex;
-  background-color: #ffffff;
-  padding: 14px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 10px;
-  border: 1px solid rgba(47, 44, 44, 0.24);
-  color: #000000;
-  word-wrap: break-word;
-
-  ${(props) =>
-    props.correct &&
-    `
-    border-color: rgb(22, 245, 22);
-    color: rgb(16, 184, 16);
-  `}
-
-  ${(props) =>
-    props.incorrect &&
-    `
-    border-color: red;
-    color: red;
-  `}
-  
-  @media (max-width: 768px) {
-    padding: 12px;
-    font-size: 13px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 10px;
-    font-size: 12px;
-  }
-`;
-
-const CorrectAnswer = styled.div`
-  margin-top: 0.5rem;
-  font-weight: 600;
-  font-size: 15px;
-  
-
-  span {
-    font-weight: 800;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: 14px;
-  }
-`;
-
-const ScoreContainer = styled.div`
-  margin-top: 1rem;
-  text-align: center;
-  padding: 0 1rem;
-`;
-
-const ScoreText = styled.p`
-  font-size: 1.25rem;
-  font-weight: 700;
-  
-  @media (max-width: 768px) {
-    font-size: 1.1rem;
-  }
-`;
-
-const ScoreResult = styled.p`
-  color: ${(props) => (props.passed ? "rgb(16, 184, 16)" : "red")};
-  font-weight: 600;
-  
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-  }
-`;
-
-const ActionButton = styled.button`
-  margin-top: 1.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
-  border-radius: 0.375rem;
-  color: white;
-  transition: background-color 0.3s;
-  cursor: pointer;
-  
-  @media (max-width: 768px) {
-    padding: 0.5rem 1.25rem;
-    margin-top: 1rem;
-  }
-`;
-
-// New styled components for feedback UI
-const FeedbackContainer = styled.div`
-  margin-top: 2rem;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-`;
-
-const FeedbackTextarea = styled.textarea`
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
-  min-height: 100px;
-  margin-bottom: 0.5rem;
-  font-family: inherit;
-  resize: vertical;
-  color: #FFFFFF
-`;
-
-const FeedbackButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-`;
-
-const FeedbackButton = styled.button`
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  
-  ${props => props.cancel ? `
-    background-color: transparent;
-    border: 1px solid #d1d5db;
-    color: #4b5563;
-    &:hover {
-      background-color: #f3f4f6;
-    }
-  ` : `
-    background-color: #3b82f6;
-    border: none;
-    color: white;
-    &:hover {
-      background-color: #2563eb;
-    }
-  `}
-`;
-
-const FeedbackTriggerButton = styled.button`
-  padding: 0.625rem 1.25rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: #2563eb;
   }
 `;
 
