@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Navigate } from "react-router-dom";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import Loader from "./Loader";
@@ -15,6 +15,8 @@ const GlobalStyle = styled.div`
 const NewQuizPage = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation(); // Get location object
+  const [redirectTo404, setRedirectTo404] = useState(false); // 404 state
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -177,10 +179,12 @@ const NewQuizPage = () => {
   const handleClosePopup = () => {
     setShowPopup(false);
     if (nextModuleId) {
-      navigate(`/aloepage/${nextModuleId}`);
+      navigate(`/aloepage/${nextModuleId}`, { 
+        state: { fromApp: true }, // Add this state
+        replace: true 
+      });
     }
   };
-
   if (loading) {
     return <Loader />;
   }

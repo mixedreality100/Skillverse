@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import LoginPage from "./components/LoginPage";
 import SignupPage from "./components/SignupPage";
@@ -26,6 +26,8 @@ import Toggle from "./components/toggle";
 import { SketchfabVR } from "./components/modelvr";
 import CourseOverview from "../src/components/CourseOverview"; // Import the CourseOverview component
 import { Leaderboard } from "./components/Leaderboard"; // Import the Leaderboard component
+import ProtectedRoute from "./components/Protectedroute";
+import NotFound from './components/NotFound';
 
 
 function App() {
@@ -64,22 +66,24 @@ function App() {
         <Route path="/cluster-fig" element={<ClusterFig />} />
         <Route path="/tulsi-plant" element={<TulsiPlant />} />
         <Route path="/aboutus" element={<AboutUs />} />
-        <Route path="/plants/:courseId" element={<Plants />} />
+        
         <Route path="/explore" element={<ExploreCourse />} />
         <Route path="/login2" element={<LoginPage2 />} />{" "}
         {/* **New route for LoginPage2** */}
         <Route path="/sign-up" element={<SignUpPage2 />} /> {/* Sign Up page */}
         <Route path="/home" element={<Home />} />
-        <Route path="/plants/:courseId" element={<Plants />} />
-        <Route path="/aloepage/:moduleId" element={<AloePage />} />
-        <Route path="/quiz/:moduleId" element={<NewQuizPage />} />
-        <Route path="/modules/:moduleId" element={<ModuleViewer />} />
+        <Route path="/plants/:courseId" element={<ProtectedRoute><Plants /></ProtectedRoute>} />
+        <Route path="/aloepage/:moduleId" element={<ProtectedRoute><AloePage /></ProtectedRoute>} />
+        <Route path="/quiz/:moduleId" element={<ProtectedRoute><NewQuizPage /></ProtectedRoute>} />
+        <Route path="/modules/:moduleId" element={<ProtectedRoute><ModuleViewer /></ProtectedRoute>} />
         <Route path="JWTfethcer" element={<JWTFetcher />} />
         <Route path="Toggle" element={<Toggle />} />
         <Route path="/module-viewer" element={<ModuleViewer />} />
         <Route path="/modelvr" element={<SketchfabVR />} />
         <Route path="/course/:courseId" element={<CourseOverview />} />
         <Route path="/leaderboard" element={<Leaderboard />} />{" "}
+        <Route path="/404" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
         {/* New route for Leaderboard */}
       </Routes>
     </div>

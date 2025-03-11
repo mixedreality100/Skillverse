@@ -77,38 +77,40 @@ export const Plants = () => {
       console.error("User ID is not available. Please log in.");
       return;
     }
-
+  
     try {
-      // Check if the user has already completed this module
+      // Check module completion
       const completionResponse = await fetch(
         `http://localhost:3000/api/module-completion/${userId}/${moduleId}`
       );
-      if (!completionResponse.ok) {
-        throw new Error(`HTTP error! status: ${completionResponse.status}`);
-      }
+      if (!completionResponse.ok) throw new Error(`HTTP error! status: ${completionResponse.status}`);
+      
       const completionData = await completionResponse.json();
-
+  
       if (completionData.completed) {
-        // User has already completed this module, navigate to the next module
+        // Navigate to next module with protected state
         const nextModuleResponse = await fetch(
           `http://localhost:3000/api/modules/next/${courseId}/${moduleId}`
         );
-        if (!nextModuleResponse.ok) {
-          throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
-        }
+        if (!nextModuleResponse.ok) throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
+        
         const nextModuleData = await nextModuleResponse.json();
-
+  
         if (nextModuleData.nextModuleId) {
-          navigate(`/aloepage/${nextModuleData.nextModuleId}`);
+          navigate(`/aloepage/${nextModuleData.nextModuleId}`, { 
+            state: { fromApp: true } // Add navigation state
+          });
         } else {
           alert("You have completed all modules in this course!");
         }
       } else {
-        // User has not completed this module, navigate to the module page
-        navigate(`/aloepage/${moduleId}`);
+        // Navigate to module with protected state
+        navigate(`/aloepage/${moduleId}`, { 
+          state: { fromApp: true } // Add navigation state
+        });
       }
     } catch (error) {
-      console.error("Error checking module completion:", error);
+      console.error("Error:", error);
       setError(error.message);
     }
   };

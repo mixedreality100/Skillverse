@@ -89,7 +89,9 @@ const CourseOverview = () => {
     }
 
     if (isEnrolled) {
-      navigate(`/plants/${courseId}`);
+      navigate(`/plants/${courseId}`, { 
+        state: { fromApp: true }  // Add state here too
+      });
       return;
     }
 
@@ -103,7 +105,10 @@ const CourseOverview = () => {
       );
 
       if (response.ok) {
-        navigate(`/plants/${courseId}`);
+        // Add navigation state for protected route
+        navigate(`/plants/${courseId}`, { 
+          state: { fromApp: true }  // This is crucial for route protection
+        });
       } else {
         console.error("Failed to enroll");
       }

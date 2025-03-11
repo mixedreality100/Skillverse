@@ -178,7 +178,9 @@ export const AloePage = () => {
   const navigate = useNavigate();
 
   const handleTakeQuiz = () => {
-    navigate(`/quiz/${moduleId}`);
+    navigate(`/quiz/${moduleId}`, { 
+      state: { fromApp: true }  // Add protected navigation state
+    });
   };
 
   useEffect(() => {
