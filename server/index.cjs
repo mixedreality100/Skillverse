@@ -14,7 +14,7 @@ const upload = multer({ storage: storage });
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'xr',
+  database: 'xrr',
   password: 'post', // Replace with your PostgreSQL password
   port: 5432,
 });
@@ -43,63 +43,158 @@ app.post('/add-course', upload.any(), async (req, res) => {
       courseName,
       primaryLanguage,
       level,
-      courseImage,
       modules,
     } = req.body;
 
+    // Get course image from uploaded files
     let courseImageBuffer = null;
     if (req.files && req.files.length > 0) {
-      for (let i = 0; i < req.files.length; i++) {
-        if (req.files[i].fieldname === 'courseImage') {
-          courseImageBuffer = req.files[i].buffer;
-        }
+      const courseImageFile = req.files.find(file => file.fieldname === 'courseImage');
+      if (courseImageFile) {
+        courseImageBuffer = courseImageFile.buffer;
       }
     }
 
     const courseResult = await pool.query(
       'INSERT INTO courses (instructor_email, course_name, primary_language, level, course_image, number_of_modules) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-      [instructorEmail, courseName, primaryLanguage, level, courseImageBuffer, modules.length]
+      [instructorEmail, courseName, primaryLanguage, level, courseImageBuffer, JSON.parse(modules).length]
     );
 
     const courseIdFromDb = courseResult.rows[0].id;
-
     const parsedModules = JSON.parse(modules);
 
     for (let i = 0; i < parsedModules.length; i++) {
       const module = parsedModules[i];
+      
+      // Get module image and GLB file from uploaded files
       let moduleImageBuffer = null;
       let glbFileBuffer = null;
+      let part1ImageBuffer = null;
+      let part2ImageBuffer = null;
+      let part3ImageBuffer = null;
+      let part4ImageBuffer = null;
 
       if (req.files && req.files.length > 0) {
-        for (let j = 0; j < req.files.length; j++) {
-          if (req.files[j].fieldname === `modules[${i}][image]`) {
-            moduleImageBuffer = req.files[j].buffer;
-          } else if (req.files[j].fieldname === `modules[${i}][glbFile]`) {
-            glbFileBuffer = req.files[j].buffer;
-          }
+        // Find module image
+        const moduleImageFile = req.files.find(file => file.fieldname === `modules[${i}][image]`);
+        if (moduleImageFile) {
+          moduleImageBuffer = moduleImageFile.buffer;
+        }
+        
+        // Find GLB file
+        const glbFile = req.files.find(file => file.fieldname === `modules[${i}][glbFile]`);
+        if (glbFile) {
+          glbFileBuffer = glbFile.buffer;
+        }
+        
+        // Find part images
+        const part1File = req.files.find(file => file.fieldname === `modules[${i}][part1][image]`);
+        if (part1File) {
+          part1ImageBuffer = part1File.buffer;
+        }
+        
+        const part2File = req.files.find(file => file.fieldname === `modules[${i}][part2][image]`);
+        if (part2File) {
+          part2ImageBuffer = part2File.buffer;
+        }
+        
+        const part3File = req.files.find(file => file.fieldname === `modules[${i}][part3][image]`);
+        if (part3File) {
+          part3ImageBuffer = part3File.buffer;
+        }
+        
+        const part4File = req.files.find(file => file.fieldname === `modules[${i}][part4][image]`);
+        if (part4File) {
+          part4ImageBuffer = part4File.buffer;
         }
       }
 
-      // Store importantParts and benefits as strings
-      const importantPartsString = module.importantParts || '';
-      const benefitsString = module.benefits || '';
-
+      // Update the query to include scientific_name
       const moduleResult = await pool.query(
-        'INSERT INTO modules (course_id, module_name, specific_name, description, more_information, important_parts, benefits, module_image, glb_file, number_of_quiz) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
-        [courseIdFromDb, module.moduleName, module.specificName, module.description, module.moreInformation, importantPartsString, benefitsString, moduleImageBuffer, glbFileBuffer, module.quiz.length]
+        `
+        INSERT INTO modules (
+          course_id,
+          module_name,
+          scientific_name,
+          description,
+          module_image,
+          glb_file,
+          number_of_quiz,
+          funfact1,
+          funfact2,
+          funfact3,
+          funfact4,
+          part1_name,
+          part1_description,
+          part1_image,
+          part2_name,
+          part2_description,
+          part2_image,
+          part3_name,
+          part3_description,
+          part3_image,
+          part4_name,
+          part4_description,
+          part4_image,
+          benefit1_name,
+          benefit1_description,
+          benefit2_name,
+          benefit2_description,
+          benefit3_name,
+          benefit3_description,
+          benefit4_name,
+          benefit4_description
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31) RETURNING id
+        `,
+        [
+          courseIdFromDb,
+          module.moduleName,
+          module.scientificName, // Add the scientific name parameter
+          module.description,
+          moduleImageBuffer,
+          glbFileBuffer,
+          module.quiz ? module.quiz.length : 0,
+          module.funfact1,
+          module.funfact2,
+          module.funfact3,
+          module.funfact4,
+          module.part1.name,
+          module.part1.description,
+          part1ImageBuffer, // Use the buffer from the files
+          module.part2.name,
+          module.part2.description,
+          part2ImageBuffer, // Use the buffer from the files
+          module.part3.name,
+          module.part3.description,
+          part3ImageBuffer, // Use the buffer from the files
+          module.part4.name,
+          module.part4.description,
+          part4ImageBuffer, // Use the buffer from the files
+          module.benefit1.name,
+          module.benefit1.description,
+          module.benefit2.name,
+          module.benefit2.description,
+          module.benefit3.name,
+          module.benefit3.description,
+          module.benefit4.name,
+          module.benefit4.description
+        ]
       );
 
       const moduleIdFromDb = moduleResult.rows[0].id;
 
-      for (let j = 0; j < module.quiz.length; j++) {
-        const question = module.quiz[j];
-        if (!['A', 'B', 'C', 'D'].includes(question.correctAnswer)) {
-          throw new Error('Invalid correct answer. Please select A, B, C, or D.');
+      // Process quiz questions
+      if (module.quiz && module.quiz.length > 0) {
+        for (let j = 0; j < module.quiz.length; j++) {
+          const question = module.quiz[j];
+          if (!['A', 'B', 'C', 'D'].includes(question.correctAnswer)) {
+            throw new Error('Invalid correct answer. Please select A, B, C, or D.');
+          }
+          await pool.query(
+            'INSERT INTO quiz_questions (module_id, question, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [moduleIdFromDb, question.question, question.optionA, question.optionB, question.optionC, question.optionD, question.correctAnswer]
+          );
         }
-        await pool.query(
-          'INSERT INTO quiz_questions (module_id, question, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          [moduleIdFromDb, question.question, question.optionA, question.optionB, question.optionC, question.optionD, question.correctAnswer]
-        );
       }
     }
 
@@ -202,30 +297,65 @@ app.get('/modules/:courseId', async (req, res) => {
 
 
 // Endpoint to fetch modules by module ID
-app.get('/api/modules/:moduleId', async (req, res) => {
+app.get("/api/modules/:moduleId", async (req, res) => {
   try {
-    const moduleId = parseInt(req.params.moduleId, 10);
-    const result = await pool.query(
-      'SELECT * FROM modules WHERE id = $1',
-      [moduleId]
-    );
+    const moduleId = Number.parseInt(req.params.moduleId, 10);
 
-    const modulesWithImages = result.rows.map(module => {
-      if (module.module_image) {
-        const base64Image = Buffer.from(module.module_image, 'binary').toString('base64');
-        module.module_image = `data:image/png;base64,${base64Image}`;
+    // Check if moduleId is a valid number
+    if (isNaN(moduleId)) {
+      return res.status(400).json({
+        message: "Invalid module ID. Please provide a valid number.",
+      });
+    }
+
+    const result = await pool.query("SELECT * FROM modules WHERE id = $1", [moduleId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Module not found" });
+    }
+
+    const modulesWithImages = result.rows.map((module) => {
+      // Convert all image fields from binary to base64
+      const imageFields = ["module_image", "part1_image", "part2_image", "part3_image", "part4_image"];
+
+      // Process each image field
+      imageFields.forEach((field) => {
+        if (module[field]) {
+          try {
+            const base64Image = Buffer.from(module[field], "binary").toString("base64");
+            module[field] = `data:image/png;base64,${base64Image}`;
+          } catch (error) {
+            console.error(`Error converting ${field} to base64:`, error);
+            module[field] = null;
+          }
+        } else {
+          module[field] = null;
+        }
+      });
+
+      // Process GLB file if present
+      if (module.glb_file) {
+        try {
+          const base64GLB = Buffer.from(module.glb_file, "binary").toString("base64");
+          module.glb_file_base64 = `data:model/gltf-binary;base64,${base64GLB}`;
+        } catch (error) {
+          console.error("Error converting GLB file to base64:", error);
+          module.glb_file_base64 = null;
+        }
       } else {
-        module.module_image = null;
+        module.glb_file_base64 = null;
       }
+
       return module;
     });
 
     res.status(200).json(modulesWithImages);
   } catch (error) {
-    console.error('Error fetching modules:', error);
+    console.error("Error fetching modules:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Endpoint to delete a course by ID
 app.delete('/delete-course/:id', async (req, res) => {
@@ -366,61 +496,6 @@ app.get('/api/modules/:moduleId/quiz', async (req, res) => {
   }
 });
 
-app.post('/api/enroll', async (req, res) => {
-  const { userId, courseId } = req.body;
-
-  try {
-      await pool.query(
-          'INSERT INTO enrollments (user_id, course_id) VALUES ($1, $2)',
-          [userId, courseId]
-      );
-      res.status(200).send('Enrollment successful');
-  } catch (error) {
-      console.error('Error enrolling user:', error);
-      res.status(500).send('Enrollment failed');
-  }
-});
-
-
-app.get('/api/enrollments/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const result = await pool.query(
-      `
-        SELECT ce.course_id, c.course_name, c.course_image, 
-               COUNT(mc.module_id) AS completed_modules, 
-               (SELECT COUNT(*) FROM modules WHERE course_id = ce.course_id) AS total_modules
-        FROM course_enrollment ce
-        LEFT JOIN module_completion mc ON ce.course_id = mc.course_id AND mc.user_id = ce.user_id
-        LEFT JOIN courses c ON ce.course_id = c.id
-        WHERE ce.user_id = $1
-        GROUP BY ce.course_id, c.course_name, c.course_image
-      `,
-      [userId]
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching enrolled courses and progress:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-app.get('/users/:userId', async (req, res) => {
-  try {
-    const userId = parseInt(req.params.userId, 10);
-    const result = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [userId]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error fetching user details:', error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
 
 app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
   try {
@@ -436,7 +511,7 @@ app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
     const courseIdInt = parseInt(courseId, 10);
     const moduleIdInt = parseInt(moduleId, 10);
 
-    if (isNaN(courseIdInt) ){
+    if (isNaN(courseIdInt)) {
       return res.status(400).json({ error: 'Invalid courseId' });
     }
 
@@ -462,62 +537,46 @@ app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
 
 
 app.post('/api/submit-quiz', async (req, res) => {
-  const { userId, moduleId, answers } = req.body;
-
   try {
-    console.log('Received quiz submission request:', { userId, moduleId, answers });
+    const { userId, moduleId, answers } = req.body;
 
-    // Validate input
-    if (!userId || !moduleId || !answers) {
-      return res.status(400).json({ message: 'Missing required fields: userId, moduleId, or answers' });
+    // Check if the record already exists
+    const checkQuery = `
+      SELECT id
+      FROM module_completion
+      WHERE user_id = $1 AND module_id = $2;
+    `;
+    const checkResult = await pool.query(checkQuery, [userId, moduleId]);
+
+    let result;
+    if (checkResult.rows.length > 0) {
+      // Record exists, update it
+      const updateQuery = `
+        UPDATE module_completion
+        SET completion_date = NOW()
+        WHERE user_id = $1 AND module_id = $2
+        RETURNING id;
+      `;
+      result = await pool.query(updateQuery, [userId, moduleId]);
+    } else {
+      // Record does not exist, insert it
+      const insertQuery = `
+        INSERT INTO module_completion (user_id, module_id, completion_date)
+        VALUES ($1, $2, NOW())
+        RETURNING id;
+      `;
+      result = await pool.query(insertQuery, [userId, moduleId]);
     }
 
-    // Fetch quiz questions for the module
-    const quizResult = await pool.query(
-      'SELECT * FROM quiz_questions WHERE module_id = $1',
-      [moduleId]
-    );
-    const quizQuestions = quizResult.rows;
-    console.log('Fetched quiz questions:', quizQuestions);
-
-    let correctAnswersCount = 0;
-    quizQuestions.forEach(question => {
-      if (answers[question.id] === question.correct_answer) {
-        correctAnswersCount++;
-      }
-    });
-
-    const totalQuestions = quizQuestions.length;
-    const scorePercentage = (correctAnswersCount / totalQuestions) * 100;
-    console.log('Calculated score:', scorePercentage);
-
-    // Check if the score is 60% or above
-    if (scorePercentage >= 60) {
-      // Mark the module as completed
-      await pool.query(
-        'INSERT INTO module_completion (user_id, module_id, completion_date) VALUES ($1, $2, CURRENT_DATE)',
-        [userId, moduleId]
-      );
-      console.log('Module marked as completed.');
-
-      // Fetch the next module ID
-      const nextModuleResult = await pool.query(
-        'SELECT id FROM modules WHERE course_id = (SELECT course_id FROM modules WHERE id = $1) AND id > $1 ORDER BY id ASC LIMIT 1',
-        [moduleId]
-      );
-      console.log('Next module result:', nextModuleResult.rows);
-
-      if (nextModuleResult.rows.length > 0) {
-        res.json({ success: true, nextModuleId: nextModuleResult.rows[0].id });
-      } else {
-        res.json({ success: true, nextModuleId: null });
-      }
+    // If the insertion or update was successful, return the ID
+    if (result.rows.length > 0) {
+      res.status(200).json({ success: true, nextModuleId: result.rows[0].id });
     } else {
-      res.json({ success: false, score: scorePercentage });
+      res.status(200).json({ success: true, nextModuleId: null });
     }
   } catch (error) {
     console.error('Error submitting quiz:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -547,15 +606,214 @@ app.post('/api/submit-feedback', async (req, res) => {
       [userId, courseId, feedback]
     );
 
-    res.json({ success: true });
+    res.json({ success: true, redirectUrl: `/learner-dashboard?courseId=${courseId}` });
   } catch (error) {
     console.error('Error submitting feedback:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
+app.post('/api/complete-course', async (req, res) => {
+  const { userId, courseId } = req.body;
 
+  try {
+    console.log('Received course completion request:', { userId, courseId });
 
+    // Update the course_enrollment table to mark the course as completed
+    const updateEnrollmentResult = await pool.query(
+      'UPDATE course_enrollment SET is_completed = true, completion_date = CURRENT_DATE WHERE user_id = $1 AND course_id = $2 RETURNING *',
+      [userId, courseId]
+    );
+    console.log('Course enrollment update result:', updateEnrollmentResult.rows);
+
+    if (updateEnrollmentResult.rows.length > 0) {
+      console.log('Course marked as completed.');
+      res.json({ success: true, message: 'Course marked as completed.' });
+    } else {
+      console.log('No course enrollment record found to update.');
+      res.json({ success: false, message: 'No course enrollment record found to update.' });
+    }
+  } catch (error) {
+    console.error('Error completing course:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Endpoint to fetch enrolled course details for a user
+app.get('/api/enrolled-courses/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+
+    // Step 1: Get the course IDs the user is enrolled in
+    const enrollmentResult = await pool.query(
+      'SELECT course_id FROM course_enrollment WHERE user_id = $1',
+      [userId]
+    );
+
+    if (enrollmentResult.rows.length === 0) {
+      return res.status(404).json({ message: 'No enrolled courses found for this user' });
+    }
+
+    const courseIds = enrollmentResult.rows.map(row => row.course_id);
+
+    // Step 2: Fetch details of the enrolled courses
+    const coursesResult = await pool.query(
+      'SELECT id, course_name, level, course_image FROM courses WHERE id = ANY($1)',
+      [courseIds]
+    );
+
+    const coursesWithImages = coursesResult.rows.map(course => {
+      if (course.course_image) {
+        // Convert BYTEA to Base64
+        const base64Image = course.course_image.toString('base64');
+        course.course_image = `data:image/png;base64,${base64Image}`;
+      } else {
+        course.course_image = null; // Handle case where there is no image
+      }
+      return course;
+    });
+
+    res.status(200).json(coursesWithImages);
+  } catch (error) {
+    console.error('Error fetching enrolled course details:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/module-completion/:userId/:courseId', async (req, res) => {
+  try {
+    const { userId, courseId } = req.params;
+
+    // Fetch total modules for the course
+    const totalModulesResult = await pool.query(
+      'SELECT COUNT(*) AS total FROM modules WHERE course_id = $1',
+      [courseId]
+    );
+    const totalModules = totalModulesResult.rows[0].total;
+
+    // Fetch completed modules for the user and course
+    const completedModulesResult = await pool.query(
+      'SELECT COUNT(*) AS completed FROM module_completion WHERE user_id = $1 AND module_id IN (SELECT id FROM modules WHERE course_id = $2)',
+      [userId, courseId]
+    );
+    const completedModules = completedModulesResult.rows[0].completed;
+
+    res.status(200).json({ completed: completedModules, total: totalModules });
+  } catch (error) {
+    console.error('Error fetching module completion:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// New endpoint to fetch progress for all enrolled courses
+// New endpoint to fetch progress for all enrolled courses
+app.get('/api/user-progress/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate userId
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: 'Invalid userId' });
+    }
+
+    // Fetch all enrolled courses for the user
+    const enrolledCoursesResult = await pool.query(
+      'SELECT course_id FROM course_enrollment WHERE user_id = $1',
+      [userId]
+    );
+
+    const enrolledCourses = enrolledCoursesResult.rows;
+
+    if (enrolledCourses.length === 0) {
+      return res.status(200).json([]); // No courses enrolled
+    }
+
+    // Fetch progress for each enrolled course
+    const progressPromises = enrolledCourses.map(async (enrollment) => {
+      const courseId = enrollment.course_id;
+
+      // Validate courseId
+      if (isNaN(courseId)) {
+        throw new Error('Invalid courseId');
+      }
+
+      // Fetch total modules for the course
+      const totalModulesResult = await pool.query(
+        'SELECT COUNT(*) AS total FROM modules WHERE course_id = $1',
+        [courseId]
+      );
+      const totalModules = totalModulesResult.rows[0].total;
+
+      // Fetch completed modules for the user and course
+      const completedModulesResult = await pool.query(
+        'SELECT COUNT(*) AS completed FROM module_completion WHERE user_id = $1 AND module_id IN (SELECT id FROM modules WHERE course_id = $2)',
+        [userId, courseId]
+      );
+      const completedModules = completedModulesResult.rows[0].completed;
+
+      return {
+        course_id: courseId,
+        completed: completedModules,
+        total: totalModules,
+      };
+    });
+
+    const progressData = await Promise.all(progressPromises);
+
+    console.log('Progress Data:', progressData); // Debugging log
+
+    res.status(200).json(progressData);
+  } catch (error) {
+    console.error('Error fetching user progress:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Updated endpoint to check next incomplete module
+app.get('/api/next-incomplete-module/:userId/:courseId', async (req, res) => {
+  try {
+    const { userId, courseId } = req.params;
+    
+    // Get all modules for the course in order
+    const allModulesResult = await pool.query(
+      'SELECT id, module_name FROM modules WHERE course_id = $1 ORDER BY id ASC',
+      [courseId]
+    );
+    
+    if (allModulesResult.rows.length === 0) {
+      return res.status(404).json({ message: 'No modules found for this course' });
+    }
+    
+    // Get completed modules for the user
+    const completedModulesResult = await pool.query(
+      'SELECT module_id FROM module_completion WHERE user_id = $1 AND module_id IN (SELECT id FROM modules WHERE course_id = $2)',
+      [userId, courseId]
+    );
+    
+    // Extract IDs of completed modules
+    const completedModuleIds = completedModulesResult.rows.map(row => row.module_id);
+    
+    // Find the first incomplete module
+    const nextIncompleteModule = allModulesResult.rows.find(module => !completedModuleIds.includes(module.id));
+    
+    if (nextIncompleteModule) {
+      return res.status(200).json({ 
+        nextModuleId: nextIncompleteModule.id,
+        moduleName: nextIncompleteModule.module_name,
+        isFirstModule: nextIncompleteModule.id === allModulesResult.rows[0].id
+      });
+    } else {
+      // All modules completed
+      return res.status(200).json({ 
+        completed: true, 
+        message: 'All modules in this course have been completed' 
+      });
+    }
+  } catch (error) {
+    console.error('Error finding next incomplete module:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

@@ -7,6 +7,8 @@ import NavButton from "./NavButton";
 import Button from "./Button";
 import Confetti from "react-confetti";
 import PopupModal from "./PopupModal"; // Import the PopupModal component
+import FeedbackForm from "./FeedbackForm"; // Make sure to import FeedbackForm component
+import { useUser } from "@clerk/clerk-react";
 
 const GlobalStyle = styled.div`
   font-family: 'Poppins', sans-serif;
@@ -30,8 +32,9 @@ const NewQuizPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [feedbackFormVisible, setFeedbackFormVisible] = useState(false);
   const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
+  const { user } = useUser();
 
-  const userId = 1; // Replace with actual user ID from authentication
+  const userId = user?.id; // Replace with actual user ID from authentication
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {
@@ -118,20 +121,20 @@ const NewQuizPage = () => {
       setError("Course ID is not available. Please try again later.");
       return;
     }
-
+  
     let correctAnswersCount = 0;
     quizQuestions.forEach((question) => {
       if (userAnswers[question.id] === question.correct_answer) {
         correctAnswersCount++;
       }
     });
-
+  
     const totalQuestions = quizQuestions.length;
     const scorePercentage = (correctAnswersCount / totalQuestions) * 100;
     setScore(scorePercentage);
-
+  
     setQuizSubmitted(true);
-
+  
     if (scorePercentage >= passingScore * 100) {
       try {
         const response = await fetch(`http://localhost:3000/api/submit-quiz`, {
@@ -145,26 +148,66 @@ const NewQuizPage = () => {
             answers: userAnswers,
           }),
         });
-
+  
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+  
         const data = await response.json();
-        if (data.success) {
-          setNextModuleId(data.nextModuleId);
-          if (data.nextModuleId === null) {
-            setFeedbackFormVisible(true);
+        console.log('Quiz submitted successfully:', data);
+  
+        // Fetch the next module ID
+        let nextModuleId = null;
+        try {
+          const nextModuleResponse = await fetch(`http://localhost:3000/api/modules/next/${courseId}/${moduleId}`);
+          if (nextModuleResponse.status === 404) {
+            // No more modules, display feedback form
+            console.log('No more modules, displaying feedback form.');
+          } else if (!nextModuleResponse.ok) {
+            throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
+          } else {
+            const nextModuleData = await nextModuleResponse.json();
+            nextModuleId = nextModuleData.nextModuleId;
+            console.log('Received nextModuleId from server:', nextModuleId);
           }
-        } else {
-          setError("Error fetching next module ID.");
+        } catch (error) {
+          console.error("Error fetching next module ID:", error);
+        }
+  
+        setNextModuleId(nextModuleId);
+  
+        if (nextModuleId === null) {
+          // Call the new API to complete the course
+          const completeCourseResponse = await fetch(`http://localhost:3000/api/complete-course`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: userId,  
+              courseId: courseId,
+            }),
+          });
+  
+          if (!completeCourseResponse.ok) {
+            throw new Error(`HTTP error! status: ${completeCourseResponse.status}`);
+          }
+  
+          const completeCourseData = await completeCourseResponse.json();
+          if (completeCourseData.success) {
+            console.log(completeCourseData.message);
+            // Show feedback form after marking the course as completed
+            setFeedbackFormVisible(true);
+          } else {
+            console.log(completeCourseData.message);
+          }
         }
       } catch (error) {
         console.error("Error submitting quiz:", error);
         setError(error.message);
       }
     }
-
+  
     // Show the popup after quiz submission
     setShowPopup(true);
   };
@@ -176,15 +219,23 @@ const NewQuizPage = () => {
     setShowPopup(false); // Hide the popup when retaking the quiz
   };
 
+  // Updated handleClosePopup function
   const handleClosePopup = () => {
     setShowPopup(false);
     if (nextModuleId) {
       navigate(`/aloepage/${nextModuleId}`, { 
-        state: { fromApp: true }, // Add this state
+        state: { fromApp: true },
         replace: true 
       });
     }
   };
+
+  // New function to handle showing the feedback form
+  const handleShowFeedback = () => {
+    setShowPopup(false);
+    setFeedbackFormVisible(true);
+  };
+
   if (loading) {
     return <Loader />;
   }
@@ -308,7 +359,7 @@ const NewQuizPage = () => {
           </QuizCardContainer>
         )}
 
-        {/* Popup Modal */}
+        {/* Updated Popup Modal */}
         {quizSubmitted && (
           <PopupModal
             isOpen={showPopup}
@@ -316,6 +367,26 @@ const NewQuizPage = () => {
             score={score}
             passed={score >= passingScore * 100}
             onRetake={handleRetake}
+            showFeedback={nextModuleId === null && score >= passingScore * 100}
+            onFeedback={() => {
+              setShowPopup(false);
+              setFeedbackFormVisible(true);
+            }}
+          />
+        )}
+
+        {/* Feedback Form Component */}
+        {feedbackFormVisible && (
+          <FeedbackForm 
+            courseId={courseId}
+            userId={userId}
+            onClose={() => setFeedbackFormVisible(false)}
+            onSubmit={() => {
+              // Handle feedback submission logic here
+              setFeedbackFormVisible(false);
+              // You might want to navigate somewhere else after feedback submission
+              navigate('/');
+            }}
           />
         )}
       </PageContainer>

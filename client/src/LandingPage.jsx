@@ -116,6 +116,8 @@ export default function LandingPage() {
     navigate("/leaderboard");
   };
 
+
+
   const addToRefs = (el) => {
     if (el && !sectionsRef.current.includes(el)) {
       sectionsRef.current.push(el);
@@ -427,6 +429,7 @@ export default function LandingPage() {
             >
               Leaderboard
             </NavButton>
+          
           </div>
 
           <div className="hidden md:flex items-center gap-5">

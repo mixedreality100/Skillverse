@@ -33,6 +33,7 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.16.0",
+    "react-lazy-load-image-component": "^1.6.3",
     "react-router-dom": "^6.28.2",
     "react-scratchcard": "^1.1.2",
     "styled-components": "^6.1.14",

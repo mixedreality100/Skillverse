@@ -1,28 +1,28 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Canvas } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
-import TakeQuizButton from "./TakeQuizButton";
-import { GradualSpacing } from "./GradualSpacing"; // Adjust the path as necessary
-import Cards from "./Cards";
-import Cards2 from "./Cards2";
-import Cards3 from "./Cards3";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import Loader from "./Loader";
-import PlusButton from "./PlusButton";
-import Paper from "@mui/material/Paper";
-import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
-import skillverseLogo from "../assets/skillverse.svg";
-import NavButton from "./NavButton";
-import ProfileButton from "./profile";
-import { Menu, X } from "lucide-react"; // For icons
-import aloeverohero from "../plantsAssets/image1.jpg";
-import MusicControl from "./MusicControl";
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { Canvas } from "@react-three/fiber"
+import { useGLTF } from "@react-three/drei"
+import TakeQuizButton from "./TakeQuizButton"
+import { GradualSpacing } from "./GradualSpacing" // Adjust the path as necessary
+import { Navigate, useNavigate, useParams } from "react-router-dom"
+import Loader from "./Loader"
+import Paper from "@mui/material/Paper"
+import { createTheme, styled } from "@mui/material/styles"
+import skillverseLogo from "../assets/skillverse.svg"
+import NavButton from "./NavButton"
+import ProfileButton from "./profile"
+import { Menu, X } from "lucide-react" // For icons
+import aloeverohero from "../plantsAssets/image1.jpg"
+import MusicControl from "./MusicControl"
+import * as THREE from "three"; // Import THREE
 
 // Updated Model function with responsive scaling and positioning
-function Model() {
-  const { scene } = useGLTF("/model/aleovera.glb");
+function Model({ glbData }) {
+  const { scene } = useGLTF(glbData);
   const modelRef = useRef();
   const [isMobile, setIsMobile] = useState(false);
+  const [scale, setScale] = useState(1);
 
   // Check if viewport is mobile
   useEffect(() => {
@@ -45,28 +45,22 @@ function Model() {
         child.receiveShadow = true;
       }
     });
-  }, [scene]);
 
-  useEffect(() => {
-    const handleMouseMove = (event) => {
-      const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-      const tiltAmount = 0.1;
-      if (modelRef.current) {
-        modelRef.current.rotation.y = mouseX * tiltAmount;
-      }
-    };
+    // Calculate the bounding box of the model
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
+    const maxDimension = Math.max(size.x, size.y, size.z);
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
+    // Adjust scale based on the maximum dimension
+    const targetScale = isMobile ? 1 / maxDimension : 2 / maxDimension;
+    setScale(targetScale);
+  }, [scene, isMobile]);
 
   return (
     <primitive
       ref={modelRef}
       object={scene}
-      scale={isMobile ? 5 : 8} // Reduced scale for mobile
+      scale={scale} // Use the dynamically calculated scale
       position={isMobile ? [0, -0.4, 0] : [1.2, -0.2, 0]} // Centered position for mobile
       rotation={[0, Math.PI / 2, 0]}
     />
@@ -79,170 +73,233 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
   height: "3.75rem",
   lineHeight: "3.75rem",
-}));
+}))
 
-const darkTheme = createTheme({ palette: { mode: "dark" } });
-const lightTheme = createTheme({ palette: { mode: "light" } });
+const darkTheme = createTheme({ palette: { mode: "dark" } })
+const lightTheme = createTheme({ palette: { mode: "light" } })
 
 export const AloePage = () => {
-  const { moduleId } = useParams();
+  const { moduleId } = useParams()
 
-  const [loading, setLoading] = useState(true);
-  const [isLeavesPopupVisible, setIsLeavesPopupVisible] = useState(false);
-  const [isGelPopupVisible, setIsGelPopupVisible] = useState(false);
-  const [navigateToCustardApple, setNavigateToCustardApple] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false); // Track if speech
-  const [isVisible, setIsVisible] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
-  const [moduleName, setModuleName] = useState(""); // State to store module name
-  const [revealedFacts, setRevealedFacts] = useState([]);
-  const paperRef = useRef(null);
+  const [loading, setLoading] = useState(true)
+  const [isLeavesPopupVisible, setIsLeavesPopupVisible] = useState(false)
+  const [isGelPopupVisible, setIsGelPopupVisible] = useState(false)
+  const [navigateToCustardApple, setNavigateToCustardApple] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false) // Track if speech
+  const [isVisible, setIsVisible] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // State for mobile menu
+  const [moduleName, setModuleName] = useState("") // State to store module name
+  const [revealedFacts, setRevealedFacts] = useState([])
+  const [moduleDetails, setModuleDetails] = useState({
+    module_name: "",
+    description: "",
+    funfact1: "",
+    funfact2: "",
+    funfact3: "",
+    funfact4: "",
+    part1_name: "",
+    part1_description: "",
+    part1_image: "",
+    part2_name: "",
+    part2_description: "",
+    part2_image: "",
+    part3_name: "",
+    part3_description: "",
+    part3_image: "",
+    part4_name: "",
+    part4_description: "",
+    part4_image: "",
+    benefit1_name: "",
+    benefit1_description: "",
+    benefit2_name: "",
+    benefit2_description: "",
+    benefit3_name: "",
+    benefit3_description: "",
+  })
+  const paperRef = useRef(null)
 
   useEffect(() => {
     const fetchModuleDetails = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:3000/api/modules/${moduleId}`
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Validate moduleId is a number
+        const parsedModuleId = Number.parseInt(moduleId, 10)
+        if (isNaN(parsedModuleId)) {
+          console.error("Invalid module ID:", moduleId)
+          setLoading(false)
+          return
         }
-        const moduleData = await response.json();
+
+        const response = await fetch(`http://localhost:3000/api/modules/${parsedModuleId}`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const moduleData = await response.json()
         if (moduleData.length > 0) {
-          setModuleName(moduleData[0].module_name); // Set the module name
-          console.log(moduleName)
+          setModuleDetails(moduleData[0]) // Set the module details
         } else {
-          console.error("Module not found");
+          console.error("Module not found")
         }
       } catch (error) {
-        console.error("Error fetching module details:", error);
+        console.error("Error fetching module details:", error)
+      } finally {
+        setLoading(false)
       }
-    };
+    }
 
     if (moduleId) {
-      fetchModuleDetails();
+      fetchModuleDetails()
+    } else {
+      setLoading(false)
     }
-  }, [moduleId]);
+  }, [moduleId])
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
 
   const toggleLeavesPopup = () => {
     if (isGelPopupVisible) {
-      setIsGelPopupVisible(false);
+      setIsGelPopupVisible(false)
     }
-    setIsLeavesPopupVisible(!isLeavesPopupVisible);
-  };
+    setIsLeavesPopupVisible(!isLeavesPopupVisible)
+  }
 
   const handelAboutUsClick = () => {
-    navigate("/aboutus");
-  };
+    navigate("/aboutus")
+  }
 
   const handelExploreCourseClick = () => {
-    navigate("/explore");
-  };
+    navigate("/explore")
+  }
 
   const revealFunFact = (factId) => {
     if (!revealedFacts.includes(factId)) {
-      setRevealedFacts([...revealedFacts, factId]);
+      setRevealedFacts([...revealedFacts, factId])
     }
-  };
+  }
 
   const toggleGelPopup = () => {
     if (isLeavesPopupVisible) {
-      setIsLeavesPopupVisible(false);
+      setIsLeavesPopupVisible(false)
     }
-    setIsGelPopupVisible(!isGelPopupVisible);
-  };
+    setIsGelPopupVisible(!isGelPopupVisible)
+  }
 
   const speakText = (selector) => {
-    const elements = document.querySelectorAll(selector);
-    let textToSpeak = "";
+    const elements = document.querySelectorAll(selector)
+    let textToSpeak = ""
     elements.forEach((element) => {
-      textToSpeak += element.textContent + " ";
-    });
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = "en-US";
-    utterance.rate = 0.8;
-    utterance.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
-  };
+      textToSpeak += element.textContent + " "
+    })
+    const utterance = new SpeechSynthesisUtterance(textToSpeak)
+    utterance.lang = "en-US"
+    utterance.rate = 0.8
+    utterance.onend = () => setIsSpeaking(false)
+    window.speechSynthesis.speak(utterance)
+    setIsSpeaking(true)
+  }
 
   const stopSpeech = () => {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  };
+    window.speechSynthesis.cancel()
+    setIsSpeaking(false)
+  }
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const handleTakeQuiz = () => {
-    navigate(`/quiz/${moduleId}`, { 
-      state: { fromApp: true }  // Add protected navigation state
-    });
-  };
+    navigate(`/quiz/${moduleId}`, {
+      state: { fromApp: true }, // Add protected navigation state
+    })
+  }
+
+  useEffect(() => {
+    if (moduleDetails) {
+      console.log("Image URLs:", {
+        part1: moduleDetails.part1_image,
+        part2: moduleDetails.part2_image,
+        part3: moduleDetails.part3_image,
+        part4: moduleDetails.part4_image,
+      })
+    }
+  }, [moduleDetails])
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+      setLoading(false)
+    }, 1000)
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsVisible(entry.isIntersecting);
+        setIsVisible(entry.isIntersecting)
       },
-      { threshold: 0.1 }
-    );
+      { threshold: 0.1 },
+    )
 
     const timer = setTimeout(() => {
-      setIsVisible(true);
-    }, 100);
+      setIsVisible(true)
+    }, 100)
 
     if (paperRef.current) {
-      observer.observe(paperRef.current);
+      observer.observe(paperRef.current)
     }
 
     return () => {
       if (paperRef.current) {
-        observer.unobserve(paperRef.current);
+        observer.unobserve(paperRef.current)
       }
-      clearTimeout(timer);
-    };
-  }, []);
+      clearTimeout(timer)
+    }
+  }, [])
 
   const handleCourses = () => {
-    navigate("/");
+    navigate("/")
     setTimeout(() => {
-      const coursesSection = document.getElementById("courses");
+      const coursesSection = document.getElementById("courses")
       if (coursesSection) {
-        coursesSection.scrollIntoView({ behavior: "smooth" });
+        coursesSection.scrollIntoView({ behavior: "smooth" })
       }
-    }, 100);
-  };
+    }, 100)
+  }
 
   const handleARClick = () => {
-    navigate("/module-viewer");
-  };
+    navigate("/module-viewer")
+  }
 
   const handleback = () => {
-    navigate("/plants");
-  };
+    navigate("/plants")
+  }
 
   const handleVRClick = () => {
-    navigate("/modelvr");
-  };
+    navigate("/modelvr")
+  }
 
   if (loading) {
-    return <Loader />;
+    return <Loader />
+  }
+
+  if (!moduleId || isNaN(Number.parseInt(moduleId, 10))) {
+    return (
+      <div className="flex justify-center items-center w-full min-h-screen bg-white">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Invalid Module ID</h2>
+          <p className="mb-4">The module ID is invalid or not provided.</p>
+          <button
+            onClick={handleback}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (navigateToCustardApple) {
-    return <Navigate to="/custard-apple" />;
+    return <Navigate to="/custard-apple" />
   }
 
   return (
@@ -671,12 +728,7 @@ export const AloePage = () => {
         <div className="main-container">
           {/* Header */}
           <header className="header">
-            <img
-              className="logo"
-              src={skillverseLogo}
-              alt="logo"
-              onClick={() => navigate("/")}
-            />
+            <img className="logo" src={skillverseLogo || "/placeholder.svg"} alt="logo" onClick={() => navigate("/")} />
 
             <div className="nav-buttons">
               <NavButton
@@ -729,12 +781,10 @@ export const AloePage = () => {
     `}
             </style>
 
-            <img src={aloeverohero} alt="Aloe Vera" className="hero-image" />
+            <img src={aloeverohero || "/placeholder.svg"} alt="Aloe Vera" className="hero-image" />
             <div className="hero-text-container">
               {/* Use GradualSpacing for the hero text */}
-              <div className="hero-title">
-                {moduleName}
-              </div>
+              <div className="hero-title">{moduleDetails.module_name}</div>
               <p className="scientific-name">Aloe Barbadensis</p>
             </div>
           </section>
@@ -744,7 +794,7 @@ export const AloePage = () => {
               {/* Image Section */}
               <div className="w-full md:w-1/2">
                 <img
-                  src="../src/plantsAssets/Aloeverahero.png" // Replace with the actual path to the Aloe Vera image
+                  src={moduleDetails.module_image} // Replace with the actual path to the Aloe Vera image
                   alt="Aloe Vera"
                   className="w-80 h-80 rounded-lg shadow-lg ml-[120px]"
                 />
@@ -753,18 +803,11 @@ export const AloePage = () => {
               {/* Information Section */}
               <div className="w-full md:w-1/2">
                 <h3 className="font-bold text-center md:text-left text-4xl mb-9">
-                <GradualSpacing text="What is Aloe Vera?"/>
+                  What is {moduleDetails.module_name}?
                 </h3>
                 <p className="text-[#725c5c] whitespace-pre-line text-lg">
-                  Aloe Vera is a green, spiky plant 🌿 that is super cool
-                  because it has a special gel inside its leaves. This gel is
-                  like nature's magic—it helps heal cuts and burns 🔥, makes
-                  skin soft, and even soothes sunburns! ☀️
+                  {moduleDetails.description}
                   <br />
-                  <br />
-                  People also use aloe vera in drinks 🥤 and shampoos because it
-                  is good for the body and hair. It’s like a superhero plant
-                  that takes care of you! 💚✨
                 </p>
               </div>
             </div>
@@ -776,7 +819,7 @@ export const AloePage = () => {
               {/* Text Section (Left Side) */}
               <div className="w-full md:w-1/2 ">
                 <h3 className="font-bold text-center md:text- text-7xl mb-8">
-                <GradualSpacing text="Fun Facts"/>
+                  <GradualSpacing text="Fun Facts" />
                 </h3>
                 <div className="space-y-4">
                   {/* Fun Fact 1 */}
@@ -786,11 +829,9 @@ export const AloePage = () => {
                   >
                     <p className="text-[#725c5c]">
                       {revealedFacts.includes(1) ? (
-                        "A long time ago, people called Aloe Vera the 'Plant of Immortality' because it stays fresh for a long time and has so many benefits! Even Egyptian queens loved it! 👑🌿"
+                        moduleDetails.funfact1 // Display the funfact1 from moduleDetails
                       ) : (
-                        <span className="text-gray-400">
-                          Tap to reveal fun fact 1
-                        </span>
+                        <span className="text-gray-400">Tap to reveal fun fact 1</span>
                       )}
                     </p>
                   </div>
@@ -802,11 +843,9 @@ export const AloePage = () => {
                   >
                     <p className="text-[#725c5c]">
                       {revealedFacts.includes(2) ? (
-                        "Aloe Vera is super tough! It doesn’t even need soil to grow—just water and air! It’s like a superhero plant! 💦🦸‍♂️"
+                        moduleDetails.funfact2
                       ) : (
-                        <span className="text-gray-400">
-                          Tap to reveal fun fact 2
-                        </span>
+                        <span className="text-gray-400">Tap to reveal fun fact 2</span>
                       )}
                     </p>
                   </div>
@@ -818,11 +857,9 @@ export const AloePage = () => {
                   >
                     <p className="text-[#725c5c]">
                       {revealedFacts.includes(3) ? (
-                        "If you ever get a hot sunburn from playing outside, Aloe Vera gel can cool it down and make it feel better. It's like a plant-made ice pack! 🧊🌿"
+                        moduleDetails.funfact3
                       ) : (
-                        <span className="text-gray-400">
-                          Tap to reveal fun fact 3
-                        </span>
+                        <span className="text-gray-400">Tap to reveal fun fact 3</span>
                       )}
                     </p>
                   </div>
@@ -834,12 +871,9 @@ export const AloePage = () => {
                   >
                     <p className="text-[#725c5c]">
                       {revealedFacts.includes(4) ? (
-                        "Some Aloe Vera plants can live for many, many years! That’s why people love growing them at home! "
-
+                        moduleDetails.funfact4
                       ) : (
-                        <span className="text-gray-400">
-                          Tap to reveal fun fact 4
-                        </span>
+                        <span className="text-gray-400">Tap to reveal fun fact 4</span>
                       )}
                     </p>
                   </div>
@@ -862,14 +896,14 @@ export const AloePage = () => {
             <div className="space-y-8 px-24 py-8">
               {/* Heading */}
               <h3 className="font-bold text-left text-7xl mb-10 ">
-              <GradualSpacing text="Parts Used"/>
-                </h3>
+                <GradualSpacing text="Parts Used" />
+              </h3>
               {/* Image-Text Pair 1 */}
               <div className="flex flex-col md:flex-row items-center gap-8">
                 {/* Image */}
                 <div className="w-full md:w-1/2">
                   <img
-                    src="../src/plantsAssets/aloegel.jpg" // Replace with the actual path to the first image
+                    src={moduleDetails.part1_image || "/placeholder.svg"} // Replace with the actual path to the first image
                     alt="Aloe Vera Gel Part 1"
                     className="w-80 h-80 rounded-lg shadow-lg"
                   />
@@ -878,11 +912,8 @@ export const AloePage = () => {
                 {/* Text */}
                 <div className="w-full ml-[-120px]">
                   <p className="text-[#725c5c] whitespace-pre-line ">
-                    <strong className="text-5xl">✨ 1. Gel 🏥</strong> <br />:
-                    The inside of the Aloe Vera leaf has a special jelly-like
-                    gel! It’s super cool because it can help with cuts, burns,
-                    and itchy skin. It’s like nature’s magic healing potion!
-                    ✨💧
+                    <strong className="text-5xl">✨ 1. {moduleDetails.part1_name} 🏥</strong> <br />:
+                    {moduleDetails.part1_description}
                   </p>
                 </div>
               </div>
@@ -892,7 +923,7 @@ export const AloePage = () => {
                 {/* Image */}
                 <div className="w-full md:w-1/2">
                   <img
-                    src="../src/plantsAssets/aloeleaf.jpg" // Replace with the actual path to the second image
+                    src={moduleDetails.part2_image || "/placeholder.svg"} // Replace with the actual path to the second image
                     alt="Aloe Vera Leaf"
                     className="w-80 h-80 rounded-lg shadow-lg"
                   />
@@ -901,11 +932,9 @@ export const AloePage = () => {
                 {/* Text */}
                 <div className="w-full ml-[-120px]">
                   <p className="text-[#725c5c] whitespace-pre-line">
-                    <strong className="text-5xl">🍃 2. Leaf 💦</strong>
+                    <strong className="text-5xl">🍃 2. {moduleDetails.part2_name} 💦</strong>
                     <br />
-                    :The Aloe Vera leaves are big and thick because they store
-                    water and food inside. That’s why the plant can survive even
-                    when it’s super hot! ☀️🌵
+                    {moduleDetails.part2_description}
                   </p>
                 </div>
               </div>
@@ -915,7 +944,7 @@ export const AloePage = () => {
                 {/* Image */}
                 <div className="w-full md:w-1/2">
                   <img
-                    src="../src/plantsAssets/aloeflower.jpg" // Replace with the actual path to the third image
+                    src={moduleDetails.part3_image || "/placeholder.svg"} // Replace with the actual path to the third image
                     alt="Aloe Vera Flower"
                     className="w-80 h-80 rounded-lg shadow-lg"
                   />
@@ -924,10 +953,9 @@ export const AloePage = () => {
                 {/* Text */}
                 <div className="w-full ml-[-120px]">
                   <p className="text-[#725c5c] whitespace-pre-line">
-                    <strong className="text-5xl">🌸 3. Flower 🌻</strong>
-                    <br /> Aloe Vera can grow tall, beautiful flowers in yellow
-                    or orange colors. While we mostly use the leaves, the
-                    flowers make the plant look extra pretty! 🎨🐝
+                    <strong className="text-5xl">🌸 3. {moduleDetails.part3_name} 🌻</strong>
+                    <br />
+                    {moduleDetails.part3_description}
                   </p>
                 </div>
               </div>
@@ -937,7 +965,7 @@ export const AloePage = () => {
                 {/* Image */}
                 <div className="w-full md:w-1/2">
                   <img
-                    src="../src/plantsAssets/aloeroot.jpg" // Replace with the actual path to the fourth image
+                    src={moduleDetails.part4_image || "/placeholder.svg"} // Replace with the actual path to the fourth image
                     alt="Aloe Vera Roots"
                     className="w-80 h-80 rounded-lg shadow-lg"
                   />
@@ -946,10 +974,8 @@ export const AloePage = () => {
                 {/* Text */}
                 <div className="w-full ml-[-120px]">
                   <p className="text-[#725c5c] whitespace-pre-line">
-                    <strong className="text-5xl">🌱 4. Roots 🌍</strong> <br />
-                    :The roots hold the plant tight in the soil so it doesn’t
-                    fall over. They also drink water from the ground, like how
-                    we drink juice with a straw! 🥤💚
+                    <strong className="text-5xl">🌱 4. {moduleDetails.part4_name} 🌍</strong> <br />:
+                    {moduleDetails.part4_description}
                   </p>
                 </div>
               </div>
@@ -962,81 +988,31 @@ export const AloePage = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center gap-8 px-4 py-8">
-            <div className="w-full md:w-1/3">
-              <h3 className="text-xl md:text-2xl font-bold text-[#063229] mb-4">
-                Welcome to the world of Aloe Vera, a plant so cool it's been
-                nicknamed the "Plant of Immortality"
-              </h3>
-              <p className="text-lg text-[#025169]">
-                Click on the different Parts to find out more
-              </p>
-              <p className="md:hidden text-lg text-[#025169]">
-                To view info on the plant, Use Desktop View
-              </p>
-            </div>
-
             <div className="w-full md:w-2/3 h-[500px] model-container">
-              <div className="absolute top-[100px] left-[62%] z-10 plus-button-container">
-                <PlusButton onClick={toggleLeavesPopup} />
-                {isLeavesPopupVisible && (
-                  <div className="popup-content">
-                    <span className="font-bold text-[#025169] text-xl">
-                      Leaves
-                    </span>
-                    <p className="text-[#025169]">
-                      : Thick, fleshy, and lance-shaped with serrated edges.
-                      They are typically green to gray-green with white flecks.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="absolute top-[350px] left-[40%] z-10 plus-button-container">
-                <PlusButton onClick={toggleGelPopup} />
-                {isGelPopupVisible && (
-                  <div className="popup-content">
-                    <span className="font-bold text-[#025169] text-xl">
-                      Gel
-                    </span>
-                    <p className="text-[#025169]">
-                      : The inner part of the leaf contains a clear, gel-like
-                      substance that is rich in nutrients and has various
-                      medicinal properties.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <Canvas
-                camera={{
-                  position: [2.192129250918481, 1, 4.405377373613455],
-                  fov: 45,
-                }}
-                shadows
-              >
-                <ambientLight intensity={2} />
-                <directionalLight
-                  position={[5, 5, 5]}
-                  intensity={1.5}
-                  castShadow
-                />
-                <directionalLight position={[-5, 5, -5]} intensity={1} />
-                <hemisphereLight intensity={1} groundColor="white" />
-                <Model />
-              </Canvas>
+            <Canvas
+          camera={{
+            position: [2.192129250918481, 1, 4.405377373613455],
+            fov: 45,
+          }}
+          shadows
+        >
+          <ambientLight intensity={2} />
+          <directionalLight position={[5, 5, 5]} intensity={1.5} castShadow />
+          <directionalLight position={[-5, 5, -5]} intensity={1} />
+          <hemisphereLight intensity={1} groundColor="white" />
+          {moduleDetails?.glb_file_base64 && (
+            <Model glbData={moduleDetails.glb_file_base64} />
+          )}
+        </Canvas>
 
               <button
                 onClick={() =>
                   isSpeaking
                     ? stopSpeech()
-                    : speakText(
-                        ".section-title, .section-subtitle, .hero-title, .scientific-name, .info-card"
-                      )
+                    : speakText(".section-title, .section-subtitle, .hero-title, .scientific-name, .info-card")
                 }
                 className={`p-2 rounded-full shadow-md transition duration-300 fixed top-40 right-4 z-50 ${
-                  isSpeaking
-                    ? "bg-white text-green-500"
-                    : "bg-green-500 text-white hover:bg-green-600"
+                  isSpeaking ? "bg-white text-green-500" : "bg-green-500 text-white hover:bg-green-600"
                 }`}
               >
                 <svg
@@ -1061,45 +1037,44 @@ export const AloePage = () => {
             {/* <p className="section-subtitle">(Hover to reveal)</p> */}
           </div>
 
-          <div className="benefits-container">
-            <div className="w-full md:w-1/3 mb-8">
-              <Cards />
+          <div className="benefits-container flex flex-wrap">
+            <div className="w-full md:w-1/3 mb-8 p-4">
+              <div className="bg-green-50 rounded-lg p-6 h-full shadow-md hover:shadow-lg transition-shadow">
+                <h3 className="text-xl font-semibold text-green-800 mb-3">{moduleDetails.benefit1_name}</h3>
+                <p className="text-gray-700">{moduleDetails.benefit1_description}.</p>
+              </div>
             </div>
 
-            <div className="w-full md:w-1/3 mb-8">
-              <Cards2 />
+            <div className="w-full md:w-1/3 mb-8 p-4">
+              <div className="bg-green-50 rounded-lg p-6 h-full shadow-md hover:shadow-lg transition-shadow">
+                <h3 className="text-xl font-semibold text-green-800 mb-3">{moduleDetails.benefit2_name}</h3>
+                <p className="text-gray-700">{moduleDetails.benefit2_description}</p>
+              </div>
             </div>
 
-            <div className="w-full md:w-1/3 mb-8">
-              <Cards3 />
+            <div className="w-full md:w-1/3 mb-8 p-4">
+              <div className="bg-green-50 rounded-lg p-6 h-full shadow-md hover:shadow-lg transition-shadow">
+                <h3 className="text-xl font-semibold text-green-800 mb-3">{moduleDetails.benefit2_name}</h3>
+                <p className="text-gray-700">{moduleDetails.benefit2_description}</p>
+              </div>
             </div>
           </div>
 
           {/* Interactive Experience Section */}
           <div className="section-header">
-            <h2 className="section-title">
-              Time for some Interactive and Immersive Experience!
-            </h2>
+            <h2 className="section-title">Time for some Interactive and Immersive Experience!</h2>
           </div>
 
           <div className="ar-vr-container">
             {/* AR Icon */}
             <div onClick={handleARClick} className="ar-vr-icon">
-              <img
-                className="absolute"
-                alt="Augmented Reality Icon"
-                src="../static/img/ar-icon.svg"
-              />
+              <img className="absolute" alt="Augmented Reality Icon" src="../static/img/ar-icon.svg" />
               <span>AR</span>
             </div>
 
             {/* VR Icon */}
             <div onClick={handleVRClick} className="ar-vr-icon">
-              <img
-                className="absolute"
-                alt="Virtual Reality Icon"
-                src="../static/img/vr-icon.svg"
-              />
+              <img className="absolute" alt="Virtual Reality Icon" src="../static/img/vr-icon.svg" />
               <span>VR</span>
             </div>
           </div>
@@ -1142,9 +1117,7 @@ export const AloePage = () => {
                 {/* Instagram Button */}
                 <button
                   className="social-button hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105"
-                  onClick={() =>
-                    (window.location.href = "https://www.instagram.com")
-                  }
+                  onClick={() => (window.location.href = "https://www.instagram.com")}
                 >
                   Instagram
                 </button>
@@ -1152,9 +1125,7 @@ export const AloePage = () => {
                 {/* Twitter Button */}
                 <button
                   className="social-button hover:bg-black hover:text-white hover:scale-105"
-                  onClick={() =>
-                    (window.location.href = "https://www.twitter.com")
-                  }
+                  onClick={() => (window.location.href = "https://www.twitter.com")}
                 >
                   Twitter
                 </button>
@@ -1162,9 +1133,7 @@ export const AloePage = () => {
                 {/* Facebook Button */}
                 <button
                   className="social-button hover:bg-blue-500 hover:text-white hover:scale-105"
-                  onClick={() =>
-                    (window.location.href = "https://www.facebook.com")
-                  }
+                  onClick={() => (window.location.href = "https://www.facebook.com")}
                 >
                   Facebook
                 </button>
@@ -1172,9 +1141,7 @@ export const AloePage = () => {
                 {/* Pinterest Button */}
                 <button
                   className="social-button hover:bg-red-500 hover:text-white hover:scale-105"
-                  onClick={() =>
-                    (window.location.href = "https://www.pinterest.com")
-                  }
+                  onClick={() => (window.location.href = "https://www.pinterest.com")}
                 >
                   Pinterest
                 </button>
@@ -1182,16 +1149,15 @@ export const AloePage = () => {
 
               <div className="mt-4 border-t border-gray-300"></div>
               <div className="text-center mt-2">
-                <p className="text-xl text-gray-800">
-                  © 2024, All Rights Reserved
-                </p>
+                <p className="text-xl text-gray-800">© 2024, All Rights Reserved</p>
               </div>
             </div>
           </footer>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AloePage;
+export default AloePage
+

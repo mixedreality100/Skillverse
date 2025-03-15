@@ -20,7 +20,7 @@ export const Plants = () => {
 
   // Fetch userId using Clerk's useUser hook
   const { user } = useUser();
-  const userId = 11; // Get userId from the authenticated user
+  const userId = 101; // Get userId from the authenticated user
 
   // Force scroll to top
   useEffect(() => {
@@ -72,45 +72,40 @@ export const Plants = () => {
     }
   }, [courseId]);
 
-  const handleEnrollClick = async (moduleId) => {
+  const handleEnrollClick = async () => {
     if (!userId) {
       console.error("User ID is not available. Please log in.");
       return;
     }
   
     try {
-      // Check module completion
-      const completionResponse = await fetch(
-        `http://localhost:3000/api/module-completion/${userId}/${moduleId}`
+      // Get the next incomplete module for this course
+      const nextModuleResponse = await fetch(
+        `http://localhost:3000/api/next-incomplete-module/${userId}/${courseId}`
       );
-      if (!completionResponse.ok) throw new Error(`HTTP error! status: ${completionResponse.status}`);
       
-      const completionData = await completionResponse.json();
-  
-      if (completionData.completed) {
-        // Navigate to next module with protected state
-        const nextModuleResponse = await fetch(
-          `http://localhost:3000/api/modules/next/${courseId}/${moduleId}`
-        );
-        if (!nextModuleResponse.ok) throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
-        
-        const nextModuleData = await nextModuleResponse.json();
-  
-        if (nextModuleData.nextModuleId) {
-          navigate(`/aloepage/${nextModuleData.nextModuleId}`, { 
-            state: { fromApp: true } // Add navigation state
-          });
-        } else {
-          alert("You have completed all modules in this course!");
-        }
-      } else {
-        // Navigate to module with protected state
-        navigate(`/aloepage/${moduleId}`, { 
-          state: { fromApp: true } // Add navigation state
-        });
+      if (!nextModuleResponse.ok) {
+        throw new Error(`HTTP error! status: ${nextModuleResponse.status}`);
       }
+      
+      const nextModuleData = await nextModuleResponse.json();
+      
+      if (nextModuleData.completed) {
+        // All modules are completed
+        alert("Congratulations! You have completed all modules in this course!");
+        return;
+      }
+      
+      // Navigate to the next incomplete module
+      navigate(`/aloepage/${nextModuleData.nextModuleId}`, { 
+        state: { 
+          fromApp: true,
+          isFirstModule: nextModuleData.isFirstModule
+        }
+      });
+      
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error determining next module:", error);
       setError(error.message);
     }
   };

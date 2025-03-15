@@ -5,6 +5,7 @@ import { Mic, MicOff, Menu, X } from "lucide-react";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+import CourseCard from "./CourseCard";
 
 const ExploreCourse = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const ExploreCourse = () => {
   const [isSpeechSupported, setIsSpeechSupported] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Speech recognition setup
   useEffect(() => {
@@ -55,7 +56,6 @@ const ExploreCourse = () => {
     };
   }, [isListening]);
 
-  // Effect to prevent body scrolling when sidebar is open
   useEffect(() => {
     if (isSidebarOpen) {
       document.body.style.overflow = "hidden";
@@ -117,7 +117,7 @@ const ExploreCourse = () => {
 
   const handleCoursesClick = () => {
     navigate("/");
-    setIsSidebarOpen(false); // Close sidebar after navigation
+    setIsSidebarOpen(false);
     setTimeout(() => {
       const coursesSection = document.getElementById("courses");
       if (coursesSection) {
@@ -128,7 +128,7 @@ const ExploreCourse = () => {
 
   const handleAboutUsClick = () => {
     navigate("/aboutus");
-    setIsSidebarOpen(false); // Close sidebar after navigation
+    setIsSidebarOpen(false);
   };
 
   const toggleSidebar = () => {
@@ -140,7 +140,6 @@ const ExploreCourse = () => {
       <div className="max-w-7xl mx-auto">
         {/* Navigation Bar */}
         <nav className="flex justify-between items-center w-full mb-8">
-          {/* Logo and Mobile Menu Toggle */}
           <div className="flex items-center">
             <img
               src="./src/assets/skillverse.svg"
@@ -150,7 +149,6 @@ const ExploreCourse = () => {
             />
           </div>
 
-          {/* Mobile Menu Toggle */}
           <div className="md:hidden">
             <button
               onClick={toggleSidebar}
@@ -166,7 +164,6 @@ const ExploreCourse = () => {
             </button>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex gap-6 items-center">
             <NavButton
               className="transform transition-transform duration-300 hover:scale-110 text-black"
@@ -182,7 +179,6 @@ const ExploreCourse = () => {
             </NavButton>
           </div>
 
-          {/* Login Button */}
           <div className="flex items-center gap-4">
             <SignedOut>
               <SignInButton>
@@ -348,7 +344,7 @@ const ExploreCourse = () => {
 
         {error && <div className="text-center py-12 text-red-500">{error}</div>}
 
-        {/* Course Grid */}
+        {/* Course Grid with CourseCard Components */}
         {!isLoading && !error && (
           <>
             {courses.length === 0 ? (
@@ -356,33 +352,15 @@ const ExploreCourse = () => {
                 No courses found matching your criteria
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="flex flex-wrap justify-center gap-6 p-4">
                 {courses.map((course) => (
-                  <div
+                  <CourseCard
                     key={course.id}
-                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    <img
-                      src={course.course_image || "/default-course.jpg"}
-                      alt={course.course_name}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="p-4 sm:p-6">
-                      <h3 className="text-xl font-semibold mb-2">
-                        {course.course_name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                          {course.level}
-                        </span>
-                        <span>•</span>
-                        <span>{course.number_of_modules} Modules</span>
-                      </div>
-                      <button className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        View Course
-                      </button>
-                    </div>
-                  </div>
+                    title={course.course_name}
+                    status={`${course.level} • ${course.number_of_modules} Modules`}
+                    image={course.course_image || "/default-course.jpg"}
+                    courseId={course.id}
+                  />
                 ))}
               </div>
             )}
