@@ -26,20 +26,43 @@ export const ContentCreatorDashboard = () => {
     { id: 1, name: 'Medicinal Plants', enrolledStudents: 1 }
   ];
 
-  // Dashboard component
   const DashboardContent = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="w-full">
       <h2 className="text-3xl font-bold mb-6">Your Dashboard</h2>
-      {courses.map(course => (
-        <div key={course.id} className="mb-4">
-          <p className="text-lg">
-            <span>Course Name: {course.name}</span>
-            <span className="block md:inline-block md:ml-4">
-              Enrolled Students: {course.enrolledStudents}
-            </span>
-          </p>
-        </div>
-      ))}
+      
+      <div className="overflow-x-auto shadow-md rounded-lg">
+        <table className="min-w-full bg-white border border-black-800">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-center text-lg font-bold text-gray-700 uppercase tracking-wider border-b">
+                Course Name
+              </th>
+              <th className="px-6 py-3 text-center text-lg font-bold text-gray-700 uppercase tracking-wider border-b">
+                Enrolled Students
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {courses.map(course => (
+              <tr key={course.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 text-lg border-b border-gray-200 text-center">
+                  {course.name}
+                </td>
+                <td className="px-6 py-4 text-lg border-b border-gray-200 text-center">
+                  {course.enrolledStudents}
+                </td>
+              </tr>
+            ))}
+            {courses.length === 0 && (
+              <tr>
+                <td colSpan={2} className="px-6 py-4 text-center text-lg text-gray-500 border-b border-gray-200">
+                  No courses available
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 

@@ -602,7 +602,7 @@ export default function LandingPage() {
         <div className="flex justify-center">
           <div
             ref={containerRef}
-            style={{ width: "100%", height: "50vh", maxHeight: "400px", transform: "translateY(-350px)" }}
+            style={{ width: "100%", height: "50vh", maxHeight: "400px", transform: "translateY(-50vh)" }}
           ></div>
         </div>
 

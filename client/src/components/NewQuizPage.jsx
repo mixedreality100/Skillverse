@@ -34,7 +34,7 @@ const NewQuizPage = () => {
   const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
   const { user } = useUser();
 
-  const userId = user?.id; // Replace with actual user ID from authentication
+  const userId = 10; // Replace with actual user ID from authentication
 
   useEffect(() => {
     const fetchQuizQuestions = async () => {

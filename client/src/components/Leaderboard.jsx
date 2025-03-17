@@ -228,7 +228,6 @@ export const Leaderboard = () => {
               <thead>
                 <tr className="bg-gray-200">
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Rank</th>
-                  <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Profile</th>
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Name</th>
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Score</th>
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Badges</th>
@@ -237,8 +236,7 @@ export const Leaderboard = () => {
               <tbody>
                 <tr>
                   <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>1</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Dylan Frias 
+                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User01
                     <img 
                     src={goldcrown} 
                     alt="Golden crown" 
@@ -249,8 +247,7 @@ export const Leaderboard = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>2</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Muskan Khatoon
+                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User02
                   <img 
                     src={silvercrown} 
                     alt="Silver crown" 
@@ -262,8 +259,7 @@ export const Leaderboard = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>3</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Prachi Prabhu
+                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User03
                   <img 
                     src={browncrown} 
                     alt="brown crown" 
@@ -275,8 +271,7 @@ export const Leaderboard = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>4</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Eshan Biswas</td>
+                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User04</td>
                   <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>16</td>
                   <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
                 </tr>
