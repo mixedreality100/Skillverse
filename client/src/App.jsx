@@ -82,6 +82,7 @@ function App() {
         <Route path="/modelvr" element={<SketchfabVR />} />
         <Route path="/course/:courseId" element={<CourseOverview />} />
         <Route path="/leaderboard" element={<Leaderboard />} />{" "}
+        <Route path="/edit-course/:courseId" element={<EditCourse />} />
         <Route path="/404" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
         {/* New route for Leaderboard */}
