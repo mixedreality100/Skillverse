@@ -28,6 +28,7 @@ import CourseOverview from "../src/components/CourseOverview"; // Import the Cou
 import { Leaderboard } from "./components/Leaderboard"; // Import the Leaderboard component
 import ProtectedRoute from "./components/Protectedroute";
 import NotFound from './components/NotFound';
+import EditCourse from "./components/EditCourse";
 
 
 function App() {
@@ -78,8 +79,8 @@ function App() {
         <Route path="/modules/:moduleId" element={<ProtectedRoute><ModuleViewer /></ProtectedRoute>} />
         <Route path="JWTfethcer" element={<JWTFetcher />} />
         <Route path="Toggle" element={<Toggle />} />
-        <Route path="/module-viewer" element={<ModuleViewer />} />
-        <Route path="/modelvr" element={<SketchfabVR />} />
+        <Route path="/module-viewer/:moduleId" element={<ModuleViewer />} />
+        <Route path="/modelvr/:moduleId" element={<SketchfabVR />} />
         <Route path="/course/:courseId" element={<CourseOverview />} />
         <Route path="/leaderboard" element={<Leaderboard />} />{" "}
         <Route path="/edit-course/:courseId" element={<EditCourse />} />
