@@ -82,10 +82,64 @@ app.post("/api/saveUser", async (req, res) => {
         ]
       );
     }
+// Add this route to your existing Express setup
+
+app.post("/api/becomeContentCreator", requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+    
+    // Update the user's is_content_creator flag to true
+    await db.query(
+      "UPDATE users SET is_content_creator = true WHERE clerk_user_id = $1",
+      [userId]
+    );
+    
+    res.status(200).json({
+      message: "You are now a Content Creator",
+      success: true
+    });
+  } catch (error) {
+    console.error("❌ Database error:", error);
+    res.status(500).json({
+      error: "Database error",
+      details: error.message
+    });
+  }
+});
+
 
     res.status(200).json({
       message: "User saved successfully",
       userId: userData.clerkUserId
+    });
+  } catch (error) {
+    console.error("❌ Database error:", error);
+    res.status(500).json({
+      error: "Database error",
+      details: error.message
+    });
+  }
+});
+
+
+app.post("/api/checkContentCreator", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    const user = await db.query(
+      "SELECT is_content_creator FROM users WHERE clerk_user_id = $1",
+      [userId]
+    );
+    
+    if (user.rows.length === 0) {
+      return res.status(404).json({
+        error: "User not found",
+        isContentCreator: false
+      });
+    }
+    
+    res.status(200).json({
+      isContentCreator: user.rows[0].is_content_creator
     });
   } catch (error) {
     console.error("❌ Database error:", error);

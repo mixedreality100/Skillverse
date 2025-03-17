@@ -12,11 +12,18 @@ export const Leaderboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [topUsers, setTopUsers] = useState([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
     }, 1500);
+
+    // Fetch top 3 users from the API
+    fetch('http://localhost:3000/api/top-rewards')
+      .then(response => response.json())
+      .then(data => setTopUsers(data))
+      .catch(error => console.error('Error fetching top rewards:', error));
 
     return () => clearTimeout(timer);
   }, []);
@@ -230,51 +237,82 @@ export const Leaderboard = () => {
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Rank</th>
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Name</th>
                   <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Score</th>
-                  <th className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>Badges</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>1</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User01
-                    <img 
-                    src={goldcrown} 
-                    alt="Golden crown" 
-                    className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 inline-block"
-                    /></td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>30</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>2</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User02
-                  <img 
-                    src={silvercrown} 
-                    alt="Silver crown" 
-                    className="w-4 h-4 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-block"
-                    />
-                  </td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>24</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>3</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User03
-                  <img 
-                    src={browncrown} 
-                    alt="brown crown" 
-                    className="w-4 h-4 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-block"
-                    />
-                  </td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>21</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>4</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>User04</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>16</td>
-                  <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}></td>
-                </tr>
+                {/* If we have data from API, use it, otherwise use fallback */}
+                {topUsers.length > 0 ? (
+                  topUsers.map((user, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>{index + 1}</td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>
+                        {user.name}
+                        {index === 0 && (
+                          <img 
+                            src={goldcrown} 
+                            alt="Golden crown" 
+                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 inline-block ml-2"
+                          />
+                        )}
+                        {index === 1 && (
+                          <img 
+                            src={silvercrown} 
+                            alt="Silver crown" 
+                            className="w-4 h-4 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-block ml-2"
+                          />
+                        )}
+                        {index === 2 && (
+                          <img 
+                            src={browncrown} 
+                            alt="Brown crown" 
+                            className="w-4 h-4 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-block ml-2"
+                          />
+                        )}
+                      </td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>{user.points_earned}</td>
+                    </tr>
+                  ))
+                ) : (
+                  // Fallback data
+                  <>
+                    <tr>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>1</td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>
+                        User01
+                        <img 
+                          src={goldcrown} 
+                          alt="Golden crown" 
+                          className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 inline-block ml-2"
+                        />
+                      </td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>30</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>2</td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>
+                        User02
+                        <img 
+                          src={silvercrown} 
+                          alt="Silver crown" 
+                          className="w-4 h-4 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-block ml-2"
+                        />
+                      </td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>24</td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>3</td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>
+                        User03
+                        <img 
+                          src={browncrown} 
+                          alt="Brown crown" 
+                          className="w-4 h-4 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 inline-block ml-2"
+                        />
+                      </td>
+                      <td className="border border-gray-400 px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4" style={{ boxShadow: "3px 3px 6px #d1d1d1, -3px -3px 6px #ffffff" }}>21</td>
+                    </tr>
+                  </>
+                )}
               </tbody>
             </table>
           </div>

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiUpload } from "react-icons/fi";
+import { useUser, useAuth } from "@clerk/clerk-react"; // Import Clerk hooks
 
 const AddCourse = () => {
   const [courseData, setCourseData] = useState({
@@ -10,6 +11,29 @@ const AddCourse = () => {
     courseImage: null,
     modules: [],
   });
+
+  const [userInfo, setUserInfo] = useState({
+    name: 'Content Creator',
+    email: 'contentCreator@gmail.com',
+    profilePicture: '<url id="" type="url" status="" title="" wc="">https://via.placeholder.com/150</url> '
+  });
+  
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isContentCreator, setIsContentCreator] = useState(false);
+
+  // Get Clerk user and auth
+  const { user } = useUser(); // Get user from Clerk
+  const auth = useAuth(); // Get auth from Clerk
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        name: user.fullName || "Content Creator",
+        email: user.primaryEmailAddress?.emailAddress || "contentCreator@gmail.com",
+        profilePicture: user.imageUrl || '<url id="" type="url" status="" title="" wc="">https://via.placeholder.com/150</url> ',
+      });
+    }
+  }, [user]); // Update user info when user changes
 
   const [isCourseSubmitted, setIsCourseSubmitted] = useState(false);
 
@@ -74,35 +98,34 @@ const AddCourse = () => {
   };
 
   // Handle adding a new module
-// When adding a new module
-const handleAddModule = () => {
-  setCourseData((prev) => ({
-    ...prev,
-    modules: [
-      ...prev.modules,
-      {
-        moduleName: "",
-        scientificName: "", // Add this field
-        description: "",
-        funfact: null,
-        funfact1: "",
-        funfact2: "",
-        funfact3: "",
-        funfact4: "",
-        part1: { name: "", description: "", image: null },
-        part2: { name: "", description: "", image: null },
-        part3: { name: "", description: "", image: null },
-        part4: { name: "", description: "", image: null },
-        benefit1: { name: "", description: "" },
-        benefit2: { name: "", description: "" },
-        benefit3: { name: "", description: "" },
-        benefit4: { name: "", description: "" },
-        numberOfQuiz: "",
-        quiz: [],
-      },
-    ],
-  }));
-};
+  const handleAddModule = () => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: [
+        ...prev.modules,
+        {
+          moduleName: "",
+          scientificName: "", // Add this field
+          description: "",
+          funfact: null,
+          funfact1: "",
+          funfact2: "",
+          funfact3: "",
+          funfact4: "",
+          part1: { name: "", description: "", image: null },
+          part2: { name: "", description: "", image: null },
+          part3: { name: "", description: "", image: null },
+          part4: { name: "", description: "", image: null },
+          benefit1: { name: "", description: "" },
+          benefit2: { name: "", description: "" },
+          benefit3: { name: "", description: "" },
+          benefit4: { name: "", description: "" },
+          numberOfQuiz: "",
+          quiz: [],
+        },
+      ],
+    }));
+  };
 
   // Handle removing a module
   const handleRemoveModule = (index) => {
@@ -150,7 +173,7 @@ const handleAddModule = () => {
       courseData.modules.some(
         (module) =>
           !module.moduleName ||
-        !module.scientificName ||
+          !module.scientificName ||
           !module.description ||
           !module.funfact ||
           !module.funfact1 ||
@@ -193,91 +216,60 @@ const handleAddModule = () => {
       return;
     }
 
-    const formData = new FormData();
-
-    // Add course data to formData
-    formData.append("instructorEmail", courseData.instructorEmail);
-    formData.append("courseName", courseData.courseName);
-    formData.append("primaryLanguage", courseData.primaryLanguage);
-    formData.append("level", courseData.level);
-    formData.append("courseImage", courseData.courseImage);
-
-    // Prepare modules data for JSON string
-    const modulesForJson = courseData.modules.map((module) => ({
-      moduleName: module.moduleName,
-      scientificName: module.scientificName, // Include scientific name
-      description: module.description,
-      funfact: module.funfact,
-      funfact1: module.funfact1,
-      funfact2: module.funfact2,
-      funfact3: module.funfact3,
-      funfact4: module.funfact4,
-      part1: module.part1,
-      part2: module.part2,
-      part3: module.part3,
-      part4: module.part4,
-      benefit1: module.benefit1,
-      benefit2: module.benefit2,
-      benefit3: module.benefit3,
-      benefit4: module.benefit4,
-      numberOfQuiz: module.numberOfQuiz,
-      quiz: module.quiz,
-    }));
-
-    formData.append("modules", JSON.stringify(modulesForJson));
-
-    // Add module data to formData
-    courseData.modules.forEach((module, index) => {
-      if (module.image) {
-        formData.append(`modules[${index}][image]`, module.image);
-      }
-      if (module.glbFile) {
-        formData.append(`modules[${index}][glbFile]`, module.glbFile);
-      }
-      if (module.funfact) {
-        formData.append(`modules[${index}][funfact]`, module.funfact);
-      }
-      if (module.part1.image) {
-        formData.append(`modules[${index}][part1][image]`, module.part1.image);
-      }
-      if (module.part2.image) {
-        formData.append(`modules[${index}][part2][image]`, module.part2.image);
-      }
-      if (module.part3.image) {
-        formData.append(`modules[${index}][part3][image]`, module.part3.image);
-      }
-      if (module.part4.image) {
-        formData.append(`modules[${index}][part4][image]`, module.part4.image);
-      }
-    });
-
+    // Check if user is already a content creator
     try {
-      const response = await fetch("http://localhost:3000/add-course", {
+      const response = await fetch("/api/checkContentCreator", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: user.id }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Server responded with status ${response.status}: ${errorData.message}`);
+      const result = await response.json();
+      if (result.isContentCreator) {
+        alert("You are already a Content Creator");
+        setIsContentCreator(true);
+        return;
       }
 
-      setIsCourseSubmitted(true);
-      alert("Course submitted successfully!");
-
-      // Reset the form data to its initial state
-      setCourseData({
-        instructorEmail: "",
-        courseName: "",
-        primaryLanguage: "",
-        level: "",
-        courseImage: null,
-        modules: [],
-      });
+      setShowConfirmation(true);
     } catch (error) {
-      console.error("Error submitting course:", error);
-      alert(`Error submitting course: ${error.message}`);
+      console.error("Error checking content creator status:", error);
+      alert("Error checking your current role. Please try again.");
     }
+  };
+
+  const confirmContentCreator = async () => {
+    try {
+      const response = await fetch("/api/becomeContentCreator", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("You are now a Content Creator!");
+        setIsContentCreator(true);
+        // Refresh user data from Clerk
+        await user.refresh();
+      } else {
+        alert("Failed to update role. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error becoming content creator:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setShowConfirmation(false);
+    }
+  };
+
+  const cancelConfirmation = () => {
+    setShowConfirmation(false);
   };
 
   return (
@@ -295,7 +287,7 @@ const handleAddModule = () => {
           <input
             type="email"
             name="instructorEmail"
-            value={courseData.instructorEmail}
+            value={userInfo.email}
             onChange={handleInputChange}
             className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
             placeholder="Enter instructor email"
@@ -420,23 +412,23 @@ const handleAddModule = () => {
             </div>
 
             {/* Scientific Name */}
-<div>
-  <label className="block text-sm font-medium text-gray-400 mb-2">
-    Scientific Name
-  </label>
-  <input
-    type="text"
-    value={module.scientificName}
-    onChange={(e) => {
-      const newModules = [...courseData.modules];
-      newModules[moduleIndex].scientificName = e.target.value;
-      setCourseData((prev) => ({ ...prev, modules: newModules }));
-    }}
-    className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-    placeholder="Enter scientific name"
-    required
-  />
-</div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Scientific Name
+              </label>
+              <input
+                type="text"
+                value={module.scientificName}
+                onChange={(e) => {
+                  const newModules = [...courseData.modules];
+                  newModules[moduleIndex].scientificName = e.target.value;
+                  setCourseData((prev) => ({ ...prev, modules: newModules }));
+                }}
+                className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Enter scientific name"
+                required
+              />
+            </div>
 
             {/* Description */}
             <div>
@@ -964,7 +956,7 @@ const handleAddModule = () => {
             {/* Benefit 4 */}
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                Enter the model name 
+                Benefit 4 Name
               </label>
               <input
                 type="text"
@@ -975,14 +967,14 @@ const handleAddModule = () => {
                   setCourseData((prev) => ({ ...prev, modules: newModules }));
                 }}
                 className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="Enter name"
+                placeholder="Enter benefit 4 name"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                Provide Link Of SketchFab for VR
+                Benefit 4 Description
               </label>
               <textarea
                 value={module.benefit4.description}
@@ -992,7 +984,7 @@ const handleAddModule = () => {
                   setCourseData((prev) => ({ ...prev, modules: newModules }));
                 }}
                 className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-                placeholder="Enter sketchfab link"
+                placeholder="Enter benefit 4 description"
                 required
               ></textarea>
             </div>
@@ -1205,58 +1197,57 @@ const handleAddModule = () => {
         {/* Submit Button */}
         <button
           type="submit"
-        // Submit Button className correction
-className={`w-full py-3 rounded-lg shadow-md transition duration-200 ${
-  (
-    !courseData.instructorEmail ||
-    !courseData.courseName ||
-    !courseData.primaryLanguage ||
-    !courseData.level ||
-    !courseData.courseImage ||
-    courseData.modules.some(
-      (module) =>
-        !module.moduleName ||
-        !module.description ||
-        !module.funfact ||
-        !module.funfact1 ||
-        !module.funfact2 ||
-        !module.funfact3 ||
-        !module.funfact4 ||
-        !module.part1.name ||
-        !module.part1.description ||
-        !module.part1.image ||
-        !module.part2.name ||
-        !module.part2.description ||
-        !module.part2.image ||
-        !module.part3.name ||
-        !module.part3.description ||
-        !module.part3.image ||
-        !module.part4.name ||
-        !module.part4.description ||
-        !module.part4.image ||
-        !module.benefit1.name ||
-        !module.benefit1.description ||
-        !module.benefit2.name ||
-        !module.benefit2.description ||
-        !module.benefit3.name ||
-        !module.benefit3.description ||
-        !module.benefit4.name ||
-        !module.benefit4.description ||
-        !module.numberOfQuiz ||
-        module.quiz.some(
-          (question) =>
-            !question.question ||
-            !question.optionA ||
-            !question.optionB ||
-            !question.optionC ||
-            !question.optionD ||
-            !question.correctAnswer
-        )
-    )
-  )
-    ? 'bg-gray-400 cursor-not-allowed'
-    : 'bg-blue-600 hover:bg-blue-700 text-white'
-}`}
+          className={`w-full py-3 rounded-lg shadow-md transition duration-200 ${
+            (
+              !courseData.instructorEmail ||
+              !courseData.courseName ||
+              !courseData.primaryLanguage ||
+              !courseData.level ||
+              !courseData.courseImage ||
+              courseData.modules.some(
+                (module) =>
+                  !module.moduleName ||
+                  !module.description ||
+                  !module.funfact ||
+                  !module.funfact1 ||
+                  !module.funfact2 ||
+                  !module.funfact3 ||
+                  !module.funfact4 ||
+                  !module.part1.name ||
+                  !module.part1.description ||
+                  !module.part1.image ||
+                  !module.part2.name ||
+                  !module.part2.description ||
+                  !module.part2.image ||
+                  !module.part3.name ||
+                  !module.part3.description ||
+                  !module.part3.image ||
+                  !module.part4.name ||
+                  !module.part4.description ||
+                  !module.part4.image ||
+                  !module.benefit1.name ||
+                  !module.benefit1.description ||
+                  !module.benefit2.name ||
+                  !module.benefit2.description ||
+                  !module.benefit3.name ||
+                  !module.benefit3.description ||
+                  !module.benefit4.name ||
+                  !module.benefit4.description ||
+                  !module.numberOfQuiz ||
+                  module.quiz.some(
+                    (question) =>
+                      !question.question ||
+                      !question.optionA ||
+                      !question.optionB ||
+                      !question.optionC ||
+                      !question.optionD ||
+                      !question.correctAnswer
+                  )
+              )
+            )
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
           disabled={
             !courseData.instructorEmail ||
             !courseData.courseName ||
@@ -1308,6 +1299,30 @@ className={`w-full py-3 rounded-lg shadow-md transition duration-200 ${
           Submit Course
         </button>
       </form>
+
+      {/* Confirmation Dialog */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">Confirm Role Change</h3>
+            <p className="mb-6">Are you sure? You will be assigned to Content Creator role.</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={cancelConfirmation}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmContentCreator}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

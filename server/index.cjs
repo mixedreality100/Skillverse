@@ -1227,6 +1227,23 @@ app.put('/edit-course/:courseId', upload.any(), async (req, res) => {
   }
 });
 
+// Endpoint to get the highest reward
+app.get('/api/top-rewards', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.name, r.points_earned
+      FROM reward r
+      JOIN users u ON r.user_id = u.id
+      ORDER BY r.points_earned DESC
+      LIMIT 3;
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 
 
 app.listen(port, () => {
