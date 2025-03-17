@@ -316,16 +316,18 @@ export const AloePage = () => {
   };
 
   const handleARClick = () => {
-    navigate("/module-viewer");
+    navigate(`/module-viewer/${moduleId}`);
+  };
+  
+  const handleVRClick = () => {
+    navigate(`/modelvr/${moduleId}`);
   };
 
   const handleback = () => {
     navigate("/plants");
   };
 
-  const handleVRClick = () => {
-    navigate("/modelvr");
-  };
+  
 
   if (loading) {
     return <Loader />;

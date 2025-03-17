@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ExploreModule from './ExploreModule'; // Import your ExploreModule component
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 
 const MyCourses = () => {
+  const navigate = useNavigate(); // Use the useNavigate hook to get the navigate function
   const [showExploreModule, setShowExploreModule] = useState(false); // State to track which component to show
   const [courses, setCourses] = useState([]); // State to store fetched courses
   const [selectedCourseId, setSelectedCourseId] = useState(null); // State to store the selected course ID
@@ -34,6 +36,9 @@ const MyCourses = () => {
     setShowExploreModule(false); // Return to MyCourses
   };
 
+  const handleEditCourse = (courseId) => {
+    navigate(`/edit-course/${courseId}`);
+  };
   const handleDeleteCourse = async (courseId) => {
     try {
       const response = await fetch(`http://localhost:3000/delete-course/${courseId}`, {
@@ -86,14 +91,17 @@ const MyCourses = () => {
                   </div>
                 </div>
                 <div className="p-4">
-                <p className="text-gray-700 mb-3 text-base text-center">
-                    Course code : {course.course_id}
+                  <p className="text-gray-700 mb-3 text-base text-center">
+                    Course code: {course.course_id}
                   </p>
                   <p className="text-gray-700 mb-3 text-base text-center">
                     Level: {course.level}
                   </p>
                   <div className="flex justify-center gap-4">
-                    <button className="bg-white border border-black text-black px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:border-green-500 hover:text-green-600 transition-colors duration-300 ease-in-out shadow-sm hover:shadow-md">
+                    <button
+                      className="bg-white border border-black text-black px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:border-green-500 hover:text-green-600 transition-colors duration-300 ease-in-out shadow-sm hover:shadow-md"
+                      onClick={() => handleEditCourse(course.id)}
+                    >
                       Edit
                     </button>
                     <button

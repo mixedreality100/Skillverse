@@ -227,27 +227,6 @@ app.get('/courses', async (req, res) => {
   }
 });
 
-
-// Endpoint to fetch all courses
-// app.get('/courses', async (req, res) => {
-//   try {
-//     const result = await pool.query('SELECT id, course_name, primary_language, level, course_image FROM courses');
-//     const coursesWithImages = result.rows.map(course => {
-//       if (course.course_image) {
-//         const base64Image = course.course_image.toString('base64');
-//         course.course_image = `data:image/png;base64,${base64Image}`;
-//       } else {
-//         course.course_image = null;
-//       }
-//       return course;
-//     });
-//     res.status(200).json(coursesWithImages);
-//   } catch (error) {
-//     console.error('Error fetching courses:', error);
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
 // Endpoint to fetch course by course ID
 app.get('/courses/:id', async (req, res) => {
   try {
@@ -356,19 +335,49 @@ app.get("/api/modules/:moduleId", async (req, res) => {
   }
 });
 
+//quiz
+app.get('/api/modules/:moduleId/quiz', async (req, res) => {
+  const { moduleId } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM quiz_questions WHERE module_id = $1',
+      [parseInt(moduleId, 10)]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching quiz questions:', error);
+    res.status(500).json({ message: 'Internal Server Error', details: error.message });
+  }
+});
+
 
 // Endpoint to delete a course by ID
 app.delete('/delete-course/:id', async (req, res) => {
   try {
     const courseId = parseInt(req.params.id, 10);
 
+    // Step 0: Delete all course enrollments associated with this course
+    await pool.query('DELETE FROM course_enrollment WHERE course_id = $1', [courseId]);
+
     // Step 1: Delete all quizzes associated with the modules of this course
     await pool.query('DELETE FROM quiz_questions WHERE module_id IN (SELECT id FROM modules WHERE course_id = $1)', [courseId]);
 
-    // Step 2: Delete all modules associated with this course
+    // Step 2: Delete all module completions associated with the modules of this course
+    await pool.query('DELETE FROM module_completion WHERE module_id IN (SELECT id FROM modules WHERE course_id = $1)', [courseId]);
+
+    // Step 3: Delete all course statistics associated with this course
+    await pool.query('DELETE FROM course_statistics WHERE course_id = $1', [courseId]);
+
+    // Step 4: Delete all feedback associated with this course
+    await pool.query('DELETE FROM feedback WHERE course_id = $1', [courseId]);
+
+    // Step 5: Delete all rewards associated with this course
+    await pool.query('DELETE FROM reward WHERE course_id = $1', [courseId]);
+
+    // Step 6: Delete all modules associated with this course
     await pool.query('DELETE FROM modules WHERE course_id = $1', [courseId]);
 
-    // Step 3: Delete the course
+    // Step 7: Delete the course
     await pool.query('DELETE FROM courses WHERE id = $1', [courseId]);
 
     res.status(200).send('Course deleted successfully');
@@ -382,6 +391,9 @@ app.delete('/delete-course/:id', async (req, res) => {
 app.delete('/delete-module/:id', async (req, res) => {
   try {
     const moduleId = parseInt(req.params.id, 10);
+
+    // Step 0: Delete all module completions associated with this module
+    await pool.query('DELETE FROM module_completion WHERE module_id = $1', [moduleId]);
 
     // Step 1: Delete all quizzes associated with this module
     await pool.query('DELETE FROM quiz_questions WHERE module_id = $1', [moduleId]);
@@ -481,21 +493,6 @@ app.get('/api/courses', async (req, res) => {
   }
 });
 
-//quiz
-app.get('/api/modules/:moduleId/quiz', async (req, res) => {
-  const { moduleId } = req.params;
-  try {
-    const result = await pool.query(
-      'SELECT * FROM quiz_questions WHERE module_id = $1',
-      [parseInt(moduleId, 10)]
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error fetching quiz questions:', error);
-    res.status(500).json({ message: 'Internal Server Error', details: error.message });
-  }
-});
-
 
 app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
   try {
@@ -536,9 +533,56 @@ app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
 });
 
 
+// app.post('/api/submit-quiz', async (req, res) => {
+//   try {
+//     const { userId, moduleId, answers } = req.body;
+
+//     // Check if the record already exists
+//     const checkQuery = `
+//       SELECT id
+//       FROM module_completion
+//       WHERE user_id = $1 AND module_id = $2;
+//     `;
+//     const checkResult = await pool.query(checkQuery, [userId, moduleId]);
+
+//     let result;
+//     if (checkResult.rows.length > 0) {
+//       // Record exists, update it
+//       const updateQuery = `
+//         UPDATE module_completion
+//         SET completion_date = NOW()
+//         WHERE user_id = $1 AND module_id = $2
+//         RETURNING id;
+//       `;
+//       result = await pool.query(updateQuery, [userId, moduleId]);
+//     } else {
+//       // Record does not exist, insert it
+//       const insertQuery = `
+//         INSERT INTO module_completion (user_id, module_id, completion_date)
+//         VALUES ($1, $2, NOW())
+//         RETURNING id;
+//       `;
+//       result = await pool.query(insertQuery, [userId, moduleId]);
+//     }
+
+//     // If the insertion or update was successful, return the ID
+//     if (result.rows.length > 0) {
+//       res.status(200).json({ success: true, nextModuleId: result.rows[0].id });
+//     } else {
+//       res.status(200).json({ success: true, nextModuleId: null });
+//     }
+//   } catch (error) {
+//     console.error('Error submitting quiz:', error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// });
+
+
+
+
 app.post('/api/submit-quiz', async (req, res) => {
   try {
-    const { userId, moduleId, answers } = req.body;
+    const { userId, moduleId, courseId, answers } = req.body;
 
     // Check if the record already exists
     const checkQuery = `
@@ -568,9 +612,29 @@ app.post('/api/submit-quiz', async (req, res) => {
       result = await pool.query(insertQuery, [userId, moduleId]);
     }
 
-    // If the insertion or update was successful, return the ID
+    // If the insertion or update was successful, calculate the total points earned
     if (result.rows.length > 0) {
-      res.status(200).json({ success: true, nextModuleId: result.rows[0].id });
+      const pointsPerModule = 10;
+      const totalPointsQuery = `
+        SELECT COUNT(*) AS total_modules_completed
+        FROM module_completion
+        WHERE user_id = $1;
+      `;
+      const totalPointsResult = await pool.query(totalPointsQuery, [userId]);
+
+      const totalModulesCompleted = totalPointsResult.rows[0].total_modules_completed;
+      const totalPointsEarned = totalModulesCompleted * pointsPerModule;
+
+      // Insert into the reward table
+      const insertRewardQuery = `
+        INSERT INTO reward (user_id, course_id, points_earned, reward_date)
+        VALUES ($1, $2, $3, NOW())
+        RETURNING id;
+      `;
+      const insertRewardResult = await pool.query(insertRewardQuery, [userId, courseId, totalPointsEarned]);
+
+      // Return the ID of the reward record
+      res.status(200).json({ success: true, nextModuleId: result.rows[0].id, rewardId: insertRewardResult.rows[0].id });
     } else {
       res.status(200).json({ success: true, nextModuleId: null });
     }
@@ -579,8 +643,6 @@ app.post('/api/submit-quiz', async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-
 app.get('/api/module-completion/:userId/:moduleId', async (req, res) => {
   try {
     const { userId, moduleId } = req.params;
@@ -814,6 +876,358 @@ app.get('/api/next-incomplete-module/:userId/:courseId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
+
+// Or better yet, restructure your endpoint to handle form data directly:
+app.put('/edit-course/:courseId', upload.any(), async (req, res) => {
+  try {
+    const courseId = parseInt(req.params.courseId);
+    const {
+      instructorEmail,
+      courseName,
+      primaryLanguage,
+      level,
+    } = req.body;
+
+    // Get course image from uploaded files
+    let courseImageBuffer = null;
+    if (req.files && req.files.length > 0) {
+      const courseImageFile = req.files.find(file => file.fieldname === 'courseImage');
+      if (courseImageFile) {
+        courseImageBuffer = courseImageFile.buffer;
+      }
+    }
+
+    console.log('Course ID:', courseId);
+    console.log('Instructor Email:', instructorEmail);
+    console.log('Course Name:', courseName);
+
+    // Update course details
+    await pool.query(
+      'UPDATE courses SET instructor_email = $1, course_name = $2, primary_language = $3, level = $4, course_image = COALESCE($5, course_image) WHERE id = $6',
+      [instructorEmail, courseName, primaryLanguage, level, courseImageBuffer, courseId]
+    );
+
+    // Process modules
+    // First, get all module indices from the request body
+    const moduleIndices = new Set();
+    for (const key in req.body) {
+      const match = key.match(/^modules\[(\d+)\]/);
+      if (match) {
+        moduleIndices.add(parseInt(match[1]));
+      }
+    }
+
+    console.log('Module Indices:', Array.from(moduleIndices));
+
+    // Process each module
+    for (const index of moduleIndices) {
+      // Consistent access pattern for all fields
+      const modulePrefix = `modules[${index}]`;
+      const moduleId = req.body[`${modulePrefix}[id]`] ? parseInt(req.body[`${modulePrefix}[id]`]) : null;
+      const moduleName = req.body[`${modulePrefix}[moduleName]`];
+      const scientificName = req.body[`${modulePrefix}[scientificName]`];
+      const description = req.body[`${modulePrefix}[description]`];
+      const funfact1 = req.body[`${modulePrefix}[funfact1]`];
+      const funfact2 = req.body[`${modulePrefix}[funfact2]`];
+      const funfact3 = req.body[`${modulePrefix}[funfact3]`];
+      const funfact4 = req.body[`${modulePrefix}[funfact4]`];
+      const numberOfQuiz = parseInt(req.body[`${modulePrefix}[numberOfQuiz]`] || '0');
+
+      // Consistent access for nested objects
+      const part1Name = req.body[`${modulePrefix}[part1][name]`];
+      const part1Description = req.body[`${modulePrefix}[part1][description]`];
+      const part2Name = req.body[`${modulePrefix}[part2][name]`];
+      const part2Description = req.body[`${modulePrefix}[part2][description]`];
+      const part3Name = req.body[`${modulePrefix}[part3][name]`];
+      const part3Description = req.body[`${modulePrefix}[part3][description]`];
+      const part4Name = req.body[`${modulePrefix}[part4][name]`];
+      const part4Description = req.body[`${modulePrefix}[part4][description]`];
+
+      const benefit1Name = req.body[`${modulePrefix}[benefit1][name]`];
+      const benefit1Description = req.body[`${modulePrefix}[benefit1][description]`];
+      const benefit2Name = req.body[`${modulePrefix}[benefit2][name]`];
+      const benefit2Description = req.body[`${modulePrefix}[benefit2][description]`];
+      const benefit3Name = req.body[`${modulePrefix}[benefit3][name]`];
+      const benefit3Description = req.body[`${modulePrefix}[benefit3][description]`];
+      const benefit4Name = req.body[`${modulePrefix}[benefit4][name]`];
+      const benefit4Description = req.body[`${modulePrefix}[benefit4][description]`];
+
+      // Get module image and GLB file from uploaded files
+      let moduleImageBuffer = null;
+      let glbFileBuffer = null;
+      let part1ImageBuffer = null;
+      let part2ImageBuffer = null;
+      let part3ImageBuffer = null;
+      let part4ImageBuffer = null;
+
+      if (req.files && req.files.length > 0) {
+        // Match the exact field names from the form
+        const moduleImageFile = req.files.find(file => file.fieldname === `${modulePrefix}[image]`);
+        if (moduleImageFile) {
+          moduleImageBuffer = moduleImageFile.buffer;
+        }
+        
+        const glbFile = req.files.find(file => file.fieldname === `${modulePrefix}[glbFile]`);
+        if (glbFile) {
+          glbFileBuffer = glbFile.buffer;
+        }
+        
+        const part1File = req.files.find(file => file.fieldname === `${modulePrefix}[part1][image]`);
+        if (part1File) {
+          part1ImageBuffer = part1File.buffer;
+        }
+        
+        const part2File = req.files.find(file => file.fieldname === `${modulePrefix}[part2][image]`);
+        if (part2File) {
+          part2ImageBuffer = part2File.buffer;
+        }
+        
+        const part3File = req.files.find(file => file.fieldname === `${modulePrefix}[part3][image]`);
+        if (part3File) {
+          part3ImageBuffer = part3File.buffer;
+        }
+        
+        const part4File = req.files.find(file => file.fieldname === `${modulePrefix}[part4][image]`);
+        if (part4File) {
+          part4ImageBuffer = part4File.buffer;
+        }
+      }
+
+      let finalModuleId = null;
+
+      // Check if module exists and update or create accordingly
+      if (moduleId) {
+        // Check if module exists
+        const moduleCheckResult = await pool.query(
+          'SELECT id FROM modules WHERE id = $1',
+          [moduleId]
+        );
+        
+        if (moduleCheckResult.rows.length > 0) {
+          // Update existing module
+          console.log(`Updating existing module ID: ${moduleId}, Name: ${moduleName}`);
+          
+          // Update text fields
+          await pool.query(
+            `
+            UPDATE modules SET
+              module_name = $1,
+              scientific_name = $2,
+              description = $3,
+              number_of_quiz = $4,
+              funfact1 = $5,
+              funfact2 = $6,
+              funfact3 = $7,
+              funfact4 = $8,
+              part1_name = $9,
+              part1_description = $10,
+              part2_name = $11,
+              part2_description = $12,
+              part3_name = $13,
+              part3_description = $14,
+              part4_name = $15,
+              part4_description = $16,
+              benefit1_name = $17,
+              benefit1_description = $18,
+              benefit2_name = $19,
+              benefit2_description = $20,
+              benefit3_name = $21,
+              benefit3_description = $22,
+              benefit4_name = $23,
+              benefit4_description = $24
+            WHERE id = $25
+            `,
+            [
+              moduleName, scientificName, description, numberOfQuiz,
+              funfact1, funfact2, funfact3, funfact4,
+              part1Name, part1Description, part2Name, part2Description,
+              part3Name, part3Description, part4Name, part4Description,
+              benefit1Name, benefit1Description, benefit2Name, benefit2Description,
+              benefit3Name, benefit3Description, benefit4Name, benefit4Description,
+              moduleId
+            ]
+          );
+          
+          finalModuleId = moduleId;
+        } else {
+          // Module ID provided but doesn't exist, create new
+          console.log(`Module ID ${moduleId} not found, creating new module: ${moduleName}`);
+          // Continue to create new module code below
+          finalModuleId = null;
+        }
+      } 
+      
+      // Create new module if no ID or ID not found
+      if (!finalModuleId) {
+        console.log(`Creating new module: ${moduleName}`);
+        
+        // Fixed parameter count mismatch (24 values for 24 placeholders)
+        const newModuleResult = await pool.query(
+          `
+          INSERT INTO modules (
+            course_id, module_name, scientific_name, description, number_of_quiz,
+            funfact1, funfact2, funfact3, funfact4,
+            part1_name, part1_description, part2_name, part2_description,
+            part3_name, part3_description, part4_name, part4_description,
+            benefit1_name, benefit1_description, benefit2_name, benefit2_description,
+            benefit3_name, benefit3_description, benefit4_name, benefit4_description
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+          RETURNING id
+          `,
+          [
+            courseId, moduleName, scientificName, description, numberOfQuiz,
+            funfact1, funfact2, funfact3, funfact4,
+            part1Name, part1Description, part2Name, part2Description,
+            part3Name, part3Description, part4Name, part4Description,
+            benefit1Name, benefit1Description, benefit2Name, benefit2Description,
+            benefit3Name, benefit3Description, benefit4Name, benefit4Description
+          ]
+        );
+        
+        finalModuleId = newModuleResult.rows[0].id;
+      }
+
+      // Update images for either new or existing module
+      if (moduleImageBuffer) {
+        await pool.query(
+          'UPDATE modules SET module_image = $1 WHERE id = $2',
+          [moduleImageBuffer, finalModuleId]
+        );
+      }
+
+      if (glbFileBuffer) {
+        await pool.query(
+          'UPDATE modules SET glb_file = $1 WHERE id = $2',
+          [glbFileBuffer, finalModuleId]
+        );
+      }
+
+      if (part1ImageBuffer) {
+        await pool.query(
+          'UPDATE modules SET part1_image = $1 WHERE id = $2',
+          [part1ImageBuffer, finalModuleId]
+        );
+      }
+
+      if (part2ImageBuffer) {
+        await pool.query(
+          'UPDATE modules SET part2_image = $1 WHERE id = $2',
+          [part2ImageBuffer, finalModuleId]
+        );
+      }
+
+      if (part3ImageBuffer) {
+        await pool.query(
+          'UPDATE modules SET part3_image = $1 WHERE id = $2',
+          [part3ImageBuffer, finalModuleId]
+        );
+      }
+
+      if (part4ImageBuffer) {
+        await pool.query(
+          'UPDATE modules SET part4_image = $1 WHERE id = $2',
+          [part4ImageBuffer, finalModuleId]
+        );
+      }
+
+      // Process quiz questions
+      console.log(`Processing ${numberOfQuiz} quiz questions for module ID: ${finalModuleId}`);
+      
+      // Consistent access for quiz questions
+      for (let j = 0; j < numberOfQuiz; j++) {
+        const quizPrefix = `${modulePrefix}[quiz][${j}]`;
+        const quizId = req.body[`${quizPrefix}[id]`] ? parseInt(req.body[`${quizPrefix}[id]`]) : null;
+        const question = req.body[`${quizPrefix}[question]`];
+        const optionA = req.body[`${quizPrefix}[optionA]`];
+        const optionB = req.body[`${quizPrefix}[optionB]`];
+        const optionC = req.body[`${quizPrefix}[optionC]`];
+        const optionD = req.body[`${quizPrefix}[optionD]`];
+        const correctAnswer = req.body[`${quizPrefix}[correctAnswer]`];
+
+        if (!question || !optionA || !optionB || !optionC || !optionD || !correctAnswer) {
+          console.log(`Skipping incomplete quiz question at index ${j}`);
+          continue; // Skip incomplete questions
+        }
+
+        if (!['A', 'B', 'C', 'D'].includes(correctAnswer)) {
+          console.log(`Invalid correct answer for question at index ${j}: ${correctAnswer}`);
+          throw new Error('Invalid correct answer. Please select A, B, C, or D.');
+        }
+
+        console.log(`Processing quiz question: ${question}`);
+
+        if (quizId) {
+          // Check if quiz exists
+          const quizCheck = await pool.query(
+            'SELECT id FROM quiz_questions WHERE id = $1 AND module_id = $2',
+            [quizId, finalModuleId]
+          );
+          
+          if (quizCheck.rows.length > 0) {
+            // Update existing quiz
+            console.log(`Updating existing quiz question ID: ${quizId}`);
+            await pool.query(
+              `
+              UPDATE quiz_questions SET
+                question = $1,
+                option_a = $2,
+                option_b = $3,
+                option_c = $4,
+                option_d = $5,
+                correct_answer = $6
+              WHERE id = $7
+              `,
+              [question, optionA, optionB, optionC, optionD, correctAnswer, quizId]
+            );
+          } else {
+            // Create new quiz
+            console.log(`Quiz ID ${quizId} not found, creating new quiz question`);
+            await pool.query(
+              `
+              INSERT INTO quiz_questions (
+                module_id, question, option_a, option_b, option_c, option_d, correct_answer
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+              `,
+              [finalModuleId, question, optionA, optionB, optionC, optionD, correctAnswer]
+            );
+          }
+        } else {
+          // Create new quiz question
+          console.log(`Creating new quiz question for module ${finalModuleId}`);
+          await pool.query(
+            `
+            INSERT INTO quiz_questions (
+              module_id, question, option_a, option_b, option_c, option_d, correct_answer
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `,
+            [finalModuleId, question, optionA, optionB, optionC, optionD, correctAnswer]
+          );
+        }
+      }
+    }
+
+    // Update the number_of_modules in the courses table
+    const countResult = await pool.query(
+      'SELECT COUNT(*) FROM modules WHERE course_id = $1',
+      [courseId]
+    );
+    const moduleCount = parseInt(countResult.rows[0].count);
+    
+    await pool.query(
+      'UPDATE courses SET number_of_modules = $1 WHERE id = $2',
+      [moduleCount, courseId]
+    );
+
+    res.status(200).send('Course updated successfully');
+  } catch (error) {
+    console.error('Error updating course:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

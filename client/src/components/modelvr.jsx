@@ -1,47 +1,62 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 const SketchfabVR = () => {
-    return (
-        <div className="sketchfab-embed-wrapper">
-            <iframe
-                title="Foliage Asset (3D): Aloe Vera Plant"
-                frameBorder="0"
-                allowFullScreen
-                mozallowfullscreen="true"
-                webkitallowfullscreen="true"
-                allow="autoplay; fullscreen; xr-spatial-tracking"
-                src="https://sketchfab.com/models/689a4edc310149938fddf1e875bf2562/embed"
-                style={{ width: '100%', height: '500px' }} // Adjust height as needed
-            >
-            </iframe>
-            <p style={{ fontSize: '13px', fontWeight: 'normal', margin: '5px', color: '#4A4A4A' }}>
-                <a
-                    href="https://sketchfab.com/3d-models/foliage-asset-3d-aloe-vera-plant-689a4edc310149938fddf1e875bf2562?utm_medium=embed&utm_campaign=share-popup&utm_content=689a4edc310149938fddf1e875bf2562"
-                    target="_blank"
-                    rel="nofollow"
-                    style={{ fontWeight: 'bold', color: '#1CAAD9' }}
-                >
-                    Foliage Asset (3D): Aloe Vera Plant
-                </a> by 
-                <a
-                    href="https://sketchfab.com/nyabsino?utm_medium=embed&utm_campaign=share-popup&utm_content=689a4edc310149938fddf1e875bf2562"
-                    target="_blank"
-                    rel="nofollow"
-                    style={{ fontWeight: 'bold', color: '#1CAAD9' }}
-                >
-                    Nyabsino KMM™
-                </a> on 
-                <a
-                    href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=689a4edc310149938fddf1e875bf2562"
-                    target="_blank"
-                    rel="nofollow"
-                    style={{ fontWeight: 'bold', color: '#1CAAD9' }}
-                >
-                    Sketchfab
-                </a>
-            </p>
-        </div>
-    );
+  const { moduleId } = useParams();
+  const [moduleDetails, setModuleDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchModuleDetails = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/modules/${moduleId}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const moduleData = await response.json();
+        if (moduleData.length > 0) {
+          setModuleDetails(moduleData[0]); // Set the module details
+        } else {
+          console.error("Module not found");
+        }
+      } catch (error) {
+        console.error("Error fetching module details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (moduleId) {
+      fetchModuleDetails();
+    }
+  }, [moduleId]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!moduleDetails) {
+    return <div>Module details not found</div>;
+  }
+
+  const benefit4Description = moduleDetails.benefit4_description || 'Default Description';
+
+  return (
+    <div className="sketchfab-embed-wrapper">
+      <iframe
+        title="Foliage Asset (3D): Aloe Vera Plant"
+        frameBorder="0"
+        allowFullScreen
+        mozallowfullscreen="true"
+        webkitallowfullscreen="true"
+        allow="autoplay; fullscreen; xr-spatial-tracking"
+        src={benefit4Description}
+        style={{ width: '100%', height: '800px' }} // Adjust height as needed
+      >
+      </iframe>
+      
+    </div>
+  );
 };
 
 export { SketchfabVR };
