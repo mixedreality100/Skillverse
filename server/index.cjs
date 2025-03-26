@@ -205,11 +205,11 @@ app.post('/add-course', upload.any(), async (req, res) => {
   }
 });
 
-// Endpoint to fetch all courses
 
-app.get('/courses', async (req, res) => {
+
+app.get('/approved/courses', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, course_name, level, course_image FROM courses');
+    const result = await pool.query('SELECT id, course_name, level, course_image, status FROM courses WHERE status = true');
     const coursesWithImages = result.rows.map(course => {
       if (course.course_image) {
         // Convert BYTEA to Base64
@@ -220,6 +220,49 @@ app.get('/courses', async (req, res) => {
       }
       return course;
     });
+    res.status(200).json(coursesWithImages);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// get get based on the emailid 
+app.get('/email/courses', async (req, res) => {
+  try {
+    const instructorEmail = req.query.instructorEmail; // Get the instructor email from query parameters
+
+    let query;
+    let values;
+
+    if (instructorEmail) {
+      query = `
+        SELECT id, course_name, level, course_image,status
+        FROM courses 
+        WHERE instructor_email = $1
+      `;
+      values = [instructorEmail];
+    } else {
+      query = `
+        SELECT id, course_name, level, course_image,status
+        FROM courses
+      `;
+      values = [];
+    }
+
+    const result = await pool.query(query, values);
+
+    const coursesWithImages = result.rows.map(course => {
+      if (course.course_image) {
+        // Convert BYTEA to Base64
+        const base64Image = course.course_image.toString('base64');
+        course.course_image = `data:image/png;base64,${base64Image}`;
+      } else {
+        course.course_image = null; // Handle case where there is no image
+      }
+      return course;
+    });
+
     res.status(200).json(coursesWithImages);
   } catch (error) {
     console.error('Error fetching courses:', error);
@@ -444,20 +487,20 @@ app.get('/courses/search', async (req, res) => {
 // Endpoint to fetch courses with filtering and sorting
 app.get('/api/courses', async (req, res) => {
   try {
-    let query = 'SELECT * FROM courses';
+    let query = 'SELECT * FROM courses WHERE status = true'; // Start with the status condition
     const params = [];
     let whereClauseAdded = false;
 
     if (req.query.keyword) {
       const keyword = `%${req.query.keyword}%`;
-      query += (whereClauseAdded ? ' AND' : ' WHERE') + ' (course_name ILIKE $1 OR level ILIKE $1)';
+      query += (whereClauseAdded ? ' AND' : ' AND') + ' (course_name ILIKE $1 OR level ILIKE $1)';
       params.push(keyword);
       whereClauseAdded = true;
     }
 
     if (req.query.level) {
       const levelParamIndex = whereClauseAdded ? params.length + 1 : 1;
-      query += (whereClauseAdded ? ' AND' : ' WHERE') + ` level ILIKE $${levelParamIndex}`;
+      query += (whereClauseAdded ? ' AND' : ' AND') + ` level ILIKE $${levelParamIndex}`;
       params.push(`%${req.query.level}%`);
       whereClauseAdded = true;
     }
@@ -577,9 +620,6 @@ app.get('/api/modules/next/:courseId/:moduleId', async (req, res) => {
 //   }
 // });
 
-
-
-
 app.post('/api/submit-quiz', async (req, res) => {
   try {
     const { userId, moduleId, courseId, answers } = req.body;
@@ -592,7 +632,7 @@ app.post('/api/submit-quiz', async (req, res) => {
     `;
     const checkResult = await pool.query(checkQuery, [userId, moduleId]);
 
-    let result;
+    let moduleCompletionId;
     if (checkResult.rows.length > 0) {
       // Record exists, update it
       const updateQuery = `
@@ -601,48 +641,75 @@ app.post('/api/submit-quiz', async (req, res) => {
         WHERE user_id = $1 AND module_id = $2
         RETURNING id;
       `;
-      result = await pool.query(updateQuery, [userId, moduleId]);
+      const result = await pool.query(updateQuery, [userId, moduleId]);
+      moduleCompletionId = result.rows[0].id;
     } else {
-      // Record does not exist, insert it
+      // Record does not exist, insert it without specifying id
+      // Let PostgreSQL assign the next value from the sequence
       const insertQuery = `
         INSERT INTO module_completion (user_id, module_id, completion_date)
         VALUES ($1, $2, NOW())
         RETURNING id;
       `;
-      result = await pool.query(insertQuery, [userId, moduleId]);
+      const result = await pool.query(insertQuery, [userId, moduleId]);
+      moduleCompletionId = result.rows[0].id;
     }
 
-    // If the insertion or update was successful, calculate the total points earned
-    if (result.rows.length > 0) {
-      const pointsPerModule = 10;
-      const totalPointsQuery = `
-        SELECT COUNT(*) AS total_modules_completed
-        FROM module_completion
-        WHERE user_id = $1;
+    // Calculate the total points earned
+    const pointsPerModule = 10;
+    const totalPointsQuery = `
+      SELECT COUNT(*) AS total_modules_completed
+      FROM module_completion
+      WHERE user_id = $1;
+    `;
+    const totalPointsResult = await pool.query(totalPointsQuery, [userId]);
+
+    const totalModulesCompleted = totalPointsResult.rows[0].total_modules_completed;
+    const totalPointsEarned = totalModulesCompleted * pointsPerModule;
+
+    // Check if a reward already exists for this user and course
+    const checkRewardQuery = `
+      SELECT id
+      FROM reward
+      WHERE user_id = $1 AND course_id = $2;
+    `;
+    const checkRewardResult = await pool.query(checkRewardQuery, [userId, courseId]);
+
+    let rewardId;
+    if (checkRewardResult.rows.length > 0) {
+      // Update existing reward record
+      const updateRewardQuery = `
+        UPDATE reward
+        SET points_earned = $3, reward_date = NOW()
+        WHERE user_id = $1 AND course_id = $2
+        RETURNING id;
       `;
-      const totalPointsResult = await pool.query(totalPointsQuery, [userId]);
-
-      const totalModulesCompleted = totalPointsResult.rows[0].total_modules_completed;
-      const totalPointsEarned = totalModulesCompleted * pointsPerModule;
-
-      // Insert into the reward table
+      const updateRewardResult = await pool.query(updateRewardQuery, [userId, courseId, totalPointsEarned]);
+      rewardId = updateRewardResult.rows[0].id;
+    } else {
+      // Insert new reward record without specifying id
       const insertRewardQuery = `
         INSERT INTO reward (user_id, course_id, points_earned, reward_date)
         VALUES ($1, $2, $3, NOW())
         RETURNING id;
       `;
       const insertRewardResult = await pool.query(insertRewardQuery, [userId, courseId, totalPointsEarned]);
-
-      // Return the ID of the reward record
-      res.status(200).json({ success: true, nextModuleId: result.rows[0].id, rewardId: insertRewardResult.rows[0].id });
-    } else {
-      res.status(200).json({ success: true, nextModuleId: null });
+      rewardId = insertRewardResult.rows[0].id;
     }
+
+    // Return the IDs of the module completion and reward records
+    res.status(200).json({ 
+      success: true, 
+      moduleCompletionId, 
+      rewardId,
+      pointsEarned: totalPointsEarned
+    });
   } catch (error) {
     console.error('Error submitting quiz:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
 app.get('/api/module-completion/:userId/:moduleId', async (req, res) => {
   try {
     const { userId, moduleId } = req.params;
@@ -657,7 +724,6 @@ app.get('/api/module-completion/:userId/:moduleId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 app.post('/api/submit-feedback', async (req, res) => {
   try {
@@ -741,7 +807,7 @@ app.get('/api/enrolled-courses/:userId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
+//progress
 app.get('/module-completion/:userId/:courseId', async (req, res) => {
   try {
     const { userId, courseId } = req.params;
@@ -763,6 +829,56 @@ app.get('/module-completion/:userId/:courseId', async (req, res) => {
     res.status(200).json({ completed: completedModules, total: totalModules });
   } catch (error) {
     console.error('Error fetching module completion:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+//progress
+app.get('/last-completed-module/:userId/:courseId', async (req, res) => {
+  try {
+    const { userId, courseId } = req.params;
+
+    // Fetch the last completed module ID for the user in this course
+    const lastCompletedModuleResult = await pool.query(
+      `SELECT MAX(m.id) AS last_completed_module_id 
+       FROM module_completion mc
+       JOIN modules m ON mc.module_id = m.id
+       WHERE mc.user_id = $1 AND m.course_id = $2`,
+      [userId, courseId]
+    );
+
+    const lastCompletedModuleId = lastCompletedModuleResult.rows[0].last_completed_module_id;
+
+    res.status(200).json({ 
+      lastCompletedModuleId: lastCompletedModuleId || null 
+    });
+  } catch (error) {
+    console.error('Error fetching last completed module:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+//progress
+app.get('/course-modules/:courseId', async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    // Fetch the first and last module IDs for the course
+    const moduleRangeResult = await pool.query(
+      `SELECT 
+        MIN(id) AS first_module_id, 
+        MAX(id) AS last_module_id 
+      FROM modules 
+      WHERE course_id = $1`,
+      [courseId]
+    );
+
+    const { first_module_id, last_module_id } = moduleRangeResult.rows[0];
+
+    res.status(200).json({ 
+      firstModuleId: first_module_id, 
+      lastModuleId: last_module_id 
+    });
+  } catch (error) {
+    console.error('Error fetching course modules:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -877,141 +993,123 @@ app.get('/api/next-incomplete-module/:userId/:courseId', async (req, res) => {
   }
 });
 
-
-
-// Or better yet, restructure your endpoint to handle form data directly:
-app.put('/edit-course/:courseId', upload.any(), async (req, res) => {
+// Endpoint to update a course
+app.post("/update-course", upload.any(), async (req, res) => {
   try {
-    const courseId = parseInt(req.params.courseId);
-    const {
-      instructorEmail,
-      courseName,
-      primaryLanguage,
-      level,
-    } = req.body;
+    console.log("==== COURSE UPDATE REQUEST RECEIVED ====");
+    const { courseId, instructorEmail, courseName, primaryLanguage, level, modules } = req.body;
+    
+    // Log all file names that were received
+    console.log("Files received:", req.files ? req.files.map(f => ({name: f.fieldname, size: f.size})) : "No files");
+    
+    // Log request body keys (excluding large values)
+    console.log("Request body keys:", Object.keys(req.body));
+    
+    // Validate course ID
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
 
-    // Get course image from uploaded files
+    // STEP 1: Get course image from uploaded files
     let courseImageBuffer = null;
     if (req.files && req.files.length > 0) {
-      const courseImageFile = req.files.find(file => file.fieldname === 'courseImage');
+      const courseImageFile = req.files.find((file) => file.fieldname === "courseImage");
       if (courseImageFile) {
         courseImageBuffer = courseImageFile.buffer;
+        console.log("Course image found:", courseImageFile.fieldname, courseImageFile.size, "bytes");
+      } else {
+        console.log("No course image found in the request");
       }
     }
 
-    console.log('Course ID:', courseId);
-    console.log('Instructor Email:', instructorEmail);
-    console.log('Course Name:', courseName);
+    // Start a transaction
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      console.log("Database transaction started");
 
-    // Update course details
-    await pool.query(
-      'UPDATE courses SET instructor_email = $1, course_name = $2, primary_language = $3, level = $4, course_image = COALESCE($5, course_image) WHERE id = $6',
-      [instructorEmail, courseName, primaryLanguage, level, courseImageBuffer, courseId]
-    );
-
-    // Process modules
-    // First, get all module indices from the request body
-    const moduleIndices = new Set();
-    for (const key in req.body) {
-      const match = key.match(/^modules\[(\d+)\]/);
-      if (match) {
-        moduleIndices.add(parseInt(match[1]));
-      }
-    }
-
-    console.log('Module Indices:', Array.from(moduleIndices));
-
-    // Process each module
-    for (const index of moduleIndices) {
-      // Consistent access pattern for all fields
-      const modulePrefix = `modules[${index}]`;
-      const moduleId = req.body[`${modulePrefix}[id]`] ? parseInt(req.body[`${modulePrefix}[id]`]) : null;
-      const moduleName = req.body[`${modulePrefix}[moduleName]`];
-      const scientificName = req.body[`${modulePrefix}[scientificName]`];
-      const description = req.body[`${modulePrefix}[description]`];
-      const funfact1 = req.body[`${modulePrefix}[funfact1]`];
-      const funfact2 = req.body[`${modulePrefix}[funfact2]`];
-      const funfact3 = req.body[`${modulePrefix}[funfact3]`];
-      const funfact4 = req.body[`${modulePrefix}[funfact4]`];
-      const numberOfQuiz = parseInt(req.body[`${modulePrefix}[numberOfQuiz]`] || '0');
-
-      // Consistent access for nested objects
-      const part1Name = req.body[`${modulePrefix}[part1][name]`];
-      const part1Description = req.body[`${modulePrefix}[part1][description]`];
-      const part2Name = req.body[`${modulePrefix}[part2][name]`];
-      const part2Description = req.body[`${modulePrefix}[part2][description]`];
-      const part3Name = req.body[`${modulePrefix}[part3][name]`];
-      const part3Description = req.body[`${modulePrefix}[part3][description]`];
-      const part4Name = req.body[`${modulePrefix}[part4][name]`];
-      const part4Description = req.body[`${modulePrefix}[part4][description]`];
-
-      const benefit1Name = req.body[`${modulePrefix}[benefit1][name]`];
-      const benefit1Description = req.body[`${modulePrefix}[benefit1][description]`];
-      const benefit2Name = req.body[`${modulePrefix}[benefit2][name]`];
-      const benefit2Description = req.body[`${modulePrefix}[benefit2][description]`];
-      const benefit3Name = req.body[`${modulePrefix}[benefit3][name]`];
-      const benefit3Description = req.body[`${modulePrefix}[benefit3][description]`];
-      const benefit4Name = req.body[`${modulePrefix}[benefit4][name]`];
-      const benefit4Description = req.body[`${modulePrefix}[benefit4][description]`];
-
-      // Get module image and GLB file from uploaded files
-      let moduleImageBuffer = null;
-      let glbFileBuffer = null;
-      let part1ImageBuffer = null;
-      let part2ImageBuffer = null;
-      let part3ImageBuffer = null;
-      let part4ImageBuffer = null;
-
-      if (req.files && req.files.length > 0) {
-        // Match the exact field names from the form
-        const moduleImageFile = req.files.find(file => file.fieldname === `${modulePrefix}[image]`);
-        if (moduleImageFile) {
-          moduleImageBuffer = moduleImageFile.buffer;
-        }
-        
-        const glbFile = req.files.find(file => file.fieldname === `${modulePrefix}[glbFile]`);
-        if (glbFile) {
-          glbFileBuffer = glbFile.buffer;
-        }
-        
-        const part1File = req.files.find(file => file.fieldname === `${modulePrefix}[part1][image]`);
-        if (part1File) {
-          part1ImageBuffer = part1File.buffer;
-        }
-        
-        const part2File = req.files.find(file => file.fieldname === `${modulePrefix}[part2][image]`);
-        if (part2File) {
-          part2ImageBuffer = part2File.buffer;
-        }
-        
-        const part3File = req.files.find(file => file.fieldname === `${modulePrefix}[part3][image]`);
-        if (part3File) {
-          part3ImageBuffer = part3File.buffer;
-        }
-        
-        const part4File = req.files.find(file => file.fieldname === `${modulePrefix}[part4][image]`);
-        if (part4File) {
-          part4ImageBuffer = part4File.buffer;
-        }
-      }
-
-      let finalModuleId = null;
-
-      // Check if module exists and update or create accordingly
-      if (moduleId) {
-        // Check if module exists
-        const moduleCheckResult = await pool.query(
-          'SELECT id FROM modules WHERE id = $1',
-          [moduleId]
+      // STEP 2: Update course details
+      if (courseImageBuffer) {
+        // Update with new image
+        console.log("Updating course with new image");
+        await client.query(
+          "UPDATE courses SET instructor_email = $1, course_name = $2, primary_language = $3, level = $4, course_image = $5, number_of_modules = $6 WHERE id = $7",
+          [
+            instructorEmail,
+            courseName,
+            primaryLanguage,
+            level,
+            courseImageBuffer,
+            JSON.parse(modules).length,
+            courseId,
+          ],
         );
-        
-        if (moduleCheckResult.rows.length > 0) {
-          // Update existing module
-          console.log(`Updating existing module ID: ${moduleId}, Name: ${moduleName}`);
-          
-          // Update text fields
-          await pool.query(
-            `
+      } else {
+        // Update without changing the image
+        console.log("Updating course without changing image");
+        await client.query(
+          "UPDATE courses SET instructor_email = $1, course_name = $2, primary_language = $3, level = $4, number_of_modules = $5 WHERE id = $6",
+          [instructorEmail, courseName, primaryLanguage, level, JSON.parse(modules).length, courseId],
+        );
+      }
+
+      // STEP 3: Process modules
+      const parsedModules = JSON.parse(modules);
+      console.log(`Processing ${parsedModules.length} modules`);
+
+      // Process each module
+      for (let i = 0; i < parsedModules.length; i++) {
+        const module = parsedModules[i];
+        console.log(`\nProcessing module ${i}: ${module.moduleName}`);
+
+        // STEP 4: Get module files for this module
+        let moduleImageBuffer = null;
+        let glbFileBuffer = null;
+        let part1ImageBuffer = null;
+        let part2ImageBuffer = null;
+        let part3ImageBuffer = null;
+        let part4ImageBuffer = null;
+
+        if (req.files && req.files.length > 0) {
+          // We're using simplified field names here
+          const moduleImageFile = req.files.find((file) => file.fieldname === `moduleImage_${i}`);
+          if (moduleImageFile) {
+            moduleImageBuffer = moduleImageFile.buffer;
+            console.log(`Found module image: ${moduleImageFile.fieldname}, ${moduleImageFile.size} bytes`);
+          } else {
+            console.log(`No module image found for module ${i}`);
+          }
+
+          const glbFile = req.files.find((file) => file.fieldname === `moduleGlb_${i}`);
+          if (glbFile) {
+            glbFileBuffer = glbFile.buffer;
+            console.log(`Found GLB file: ${glbFile.fieldname}, ${glbFile.size} bytes`);
+          } else {
+            console.log(`No GLB file found for module ${i}`);
+          }
+
+          // Find part images
+          for (let j = 1; j <= 4; j++) {
+            const partFile = req.files.find((file) => file.fieldname === `modulePart${j}_${i}`);
+            if (partFile) {
+              console.log(`Found part${j} image: ${partFile.fieldname}, ${partFile.size} bytes`);
+              if (j === 1) part1ImageBuffer = partFile.buffer;
+              if (j === 2) part2ImageBuffer = partFile.buffer;
+              if (j === 3) part3ImageBuffer = partFile.buffer;
+              if (j === 4) part4ImageBuffer = partFile.buffer;
+            } else {
+              console.log(`No part${j} image found for module ${i}`);
+            }
+          }
+        }
+
+        // STEP 5: Update or create module
+        if (module.id) {
+          // This is an existing module, update it
+          console.log(`Updating existing module with ID: ${module.id}`);
+
+          // Build the update query dynamically based on which files were uploaded
+          let updateQuery = `
             UPDATE modules SET
               module_name = $1,
               scientific_name = $2,
@@ -1037,197 +1135,242 @@ app.put('/edit-course/:courseId', upload.any(), async (req, res) => {
               benefit3_description = $22,
               benefit4_name = $23,
               benefit4_description = $24
-            WHERE id = $25
-            `,
-            [
-              moduleName, scientificName, description, numberOfQuiz,
-              funfact1, funfact2, funfact3, funfact4,
-              part1Name, part1Description, part2Name, part2Description,
-              part3Name, part3Description, part4Name, part4Description,
-              benefit1Name, benefit1Description, benefit2Name, benefit2Description,
-              benefit3Name, benefit3Description, benefit4Name, benefit4Description,
-              moduleId
-            ]
-          );
-          
-          finalModuleId = moduleId;
-        } else {
-          // Module ID provided but doesn't exist, create new
-          console.log(`Module ID ${moduleId} not found, creating new module: ${moduleName}`);
-          // Continue to create new module code below
-          finalModuleId = null;
-        }
-      } 
-      
-      // Create new module if no ID or ID not found
-      if (!finalModuleId) {
-        console.log(`Creating new module: ${moduleName}`);
-        
-        // Fixed parameter count mismatch (24 values for 24 placeholders)
-        const newModuleResult = await pool.query(
-          `
-          INSERT INTO modules (
-            course_id, module_name, scientific_name, description, number_of_quiz,
-            funfact1, funfact2, funfact3, funfact4,
-            part1_name, part1_description, part2_name, part2_description,
-            part3_name, part3_description, part4_name, part4_description,
-            benefit1_name, benefit1_description, benefit2_name, benefit2_description,
-            benefit3_name, benefit3_description, benefit4_name, benefit4_description
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
-          RETURNING id
-          `,
-          [
-            courseId, moduleName, scientificName, description, numberOfQuiz,
-            funfact1, funfact2, funfact3, funfact4,
-            part1Name, part1Description, part2Name, part2Description,
-            part3Name, part3Description, part4Name, part4Description,
-            benefit1Name, benefit1Description, benefit2Name, benefit2Description,
-            benefit3Name, benefit3Description, benefit4Name, benefit4Description
-          ]
-        );
-        
-        finalModuleId = newModuleResult.rows[0].id;
-      }
+          `;
 
-      // Update images for either new or existing module
-      if (moduleImageBuffer) {
-        await pool.query(
-          'UPDATE modules SET module_image = $1 WHERE id = $2',
-          [moduleImageBuffer, finalModuleId]
-        );
-      }
+          // Prepare parameters array
+          const params = [
+            module.moduleName,
+            module.scientificName,
+            module.description,
+            module.quiz ? module.quiz.length : 0,
+            module.funfact1 || null,
+            module.funfact2 || null,
+            module.funfact3 || null,
+            module.funfact4 || null,
+            module.part1 ? module.part1.name : null,
+            module.part1 ? module.part1.description : null,
+            module.part2 ? module.part2.name : null,
+            module.part2 ? module.part2.description : null,
+            module.part3 ? module.part3.name : null,
+            module.part3 ? module.part3.description : null,
+            module.part4 ? module.part4.name : null,
+            module.part4 ? module.part4.description : null,
+            module.benefit1 ? module.benefit1.name : null,
+            module.benefit1 ? module.benefit1.description : null, 
+            module.benefit2 ? module.benefit2.name : null,
+            module.benefit2 ? module.benefit2.description : null,
+            module.benefit3 ? module.benefit3.name : null,
+            module.benefit3 ? module.benefit3.description : null,
+            module.benefit4 ? module.benefit4.name : null,
+            module.benefit4 ? module.benefit4.description : null,
+          ];
 
-      if (glbFileBuffer) {
-        await pool.query(
-          'UPDATE modules SET glb_file = $1 WHERE id = $2',
-          [glbFileBuffer, finalModuleId]
-        );
-      }
+          let paramIndex = 25;
 
-      if (part1ImageBuffer) {
-        await pool.query(
-          'UPDATE modules SET part1_image = $1 WHERE id = $2',
-          [part1ImageBuffer, finalModuleId]
-        );
-      }
+          // Add image fields if they were uploaded
+          if (moduleImageBuffer) {
+            updateQuery += `, module_image = $${paramIndex}`;
+            params.push(moduleImageBuffer);
+            paramIndex++;
+            console.log("Including module image in update query");
+          }
 
-      if (part2ImageBuffer) {
-        await pool.query(
-          'UPDATE modules SET part2_image = $1 WHERE id = $2',
-          [part2ImageBuffer, finalModuleId]
-        );
-      }
+          if (glbFileBuffer) {
+            updateQuery += `, glb_file = $${paramIndex}`;
+            params.push(glbFileBuffer);
+            paramIndex++;
+            console.log("Including GLB file in update query");
+          }
 
-      if (part3ImageBuffer) {
-        await pool.query(
-          'UPDATE modules SET part3_image = $1 WHERE id = $2',
-          [part3ImageBuffer, finalModuleId]
-        );
-      }
+          if (part1ImageBuffer) {
+            updateQuery += `, part1_image = $${paramIndex}`;
+            params.push(part1ImageBuffer);
+            paramIndex++;
+            console.log("Including part1 image in update query");
+          }
 
-      if (part4ImageBuffer) {
-        await pool.query(
-          'UPDATE modules SET part4_image = $1 WHERE id = $2',
-          [part4ImageBuffer, finalModuleId]
-        );
-      }
+          if (part2ImageBuffer) {
+            updateQuery += `, part2_image = $${paramIndex}`;
+            params.push(part2ImageBuffer);
+            paramIndex++;
+            console.log("Including part2 image in update query");
+          }
 
-      // Process quiz questions
-      console.log(`Processing ${numberOfQuiz} quiz questions for module ID: ${finalModuleId}`);
-      
-      // Consistent access for quiz questions
-      for (let j = 0; j < numberOfQuiz; j++) {
-        const quizPrefix = `${modulePrefix}[quiz][${j}]`;
-        const quizId = req.body[`${quizPrefix}[id]`] ? parseInt(req.body[`${quizPrefix}[id]`]) : null;
-        const question = req.body[`${quizPrefix}[question]`];
-        const optionA = req.body[`${quizPrefix}[optionA]`];
-        const optionB = req.body[`${quizPrefix}[optionB]`];
-        const optionC = req.body[`${quizPrefix}[optionC]`];
-        const optionD = req.body[`${quizPrefix}[optionD]`];
-        const correctAnswer = req.body[`${quizPrefix}[correctAnswer]`];
+          if (part3ImageBuffer) {
+            updateQuery += `, part3_image = $${paramIndex}`;
+            params.push(part3ImageBuffer);
+            paramIndex++;
+            console.log("Including part3 image in update query");
+          }
 
-        if (!question || !optionA || !optionB || !optionC || !optionD || !correctAnswer) {
-          console.log(`Skipping incomplete quiz question at index ${j}`);
-          continue; // Skip incomplete questions
-        }
+          if (part4ImageBuffer) {
+            updateQuery += `, part4_image = $${paramIndex}`;
+            params.push(part4ImageBuffer);
+            paramIndex++;
+            console.log("Including part4 image in update query");
+          }
 
-        if (!['A', 'B', 'C', 'D'].includes(correctAnswer)) {
-          console.log(`Invalid correct answer for question at index ${j}: ${correctAnswer}`);
-          throw new Error('Invalid correct answer. Please select A, B, C, or D.');
-        }
+          updateQuery += ` WHERE id = $${paramIndex}`;
+          params.push(module.id);
 
-        console.log(`Processing quiz question: ${question}`);
+          await client.query(updateQuery, params);
+          console.log(`Updated module ${module.id} successfully`);
 
-        if (quizId) {
-          // Check if quiz exists
-          const quizCheck = await pool.query(
-            'SELECT id FROM quiz_questions WHERE id = $1 AND module_id = $2',
-            [quizId, finalModuleId]
-          );
-          
-          if (quizCheck.rows.length > 0) {
-            // Update existing quiz
-            console.log(`Updating existing quiz question ID: ${quizId}`);
-            await pool.query(
-              `
-              UPDATE quiz_questions SET
-                question = $1,
-                option_a = $2,
-                option_b = $3,
-                option_c = $4,
-                option_d = $5,
-                correct_answer = $6
-              WHERE id = $7
-              `,
-              [question, optionA, optionB, optionC, optionD, correctAnswer, quizId]
-            );
-          } else {
-            // Create new quiz
-            console.log(`Quiz ID ${quizId} not found, creating new quiz question`);
-            await pool.query(
-              `
-              INSERT INTO quiz_questions (
-                module_id, question, option_a, option_b, option_c, option_d, correct_answer
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-              `,
-              [finalModuleId, question, optionA, optionB, optionC, optionD, correctAnswer]
-            );
+          // Delete existing quiz questions for this module
+          await client.query("DELETE FROM quiz_questions WHERE module_id = $1", [module.id]);
+          console.log(`Deleted existing quiz questions for module ${module.id}`);
+
+          // Add new quiz questions
+          if (module.quiz && module.quiz.length > 0) {
+            console.log(`Adding ${module.quiz.length} quiz questions for module ${module.id}`);
+            for (const question of module.quiz) {
+              if (!["A", "B", "C", "D"].includes(question.correctAnswer)) {
+                throw new Error("Invalid correct answer. Please select A, B, C, or D.");
+              }
+              await client.query(
+                "INSERT INTO quiz_questions (module_id, question, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                [
+                  module.id,
+                  question.question,
+                  question.optionA,
+                  question.optionB,
+                  question.optionC,
+                  question.optionD,
+                  question.correctAnswer,
+                ],
+              );
+            }
           }
         } else {
-          // Create new quiz question
-          console.log(`Creating new quiz question for module ${finalModuleId}`);
-          await pool.query(
+          // This is a new module, insert it
+          console.log("Creating new module");
+          
+          // Log all the parts going into the insert
+          console.log("Module insert parameters check:");
+          console.log("- Module image:", moduleImageBuffer ? "Present" : "Missing");
+          console.log("- GLB file:", glbFileBuffer ? "Present" : "Missing");
+          console.log("- Part1 image:", part1ImageBuffer ? "Present" : "Missing");
+          console.log("- Part2 image:", part2ImageBuffer ? "Present" : "Missing");
+          console.log("- Part3 image:", part3ImageBuffer ? "Present" : "Missing");
+          console.log("- Part4 image:", part4ImageBuffer ? "Present" : "Missing");
+          
+          const moduleResult = await client.query(
             `
-            INSERT INTO quiz_questions (
-              module_id, question, option_a, option_b, option_c, option_d, correct_answer
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO modules (
+              course_id,
+              module_name,
+              scientific_name,
+              description,
+              module_image,
+              glb_file,
+              number_of_quiz,
+              funfact1,
+              funfact2,
+              funfact3,
+              funfact4,
+              part1_name,
+              part1_description,
+              part1_image,
+              part2_name,
+              part2_description,
+              part2_image,
+              part3_name,
+              part3_description,
+              part3_image,
+              part4_name,
+              part4_description,
+              part4_image,
+              benefit1_name,
+              benefit1_description,
+              benefit2_name,
+              benefit2_description,
+              benefit3_name,
+              benefit3_description,
+              benefit4_name,
+              benefit4_description
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31) RETURNING id
             `,
-            [finalModuleId, question, optionA, optionB, optionC, optionD, correctAnswer]
+            [
+              courseId,
+              module.moduleName,
+              module.scientificName,
+              module.description,
+              moduleImageBuffer,  // This should contain the module image buffer
+              glbFileBuffer,      // This should contain the GLB file buffer
+              module.quiz ? module.quiz.length : 0,
+              module.funfact1 || null,
+              module.funfact2 || null,
+              module.funfact3 || null,
+              module.funfact4 || null,
+              module.part1 ? module.part1.name : null,
+              module.part1 ? module.part1.description : null,
+              part1ImageBuffer,   // This should contain the part1 image buffer
+              module.part2 ? module.part2.name : null,
+              module.part2 ? module.part2.description : null,
+              part2ImageBuffer,   // This should contain the part2 image buffer
+              module.part3 ? module.part3.name : null,
+              module.part3 ? module.part3.description : null,
+              part3ImageBuffer,   // This should contain the part3 image buffer
+              module.part4 ? module.part4.name : null,
+              module.part4 ? module.part4.description : null,
+              part4ImageBuffer,   // This should contain the part4 image buffer
+              module.benefit1 ? module.benefit1.name : null,
+              module.benefit1 ? module.benefit1.description : null,
+              module.benefit2 ? module.benefit2.name : null,
+              module.benefit2 ? module.benefit2.description : null,
+              module.benefit3 ? module.benefit3.name : null,
+              module.benefit3 ? module.benefit3.description : null,
+              module.benefit4 ? module.benefit4.name : null,
+              module.benefit4 ? module.benefit4.description : null,
+            ],
           );
+
+          const moduleIdFromDb = moduleResult.rows[0].id;
+          console.log(`Created new module with ID: ${moduleIdFromDb}`);
+
+          // Process quiz questions
+          if (module.quiz && module.quiz.length > 0) {
+            console.log(`Adding ${module.quiz.length} quiz questions for new module ${moduleIdFromDb}`);
+            for (const question of module.quiz) {
+              if (!["A", "B", "C", "D"].includes(question.correctAnswer)) {
+                throw new Error("Invalid correct answer. Please select A, B, C, or D.");
+              }
+              await client.query(
+                "INSERT INTO quiz_questions (module_id, question, option_a, option_b, option_c, option_d, correct_answer) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                [
+                  moduleIdFromDb,
+                  question.question,
+                  question.optionA,
+                  question.optionB,
+                  question.optionC,
+                  question.optionD,
+                  question.correctAnswer,
+                ],
+              );
+            }
+          }
         }
       }
+
+      // Commit the transaction
+      await client.query("COMMIT");
+      console.log("Transaction committed successfully");
+      res.status(200).send("Course updated successfully");
+    } catch (error) {
+      // Rollback in case of error
+      await client.query("ROLLBACK");
+      console.error("Transaction rolled back due to error:", error.message);
+      throw error;
+    } finally {
+      client.release();
     }
-
-    // Update the number_of_modules in the courses table
-    const countResult = await pool.query(
-      'SELECT COUNT(*) FROM modules WHERE course_id = $1',
-      [courseId]
-    );
-    const moduleCount = parseInt(countResult.rows[0].count);
-    
-    await pool.query(
-      'UPDATE courses SET number_of_modules = $1 WHERE id = $2',
-      [moduleCount, courseId]
-    );
-
-    res.status(200).send('Course updated successfully');
   } catch (error) {
-    console.error('Error updating course:', error);
+    console.error("Error updating course:", error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Endpoint to get the highest reward
+//for top reward
 app.get('/api/top-rewards', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -1244,6 +1387,281 @@ app.get('/api/top-rewards', async (req, res) => {
   }
 });
 
+// Add this route to your Express server
+
+app.get("/api/instructor-courses", async (req, res) => {
+  const instructorEmail = req.query.email;
+  
+  if (!instructorEmail) {
+    return res.status(400).json({ message: "Instructor email is required" });
+  }
+  
+  try {
+    const client = await pool.connect();
+    try {
+      // Query to get courses and enrollment counts for a specific instructor
+      const result = await client.query(`
+        SELECT 
+          c.id,
+          c.course_name,
+          c.primary_language,
+          c.level,
+          COUNT(ce.id) AS enrolled_students
+        FROM 
+          courses c
+        LEFT JOIN 
+          course_enrollment ce ON c.id = ce.course_id
+        WHERE 
+          c.instructor_email = $1
+        GROUP BY 
+          c.id, c.course_name, c.primary_language, c.level
+        ORDER BY 
+          c.id
+      `, [instructorEmail]);
+      
+      res.status(200).json(result.rows);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Error fetching instructor courses:", error);
+    res.status(500).json({ message: "Failed to fetch courses" });
+  }
+});
+
+
+// API endpoint to handle login
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM adminLogin WHERE username = $1 AND password = $2',
+      [username, password]
+    );
+
+    if (result.rows.length > 0) {
+      res.status(200).json({ message: 'Login successful' });
+    } else {
+      res.status(401).json({ message: 'Invalid username or password' });
+    }
+  } catch (error) {
+    console.error('Error executing query', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// admin dashboard  to count total number of useres
+app.get('/api/users/count', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) AS total_users FROM users');
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching user count:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+//to count no. of active course
+app.get('/api/courses/active', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.id, c.course_name, c.instructor_email, u.name as instructor_name 
+      FROM courses c
+      LEFT JOIN users u ON c.instructor_email = u.email
+      WHERE c.status = true
+    `);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching active courses:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+//to count no. of un approved course
+app.get('/api/courses/unapproved', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.id, c.course_name, c.instructor_email, u.name as instructor_name 
+      FROM courses c
+      LEFT JOIN users u ON c.instructor_email = u.email
+      WHERE c.status = false
+    `);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching unapproved courses:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//total no of instructor 
+app.get('/api/users/instructors/count', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) AS total_instructors FROM users WHERE is_content_creator = true');
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching instructor count:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//total no of learner 
+app.get('/api/users/learners/count', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) AS total_learners FROM users WHERE is_content_creator = false');
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching instructor count:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// all other information about the admin dashboard
+app.get('/api/courses/enrollment', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT ce.course_id, COUNT(*) AS total_students
+      FROM course_enrollment ce
+      JOIN courses c ON ce.course_id = c.id
+      WHERE c.status = true
+      GROUP BY ce.course_id
+    `);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching course enrollment:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// api of admin usermanagement to display user information
+app.get('/admin/api/users', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name, email, is_content_creator FROM users');
+    const users = result.rows.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.is_content_creator ? 'Instructor' : 'Learner'
+    }));
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// api of admin usermanagement to delete user information
+app.delete('/admin/api/users/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+
+    // Delete related records from course_enrollment table
+    await pool.query('DELETE FROM course_enrollment WHERE user_id = $1', [userId]);
+
+    // Delete the user from the users table
+    const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
+
+    if (result.rows.length > 0) {
+      res.status(200).json({ message: 'User deleted successfully' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Endpoint to fetch all courses for admin course management
+
+app.get('/courses', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.id, c.course_name, c.level, c.instructor_email, c.course_image, c.status, u.name AS instructor_name,
+      (SELECT COUNT(*) FROM course_enrollment ce WHERE ce.course_id = c.id) AS total_students
+      FROM courses c
+      LEFT JOIN users u ON c.instructor_email = u.email
+    `);
+
+    const coursesWithImages = result.rows.map(course => {
+      if (course.course_image) {
+        // Convert BYTEA to Base64
+        const base64Image = course.course_image.toString('base64');
+        course.course_image = `data:image/png;base64,${base64Image}`;
+      } else {
+        course.course_image = null; // Handle case where there is no image
+      }
+      return course;
+    });
+
+    res.status(200).json(coursesWithImages);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post('/courses/:id/approve', async (req, res) => {
+  try {
+    const courseId = parseInt(req.params.id, 10);
+    // Make sure the status is properly converted to a boolean
+    const status = req.body.status === true;
+
+    console.log(`Updating course ${courseId} status to: ${status}`);
+    
+    await pool.query('UPDATE courses SET status = $1 WHERE id = $2', [status, courseId]);
+
+    res.status(200).json({ message: 'Course status updated successfully' });
+  } catch (error) {
+    console.error('Error updating course status:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//id 
+// Endpoint to get user ID by email
+app.get('/api/user-id', async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userId = result.rows[0].id;
+    console.log(`Fetched user ID for email ${email}: ${userId}`);
+    res.json({ userId });
+  } catch (error) {
+    console.error('Error fetching user ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+app.get('/course-first-module/:courseId', async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    // Query your database to find the first module for this course
+    const firstModule = await db.modules.findFirst({
+      where: { courseId: courseId },
+      orderBy: { moduleNumber: 'asc' }
+    });
+
+    res.json({ 
+      firstModuleId: firstModule ? firstModule.id : null 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not fetch first module' });
+  }
+});
 
 
 app.listen(port, () => {

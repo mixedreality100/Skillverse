@@ -67,7 +67,7 @@ const StyledWrapper = styled.div`
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    transform: scale(2); /* Make the loader 2x larger */
+    transform: scale(2); /* Default scale for desktop */
   }
   .loader span {
     padding: 0;
@@ -100,10 +100,10 @@ const StyledWrapper = styled.div`
   }
   .letter {
     width: fit-content;
-    height: 3rem;
+    height: 3rem; /* Default height for desktop */
   }
   .i {
-    margin-inline: 5px;
+    margin-inline: 5px; /* Default spacing for the 'i' letter */
   }
   @keyframes hideAndSeek {
     0% {
@@ -112,6 +112,57 @@ const StyledWrapper = styled.div`
     100% {
       transform: translateY(0rem);
     }
-  }`;
+  }
+
+  /* Tablet and below (max-width: 768px) */
+  @media (max-width: 768px) {
+    .loader {
+      transform: scale(1.5); /* Reduce scale for tablets */
+    }
+    .loader span {
+      letter-spacing: -3rem; /* Reduce letter spacing */
+      transform: translateY(3rem); /* Reduce animation distance */
+    }
+    .letter {
+      height: 2.5rem; /* Reduce letter height */
+    }
+    .i {
+      margin-inline: 3px; /* Reduce spacing for the 'i' letter */
+    }
+    @keyframes hideAndSeek {
+      0% {
+        transform: translateY(3rem);
+      }
+      100% {
+        transform: translateY(0rem);
+      }
+    }
+  }
+
+  /* Mobile (max-width: 480px) */
+  @media (max-width: 480px) {
+    .loader {
+      transform: scale(1); /* Further reduce scale for mobile */
+    }
+    .loader span {
+      letter-spacing: -2rem; /* Further reduce letter spacing */
+      transform: translateY(2rem); /* Further reduce animation distance */
+    }
+    .letter {
+      height: 2rem; /* Further reduce letter height */
+    }
+    .i {
+      margin-inline: 2px; /* Further reduce spacing for the 'i' letter */
+    }
+    @keyframes hideAndSeek {
+      0% {
+        transform: translateY(2rem);
+      }
+      100% {
+        transform: translateY(0rem);
+      }
+    }
+  }
+`;
 
 export default CenteredLoader;

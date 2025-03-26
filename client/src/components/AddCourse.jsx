@@ -15,7 +15,7 @@ const AddCourse = () => {
   const [userInfo, setUserInfo] = useState({
     name: 'Content Creator',
     email: 'contentCreator@gmail.com',
-    profilePicture: '<url id="" type="url" status="" title="" wc="">https://via.placeholder.com/150</url> '
+    profilePicture: 'https://via.placeholder.com/150'
   });
   
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -25,18 +25,24 @@ const AddCourse = () => {
   const { user } = useUser(); // Get user from Clerk
   const auth = useAuth(); // Get auth from Clerk
 
-  useEffect(() => {
-    if (user) {
-      setUserInfo({
-        name: user.fullName || "Content Creator",
-        email: user.primaryEmailAddress?.emailAddress || "contentCreator@gmail.com",
-        profilePicture: user.imageUrl || '<url id="" type="url" status="" title="" wc="">https://via.placeholder.com/150</url> ',
-      });
-    }
-  }, [user]); // Update user info when user changes
+  // Update the useEffect to populate courseData.instructorEmail
+useEffect(() => {
+  if (user) {
+    const userEmail = user.primaryEmailAddress?.emailAddress || "contentCreator@gmail.com";
+    
+    // Update both userInfo AND courseData
+    setUserInfo({
+      name: user.fullName || "Content Creator",
+      email: userEmail,
+      profilePicture: user.imageUrl || 'https://via.placeholder.com/150',
+    });
 
-  const [isCourseSubmitted, setIsCourseSubmitted] = useState(false);
-
+    setCourseData(prev => ({
+      ...prev,
+      instructorEmail: userEmail // Set the email in courseData
+    }));
+  }
+}, [user]);
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -97,7 +103,6 @@ const AddCourse = () => {
     }));
   };
 
-  // Handle adding a new module
   const handleAddModule = () => {
     setCourseData((prev) => ({
       ...prev,
@@ -105,7 +110,7 @@ const AddCourse = () => {
         ...prev.modules,
         {
           moduleName: "",
-          scientificName: "", // Add this field
+          scientificName: "",
           description: "",
           funfact: null,
           funfact1: "",
@@ -122,6 +127,8 @@ const AddCourse = () => {
           benefit4: { name: "", description: "" },
           numberOfQuiz: "",
           quiz: [],
+          image: null, // Add this line
+          glbFile: null, // Add this line
         },
       ],
     }));
@@ -218,18 +225,18 @@ const AddCourse = () => {
 
     // Check if user is already a content creator
     try {
-      const response = await fetch("/api/checkContentCreator", {
+      const response = await fetch("http://localhost:3001/api/checkContentCreator", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: user.id }),
+        credentials: 'include', // Required for Clerk authentication cookies
       });
-
       const result = await response.json();
       if (result.isContentCreator) {
         alert("You are already a Content Creator");
         setIsContentCreator(true);
+        await submitCourse(); // Submit the course if already a content creator
         return;
       }
 
@@ -239,24 +246,88 @@ const AddCourse = () => {
       alert("Error checking your current role. Please try again.");
     }
   };
+  const submitCourse = async () => {
+    try {
+      const formData = new FormData();
+      // Add course basic data
+      formData.append('instructorEmail', courseData.instructorEmail);
+      formData.append('courseName', courseData.courseName);
+      formData.append('primaryLanguage', courseData.primaryLanguage);
+      formData.append('level', courseData.level);
+      // Add course image
+      if (courseData.courseImage) {
+        formData.append('courseImage', courseData.courseImage);
+      }
+      // Prepare modules data (remove file objects)
+      const modulesForSubmit = courseData.modules.map(module => {
+        const moduleCopy = { ...module };
+        // Remove file objects from parts and funfact
+        // delete moduleCopy.part1.image;
+        // delete moduleCopy.part2.image;
+        // delete moduleCopy.part3.image;
+        // delete moduleCopy.part4.image;
+        delete moduleCopy.image;
+        delete moduleCopy.glbFile;
+        delete moduleCopy.funfact; // Remove funfact file reference
+        return moduleCopy;
+      });
+      formData.append('modules', JSON.stringify(modulesForSubmit));
+      // Add module files
+      courseData.modules.forEach((module, i) => {
+        // Append module image and GLB file
+        if (module.image) {
+          formData.append(`modules[${i}][image]`, module.image);
+        }
+        if (module.glbFile) {
+          formData.append(`modules[${i}][glbFile]`, module.glbFile);
+        }
+        // Append part images
+        if (module.part1.image) {
+          formData.append(`modules[${i}][part1][image]`, module.part1.image);
+        }
+        if (module.part2.image) {
+          formData.append(`modules[${i}][part2][image]`, module.part2.image);
+        }
+        if (module.part3.image) {
+          formData.append(`modules[${i}][part3][image]`, module.part3.image);
+        }
+        if (module.part4.image) {
+          formData.append(`modules[${i}][part4][image]`, module.part4.image);
+        }
+        // Append funfact image [[3]]
+        if (module.funfact) {
+          formData.append(`modules[${i}][funfact]`, module.funfact);
+        }
+      });
+      // Submit to backend
+      const response = await fetch('http://localhost:3000/add-course', {
+        method: 'POST',
+        body: formData,
+      });
+      // Handle response...
+    } catch (error) {
+      // Handle error...
+    }
+  };
 
   const confirmContentCreator = async () => {
     try {
-      const response = await fetch("/api/becomeContentCreator", {
+      const response = await fetch("http://localhost:3001/api/becomeContentCreator", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: user.id }),
+        credentials: 'include', // For Clerk authentication
       });
-
+    
       const result = await response.json();
-
+    
       if (result.success) {
         alert("You are now a Content Creator!");
         setIsContentCreator(true);
-        // Refresh user data from Clerk
-        await user.refresh();
+        
+        // Now submit the course
+        await submitCourse();
       } else {
         alert("Failed to update role. Please try again.");
       }
@@ -290,7 +361,7 @@ const AddCourse = () => {
             value={userInfo.email}
             onChange={handleInputChange}
             className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Enter instructor email"
+            readOnly
             required
           />
         </div>
@@ -1207,6 +1278,7 @@ const AddCourse = () => {
               courseData.modules.some(
                 (module) =>
                   !module.moduleName ||
+                  !module.scientificName ||
                   !module.description ||
                   !module.funfact ||
                   !module.funfact1 ||
@@ -1257,6 +1329,7 @@ const AddCourse = () => {
             courseData.modules.some(
               (module) =>
                 !module.moduleName ||
+                !module.scientificName ||
                 !module.description ||
                 !module.funfact ||
                 !module.funfact1 ||

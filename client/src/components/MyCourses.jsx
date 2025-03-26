@@ -2,30 +2,38 @@ import React, { useState, useEffect } from 'react';
 import ExploreModule from './ExploreModule'; // Import your ExploreModule component
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 
-const MyCourses = () => {
+const MyCourses = ({ instructorEmail })  => {
   const navigate = useNavigate(); // Use the useNavigate hook to get the navigate function
   const [showExploreModule, setShowExploreModule] = useState(false); // State to track which component to show
   const [courses, setCourses] = useState([]); // State to store fetched courses
   const [selectedCourseId, setSelectedCourseId] = useState(null); // State to store the selected course ID
+  const [loading, setLoading] = useState(true); // Ensure setLoading is declared
+  // New state for delete confirmation
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState(null);
 
   useEffect(() => {
-    // Function to fetch courses from the backend
-    const fetchCourses = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/courses');
-        if (!response.ok) {
-          throw new Error(`Server responded with status ${response.status}`);
-        }
-        const data = await response.json();
-        setCourses(data); // Update the courses state with fetched data
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-        alert(`Error fetching courses: ${error.message}`);
-      }
-    };
+    if (instructorEmail) {
+      fetchCourses(instructorEmail);
+    }
+  }, [instructorEmail]);
 
-    fetchCourses(); // Call the function to fetch courses when the component mounts
-  }, []);
+  const fetchCourses = async (instructorEmail) => {
+    try {
+      setLoading(true); // Use setLoading here
+      const response = await fetch(`http://localhost:3000/email/courses?instructorEmail=${instructorEmail}`);
+      if (!response.ok) {
+        throw new Error(`Server responded with status ${response.status}`);
+      }
+      const data = await response.json();
+      setCourses(data);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      alert(`Error fetching courses: ${error.message}`);
+    } finally {
+      setLoading(false); // Use setLoading here
+    }
+  };
 
   const handleExploreClick = (courseId) => {
     setSelectedCourseId(courseId); // Set the selected course ID
@@ -39,9 +47,17 @@ const MyCourses = () => {
   const handleEditCourse = (courseId) => {
     navigate(`/edit-course/${courseId}`);
   };
-  const handleDeleteCourse = async (courseId) => {
+
+  // Modified to show confirmation instead of deleting immediately
+  const handleDeleteCourse = (course) => {
+    setCourseToDelete(course);
+    setShowDeleteConfirmation(true);
+  };
+
+  // New function to actually delete the course after confirmation
+  const confirmDeleteCourse = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/delete-course/${courseId}`, {
+      const response = await fetch(`http://localhost:3000/delete-course/${courseToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -50,13 +66,21 @@ const MyCourses = () => {
       }
 
       alert('Course deleted successfully');
-      // Optionally, you can reload the courses list or update the state to reflect the deletion
-      const updatedCourses = courses.filter(course => course.id !== courseId);
+      // Update the courses list to reflect the deletion
+      const updatedCourses = courses.filter(course => course.id !== courseToDelete.id);
       setCourses(updatedCourses);
+      // Close the confirmation dialog
+      setShowDeleteConfirmation(false);
     } catch (error) {
       console.error('Error deleting course:', error);
       alert(`Error deleting course: ${error.message}`);
     }
+  };
+
+  // Function to cancel deletion
+  const cancelDeleteCourse = () => {
+    setShowDeleteConfirmation(false);
+    setCourseToDelete(null);
   };
 
   return (
@@ -66,13 +90,13 @@ const MyCourses = () => {
       ) : (
         <>
           <h2 className="text-2xl font-bold mb-5">My Courses</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ">
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden"
+                className="bg-white rounded-lg shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3),0_4px_6px_-2px_rgba(0,0,0,0.15)] overflow-hidden"
               >
-                <div className="relative">
+                <div className="relative ">
                   {course.course_image ? (
                     <img
                       src={course.course_image}
@@ -92,11 +116,12 @@ const MyCourses = () => {
                 </div>
                 <div className="p-4">
                   <p className="text-gray-700 mb-3 text-base text-center">
-                    Course code: {course.course_id}
+                    Course code: {course.id}
                   </p>
                   <p className="text-gray-700 mb-3 text-base text-center">
                     Level: {course.level}
                   </p>
+                
                   <div className="flex justify-center gap-4">
                     <button
                       className="bg-white border border-black text-black px-4 py-2 rounded-full text-sm hover:bg-green-100 hover:border-green-500 hover:text-green-600 transition-colors duration-300 ease-in-out shadow-sm hover:shadow-md"
@@ -106,24 +131,54 @@ const MyCourses = () => {
                     </button>
                     <button
                       className="bg-white border border-black text-black px-4 py-2 rounded-full text-sm hover:bg-red-100 hover:border-red-500 hover:text-red-600 transition-colors duration-300 ease-in-out shadow-sm hover:shadow-md"
-                      onClick={() => handleDeleteCourse(course.id)}
+                      onClick={() => handleDeleteCourse(course)}
                     >
                       Delete
                     </button>
+                   
                   </div>
-                  <div className="flex justify-center mt-4">
-                    <button
-                      className="bg-black text-white px-5 py-2 rounded-full text-sm hover:bg-gray-800"
-                      onClick={() => handleExploreClick(course.id)} // Trigger ExploreModule display
+                  <div className="flex justify-center">
+                    <span 
+                      className={`inline-block px-3 py-1 rounded-full mt-5 text-sm font-medium ${
+                        course.status 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : 'bg-red-100 text-red-800 border border-red-200'
+                      }`}
                     >
-                      Explore Module
-                    </button>
+                      {course.status ? 'Approved' : 'Not Approved'}
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmation && courseToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">
+              Do you really want to delete the course: <span className="font-semibold">{courseToDelete.course_name}</span>?
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                onClick={cancelDeleteCourse}
+              >
+                No
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                onClick={confirmDeleteCourse}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

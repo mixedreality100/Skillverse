@@ -16,14 +16,15 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
     <div 
       style={{
         position: 'relative',
-        width: '445px',
+        width: '100%',
+        maxWidth: '445px',
         backgroundColor: '#e0e5ec',
         borderRadius: '20px',
         boxShadow: '20px 20px 60px #bebebe, -20px -20px 60px #ffffff',
         overflow: 'hidden',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         transform: 'scale(1)',
-        margin: '24px',
+        margin: '12px',
         cursor: 'pointer',
       }}
       className="hover:scale-105"
@@ -37,6 +38,13 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
       }}
       onClick={handleCardClick}
     >
+      {/* Import Poppins Font */}
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+        `}
+      </style>
+
       {/* Card Media */}
       <div style={{ position: 'relative' }}>
         <img
@@ -66,6 +74,7 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
             fontSize: '1.5rem',
             fontWeight: '600',
             letterSpacing: '0.025em',
+            fontFamily: "'Paytone One', sans-serif", // Apply Poppins font
           }}>
             {title}
           </h2>
@@ -73,18 +82,23 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
       </div>
 
       {/* Card Content */}
-      <div style={{ padding: '16px' }}>
+      <div style={{ 
+        padding: '16px',
+        width: '100%',
+      }}>
         <h3 style={{
-          fontSize: '1.25rem',
+          fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
           fontWeight: '500',
           marginBottom: '8px',
+          fontFamily: "'Poppins', sans-serif",
         }}>
           {title}
         </h3>
         <p style={{
           color: '#4a5568',
-          fontSize: '0.875rem',
+          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
           marginBottom: '16px',
+          fontFamily: "'Poppins', sans-serif",
         }}>
           {status}
         </p>
@@ -111,6 +125,7 @@ export default function CourseCard({ title = "Flora", status, image, courseId })
               boxShadow: '5px 5px 10px #bebebe, -5px -5px 10px #ffffff',
               transition: 'background-color 0.3s ease, transform 0.3s ease',
               cursor: 'pointer',
+              fontFamily: "'Poppins', sans-serif", // Apply Poppins font
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.05)';

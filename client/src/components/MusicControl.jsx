@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Music } from "lucide-react"; // Import the Music icon
 import audioFile from "../assets/whispering-vinyl-loops-lofi-beats-281193.mp3";
 
 const MusicControl = () => {
@@ -12,8 +12,8 @@ const MusicControl = () => {
 
   useEffect(() => {
     // Set up audio error handling
-    audioRef.current.addEventListener('error', (e) => {
-      console.error('Audio loading error:', e);
+    audioRef.current.addEventListener("error", (e) => {
+      console.error("Audio loading error:", e);
       setAudioError(true);
       setIsPlaying(false);
     });
@@ -23,7 +23,7 @@ const MusicControl = () => {
 
     return () => {
       audioRef.current.pause();
-      audioRef.current.removeEventListener('error', () => {});
+      audioRef.current.removeEventListener("error", () => {});
     };
   }, []);
 
@@ -34,19 +34,19 @@ const MusicControl = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const togglePlayPause = (e) => {
     e.stopPropagation(); // Prevent event from bubbling to parent
     if (audioError) {
-      console.error('Audio file could not be loaded');
+      console.error("Audio file could not be loaded");
       return;
     }
-    
+
     try {
       if (isPlaying) {
         audioRef.current.pause();
@@ -57,7 +57,7 @@ const MusicControl = () => {
             .then(() => {
               // Playback started successfully
             })
-            .catch(error => {
+            .catch((error) => {
               console.error("Playback failed:", error);
               setAudioError(true);
             });
@@ -80,19 +80,28 @@ const MusicControl = () => {
 
   return (
     <div ref={controlRef} className="relative">
-      <button 
+      <button
         onClick={(e) => {
           e.stopPropagation();
           setShowVolume(!showVolume);
         }}
-        className={`flex items-center justify-center ${audioError ? 'bg-red-500' : 'bg-orange-500'} text-white p-2 rounded-full shadow-md hover:bg-orange-600 transition duration-300`}
+        className={`flex items-center justify-center ${
+          audioError ? "bg-red-500" : "bg-orange-500"
+        } text-white p-2 rounded-full shadow-md hover:bg-orange-600 transition duration-300`}
         title={audioError ? "Audio failed to load" : "Toggle music"}
       >
         <div onClick={togglePlayPause}>
-          {isPlaying ? <VolumeX size={24} /> : <Volume2 size={24} />}
+          <Music
+            size={24}
+            className={`${
+              isPlaying
+                ? "text-orange-200 animate-pulse"
+                : "text-white"
+            } transition-colors duration-300`}
+          />
         </div>
       </button>
-      
+
       {showVolume && !audioError && (
         <div className="absolute top-12 -left-12 bg-white p-2 rounded-lg shadow-lg z-50">
           <input
@@ -110,4 +119,4 @@ const MusicControl = () => {
   );
 };
 
-export default MusicControl; 
+export default MusicControl;

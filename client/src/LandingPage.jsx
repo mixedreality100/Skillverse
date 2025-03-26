@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CourseCard from "./components/CourseCard";
 import NavButton from "./components/NavButton";
-import { courses } from "./data/courseData";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import ProfileButton from "./components/profile";
@@ -14,9 +13,13 @@ import {
   SignInButton,
   useAuth,
 } from "@clerk/clerk-react";
-import Home from "./components/Home";
-import JWTFetcher from "./components/JWTfetcher";
-import { motion, useAnimation } from 'framer-motion';
+import { motion, useAnimation } from "framer-motion";
+import Bot from "./components/bot";
+// Import social media logos from src/assets
+import instagramLogo from "./assets/instagram.png";
+import twitterLogo from "./assets/twitter.png";
+import facebookLogo from "./assets/facebook.png";
+import pinterestLogo from "./assets/pinterest.png";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -29,7 +32,7 @@ export default function LandingPage() {
   const animationFrameRef = useRef(null);
   const cameraRef = useRef(null);
   const [courses, setCourses] = useState([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar visibility
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [animationStarted, setAnimationStarted] = useState(false);
   const textAnimationControls = useAnimation();
 
@@ -39,16 +42,13 @@ export default function LandingPage() {
   const getToken = auth?.getToken;
   const signOut = auth?.signOut;
 
-  // Toggle sidebar
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Close sidebar when a link is clicked
   const handleSidebarLinkClick = () => {
     setIsSidebarOpen(false);
   };
-
 
   useEffect(() => {
     if (user) {
@@ -84,7 +84,7 @@ export default function LandingPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(userData),
-        credentials: "include", // Try adding this to include cookies
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -115,8 +115,6 @@ export default function LandingPage() {
   const handleLeaderboardClick = () => {
     navigate("/leaderboard");
   };
-
-
 
   const addToRefs = (el) => {
     if (el && !sectionsRef.current.includes(el)) {
@@ -152,7 +150,7 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch("http://localhost:3000/courses");
+        const response = await fetch("http://localhost:3000/approved/courses");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -176,7 +174,7 @@ export default function LandingPage() {
       const container = containerRef.current;
       const aspect = container.clientWidth / container.clientHeight;
       camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 1000);
-      cameraRef.current = camera; // Assign camera to ref
+      cameraRef.current = camera;
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       rendererRef.current = renderer;
@@ -307,7 +305,7 @@ export default function LandingPage() {
       rendererRef.current = null;
       mixerRef.current = null;
       animationFrameRef.current = null;
-      cameraRef.current = null; // Clean up cameraRef
+      cameraRef.current = null;
     };
   }, []);
 
@@ -316,22 +314,6 @@ export default function LandingPage() {
       textAnimationControls.start({ marginLeft: 0 });
     }
   }, [animationStarted, textAnimationControls]);
-
-  const handleSignIn = async () => {
-    if (user) {
-      // If the user is already logged in, sign them out
-      await clerk.signOut();
-      // Redirect to the landing page after signing out
-      navigate("/");
-    } else {
-      // If not logged in, initiate the sign-in process
-      try {
-        await signIn.create(); // This will open the Clerk sign-in modal
-      } catch (error) {
-        console.error("Sign-in error:", error);
-      }
-    }
-  };
 
   return (
     <main className="flex flex-col bg-white">
@@ -349,7 +331,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-4 md:hidden">
               <div className="flex-grow flex justify-center">
                 <button
-                  onClick={toggleSidebar} // Toggle sidebar on button click
+                  onClick={toggleSidebar}
                   className="p-2 text-black focus:outline-none"
                 >
                   <svg
@@ -382,7 +364,8 @@ export default function LandingPage() {
                     <button
                       className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full px-8 py-3"
                       style={{
-                        boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
+                        boxShadow:
+                          "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
                         border: "0.5px solid rgba(0, 0, 0, 0.33)",
                       }}
                     >
@@ -390,7 +373,6 @@ export default function LandingPage() {
                     </button>
                   </SignInButton>
                 </SignedOut>
-
                 <SignedIn>
                   <ProfileButton onClick={() => signOut()} />
                 </SignedIn>
@@ -398,7 +380,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex gap-9">
             <NavButton
               path="#courses"
@@ -429,7 +410,6 @@ export default function LandingPage() {
             >
               Leaderboard
             </NavButton>
-          
           </div>
 
           <div className="hidden md:flex items-center gap-5">
@@ -446,73 +426,75 @@ export default function LandingPage() {
                 </button>
               </SignInButton>
             </SignedOut>
-
             <SignedIn>
               <ProfileButton onClick={() => signOut()} />
             </SignedIn>
           </div>
         </nav>
 
-        <section className="flex flex-col items-start py-16 text-start">
-          <style>
-            {`
+        <section className="flex flex-col items-start pt-8 md:py-16 text-start relative"> {/* Changed py-16 to pt-8 for mobile */}
+  <style>
+    {`
       @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap');
       
       .poppins-font {
         font-family: 'Poppins', sans-serif;
         text-shadow: 7px 7px 4px rgba(0, 0, 0, 0.5);
       }
-
     `}
-          </style>
-          <div className="flex flex-row items-center justify-between w-full px-4 md:px-0">
-            <div className="flex flex-col w-1/2 md:w-auto">
-              <h1 className="text-5xl md:text-9xl font-bold text-black flex flex-col">
-                <motion.span
-                  className="self-start md:self-end poppins-font"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  Visualize
-                </motion.span>
-                <motion.span
-                  className="text-yellow-500 self-start md:self-end md:mr-[0.5em] poppins-font"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                >
-                  &
-                </motion.span>
-                <motion.span
-                  className="self-start md:self-end relative poppins-font"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 }}
-                >
-                  Learn
-                  <motion.h5
-                    className="text-gray-700 text-xs md:text-sm relative md:absolute md:left-[7em] md:top-full md:mt-3 mt-2 max-w-[250px] md:max-w-none"
-                    style={{ textShadow: "none" }}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
-                  >
-                    Education is the kindling of a flame, not the filling of a vessel. <span className="italic">- Socrates</span>
-                  </motion.h5>
-                </motion.span>
-              </h1>
-            </div>
-            <img
-              src="src/assets/Hero.png"
-              alt="Hero"
-              className="w-1/2 md:w-2/5 h-auto object-contain transform scale-105 md:scale-100"
-            />
-          </div>
-        </section>
+  </style>
+  <div className="flex flex-col md:flex-row items-center justify-between w-full px-4 md:px-0">
+    {/* Text container with adjusted margin-top for mobile */}
+    <div className="flex flex-col w-full md:w-auto z-10 mt-[-20px] md:mt-0"> {/* Added mt-[-20px] for mobile */}
+      <h1 className="text-5xl md:text-9xl font-bold text-black flex flex-col">
+        <motion.span
+          className="self-start md:self-end poppins-font"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Visualize
+        </motion.span>
+        <motion.span
+          className="text-yellow-500 self-start md:self-end md:mr-[0.5em] poppins-font"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          &
+        </motion.span>
+        <motion.span
+          className="self-start md:self-end relative poppins-font"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          Learn
+          <motion.h5
+            className="text-gray-700 text-xs md:text-sm relative md:absolute md:left-[7em] md:top-full md:mt-3 mt-2 max-w-[250px] md:max-w-none"
+            style={{ textShadow: "none" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            Education is the kindling of a flame, not the filling of a vessel. <span className="italic">- Socrates</span>
+          </motion.h5>
+        </motion.span>
+      </h1>
+    </div>
+    
+    {/* Hero image - adjusted order for mobile */}
+    <img
+  src="src/assets/Hero.png"
+  alt="Hero"
+  className="w-[250px] md:w-2/5 h-auto object-contain transform scale-120 md:scale-100 mb-[50px] z-0"
+/>
+  </div>
+</section>
       </header>
-       {/* Mobile Sidebar */}
-       <div
+
+      {/* Mobile Sidebar */}
+      <div
         className={`fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
           isSidebarOpen ? "translate-x-0" : "translate-x-full"
         } md:hidden`}
@@ -581,53 +563,77 @@ export default function LandingPage() {
       </div>
 
       {/* Step Into the Future Section */}
-      <section className="bg-black text-white py-0 fade-in" ref={addToRefs} style={{ marginTop: '-35px' }}>
+      <section
+        className="bg-black text-white py-0 fade-in"
+        ref={addToRefs}
+        style={{ marginTop: "-35px" }}
+      >
         <div className="carousel-container">
-          <div className="flex flex-wrap justify-center gap-5 text-center "style={{ marginTop: '-20px' }}>
-            {[".step .", ".in .", ".the .", ".future ."].map((text, index, arr) => (
-              <motion.h2
-                key={index}
-                className="text-4xl md:text-9xl font-bold lowercase tracking-normal whitespace-nowrap"
-                initial={{ marginLeft: -50 * (arr.length - index) }}
-                animate={textAnimationControls}
-                transition={{ delay: 0.2 * index, type: 'spring', stiffness: 120 }}
-              >
-                {text}
-              </motion.h2>
-            ))}
+          <div
+            className="flex flex-wrap justify-center gap-5 text-center "
+            style={{ marginTop: "0px" }}
+          >
+            {[".step .", ".in .", ".the .", ".future ."].map(
+              (text, index, arr) => (
+                <motion.h2
+                  key={index}
+                  className="text-4xl md:text-9xl font-bold lowercase tracking-normal whitespace-nowrap"
+                  initial={{ marginLeft: -50 * (arr.length - index) }}
+                  animate={textAnimationControls}
+                  transition={{
+                    delay: 0.2 * index,
+                    type: "spring",
+                    stiffness: 120,
+                  }}
+                >
+                  {text}
+                </motion.h2>
+              )
+            )}
           </div>
         </div>
 
-        {/* Centered Image */}
         <div className="flex justify-center">
           <div
             ref={containerRef}
-            style={{ width: "100%", height: "50vh", maxHeight: "400px", transform: "translateY(-50vh)" }}
+            style={{
+              width: "100%",
+              height: "50vh",
+              maxHeight: "400px",
+              transform: "translateY(-50vh)",
+            }}
           ></div>
         </div>
 
-        {/* Description */}
         <p className="text-center mt-8 text-xl mx-auto text-white font-bold">
           "Experience immersive and interactive learning anytime, anywhere—on
           laptops, tablets, <br />
           and smartphones."
         </p>
 
-        {/* Info Boxes */}
         <div className="flex flex-col md:flex-row justify-around mt-10 text-center text-lg">
-          <div className="flex-1 px-5 text-white text-center mb-5">
+          <div
+            className="flex-1 px-5 text-white text-center mb-5"
+            style={{ fontFamily: "'Paytone One', sans-serif" }}
+          >
             Hands-on exploration with
             <br />
             engaging 3D models across
             <br /> diverse subjects.
           </div>
-          <div className="flex-1 px-5 text-white text-center mb-5">
+          <div
+            className="flex-1 px-5 text-white text-center mb-5"
+            style={{ fontFamily: "'Paytone One', sans-serif" }}
+          >
             Delivering realistic and engaging <br />
             learning environments that bring <br />
             education to life through interactive <br />
             experiences.
           </div>
-          <div className="flex-1 px-5 text-white text-center">
+          <div
+            className="flex-1 px-5 text-white text-center"
+            style={{ fontFamily: "'Paytone One', sans-serif" }}
+          >
             Creating captivating and <br />
             immersive educational spaces <br />
             that transform the way you <br />
@@ -647,6 +653,7 @@ export default function LandingPage() {
           style={{
             textShadow:
               "1px 1px 0px black, -1px -1px 0px black, 1px -1px 0px black, -1px 1px 0px black",
+            fontFamily: "'Paytone One', sans-serif",
           }}
         >
           Courses
@@ -659,7 +666,7 @@ export default function LandingPage() {
               title={course.course_name}
               status={course.level}
               image={course.course_image}
-              courseId={course.id} // Pass courseId to CourseCard
+              courseId={course.id}
               iconSrc={course.iconSrc}
               showOverlay={index === 0 || index === 1 || index === 2}
               className="w-full md:w-1/4 transition-transform transform hover:scale-105 fade-in cursor-pointer"
@@ -669,153 +676,81 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer Section */}
+      {/* Footer Section with Logo Images */}
       <footer
         id="footer"
-        className={`relative w-full fade-in ${
+        className={`relative mt-[220px] mx-auto w-[98%] fade-in ${
           isVisible ? "visible" : ""
         }`}
       >
         <div className="relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover bg-center">
-          {/* Nature Text */}
-          <div className="absolute w-full top-[40px] px-4 md:px-0">
-            <p className="text-4xl md:text-[64px] font-normal text-center text-white">
-              Be the one with
-              <span className="text-red-500"> Nat</span>
-              <span className="text-[#B9DE00]">ur</span>
-              <span className="text-red-500">e</span>
-            </p>
-          </div>
-
-          {/* Social Media Section */}
-          <div className="absolute bottom-[20px] left-0 right-0 w-full md:w-[1440px] mx-auto bg-white rounded-t-[12px] md:rounded-[12px] py-6">
-            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 px-4 md:px-0">
-              {/* Instagram Button */}
+          <div className="absolute top-[252px] left-[23px] right-[23px] h-[178px] bg-white rounded-[12px] shadow-lg">
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
               <button
-                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
-                style={{
-                  backgroundColor: "#e0e5ec",
-                  backgroundImage: "none",
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundImage =
-                    "linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D, #F56040, #F77737, #FCAF45, #FFDC80)";
-                  e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec";
-                  e.currentTarget.style.backgroundImage = "none";
-                  e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
-                }}
+                className="w-40 sm:w-48 h-11 bg-white border-2 border-gray-300 rounded-full text-gray-800 font-semibold hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 transition duration-300 flex items-center justify-center"
                 onClick={() =>
                   (window.location.href = "https://www.instagram.com")
                 }
-                aria-label="Visit Instagram"
               >
-                Instagram
+                <img
+                  src={instagramLogo}
+                  alt="Instagram Logo"
+                  className="w-9 h-6"
+                />
               </button>
-
-              {/* Twitter Button */}
               <button
-                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
-                style={{
-                  backgroundColor: "#e0e5ec",
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#424240";
-                  e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec";
-                  e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
-                }}
+                className="w-40 sm:w-48 h-11 bg-white border-2 border-gray-300 rounded-full text-gray-800 font-semibold hover:bg-black hover:text-white hover:scale-105 transition duration-300 flex items-center justify-center"
                 onClick={() =>
                   (window.location.href = "https://www.twitter.com")
                 }
               >
-                Twitter
+                <img src={twitterLogo} alt="Twitter Logo" className="w-6 h-6" />
               </button>
-
-              {/* Facebook Button */}
               <button
-                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
-                style={{
-                  backgroundColor: "#e0e5ec",
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#1877F2";
-                  e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec";
-                  e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
-                }}
+                className="w-40 sm:w-48 h-11 bg-white border-2 border-gray-300 rounded-full text-gray-800 font-semibold hover:bg-blue-600 hover:text-white hover:scale-105 transition duration-300 flex items-center justify-center"
                 onClick={() =>
                   (window.location.href = "https://www.facebook.com")
                 }
               >
-                Facebook
+                <img
+                  src={facebookLogo}
+                  alt="Facebook Logo"
+                  className="w-6 h-6"
+                />
               </button>
-
-              {/* Pinterest Button */}
               <button
-                className="w-full md:w-auto text-black transform transition-all duration-300 hover:scale-110 rounded-full px-8 py-3"
-                style={{
-                  backgroundColor: "#e0e5ec",
-                  boxShadow: "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e94a22";
-                  e.currentTarget.style.boxShadow =
-                    "12px 12px 20px #a3b1c6, -12px -12px 20px #ffffff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e0e5ec";
-                  e.currentTarget.style.boxShadow =
-                    "8px 8px 15px #a3b1c6, -8px -8px 15px #ffffff";
-                }}
+                className="w-40 sm:w-48 h-11 bg-white border-2 border-gray-300 rounded-full text-gray-800 font-semibold hover:bg-red-100 hover:text-white hover:scale-105 transition duration-300 flex items-center justify-center"
                 onClick={() =>
                   (window.location.href = "https://www.pinterest.com")
                 }
               >
-                Pinterest
+                <img
+                  src={pinterestLogo}
+                  alt="Pinterest Logo"
+                  className="w-6 h-6"
+                />
               </button>
             </div>
-
-            <div className="mt-4 border-t border-gray-300"></div>
+            <div className="mt-4 border-t border-gray-200"></div>
             <div className="text-center mt-2">
-              <p className="text-xl text-gray-800">
-                © 2024, All Rights Reserved
+              <p className="text-base sm:text-lg text-gray-700 font-medium">
+                © 2025, All Rights Reserved
               </p>
             </div>
           </div>
+          <p className="absolute top-[40px] left-0 right-0 text-3xl sm:text-4xl md:text-5xl lg:text-[64px] font-semibold text-center text-white drop-shadow-lg">
+            Be the one with
+            <span className="text-red-500"> Nat</span>
+            <span className="text-[#B9DE00]">ur</span>
+            <span className="text-red-500">e</span>
+          </p>
         </div>
       </footer>
+
+      {/* Add the Bot component here */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <Bot />
+      </div>
     </main>
   );
 }

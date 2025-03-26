@@ -2,18 +2,21 @@ import express from "express";
 import cors from "cors";
 import db from "./db/db.js";
 import dotenv from 'dotenv';
-import { clerkClient ,requireAuth } from '@clerk/express';
+import { clerkClient, requireAuth } from '@clerk/express';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+dotenv.config();
+import { GoogleGenerativeAI } from "@google/generative-ai"; // [[2]][[5]]
+
 
 // ES module path fix
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // Secure API key [[5]]
 const app = express();
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -23,13 +26,134 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Clerk middleware configuration
-app.use(
-  requireAuth({
-    secretKey: process.env.CLERK_SECRET_KEY,
-  })
-);
 
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.0-flash", // Updated to latest version
+  systemInstruction:  `
+  You are a specialized AI assistant for Skillverse. 
+  You MUST ONLY answer questions about: 
+  - Medicinal plants 
+  - Human Anatomy 
+  - The Solar System. 
+  REFUSE to discuss ANY other topics. 
+  If a query is unrelated, respond with: "I cannot assist with that topic."`,
+  generationConfig: {
+    temperature: 0.1, // 
+    topP: 0.9, // Diverse but focused responses
+    topK: 40, // Broad but controlled token selection
+    maxOutputTokens: 1048, // Increased token limit
+  },
+  safetySettings: [
+    {
+      category: 'HARM_CATEGORY_HARASSMENT',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+    },
+    {
+      category: 'HARM_CATEGORY_HATE_SPEECH',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+    },
+    {
+      category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+    },
+    {
+      category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+      threshold: 'BLOCK_MEDIUM_AND_ABOVE'
+    }
+  ]
+});
+
+// Gemini API route
+app.post("/api/gemini", async (req, res) => {
+  const { message, context } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: "No message provided" });
+  }
+
+  try {
+    // Initialize model
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      systemInstruction:  `
+  You are a specialized AI assistant for Skillverse. 
+  You MUST ONLY answer questions about: 
+  - Medicinal plants 
+  - Human Anatomy 
+  - The Solar System. 
+  - Normal greetings from the user.
+  - About skillverse site
+  REFUSE to discuss ANY other topics. 
+  If a query is unrelated, respond with: "I cannot assist with that topic.
+  About Skillverse -
+  Navigate the Site:
+        On desktop, you’ll find a navigation bar at the top with buttons like "Courses," "Explore," "About Us," and "Leaderboard." Click "Courses" to scroll down to a list of available courses, or click "Explore" to browse all courses in detail.
+        On mobile, tap the hamburger icon (three horizontal lines) in the top-right corner to open a sidebar. From there, you can tap the same options ("Courses," "Explore," "About Us," "Leaderboard") to navigate. Tap the "X" to close the sidebar.
+    Log In or Sign Up:
+        If you’re not logged in, you’ll see a "Login" button in the top-right corner (or in the mobile sidebar). Click it to sign up or log in using your email, Google, or other options. We use a secure system to handle this for you.
+        Once logged in, the "Login" button changes to a profile button showing your picture or initials. Click it to log out if needed.
+    Get Support: Look for a gold-colored bot button in the bottom-right corner. Click it to open a chat window where you can ask questions (like "How do I enroll in a course?") and get instant help.
+    Connect with Us: Scroll to the footer to find social media buttons (Instagram, Twitter, Facebook, Pinterest). Click any of them to visit our pages and stay updated.
+
+2. Exploring and Enrolling in Courses (For Everyone)
+
+Before logging in, you can browse courses to get a feel for what we offer:
+
+    View Courses on the Landing Page: Scroll down to the "Courses" section, where you’ll see cards with course names, levels (e.g., beginner, advanced), and images. Hover over a card to see it scale up slightly for a nice effect.
+    Go to the Explore Page: Click the "Explore" button in the navigation bar (or sidebar on mobile) to visit the course exploration page. Here, you’ll see a grid of all available courses with more details like the instructor’s name. Click a course card to see its overview, including a description and module list.
+    Enroll in a Course: If you’re logged in as a learner, you’ll see an "Enroll" button on the course overview page. Click it to join the course, and it’ll appear on your learner dashboard.
+
+3. Learning as a Learner
+
+Once you’re logged in as a learner, you’ll be taken to your learner dashboard, where your learning journey begins:
+
+    Check Your Dashboard: The learner dashboard shows your enrolled courses, progress, and certificates. It has a tabbed layout—switch between tabs to see:
+        Enrolled Courses: A list of courses you’ve joined, with a progress bar showing how much you’ve completed.
+        Certificates: Courses you’ve finished, with a button to download a certificate as a PDF.
+    Start Learning:
+        Click an enrolled course to go to its module page. Here, you’ll find the course content, like text, images, and interactive elements.
+        Enjoy a lo-fi music track playing in the background to help you focus. Use the music control button (or toggle switch) to adjust the volume or turn it off.
+        Look for a VR button to view a 3D model (e.g., an aloe plant). Click it to open the model in a fullscreen view, where you can rotate, zoom, or switch to VR mode for an immersive experience.
+    Take Quizzes:
+        At the end of a module, you might find a quiz. Answer the questions and submit your responses.
+        A modal will pop up with your score. If you pass, you’ll see a fun confetti animation to celebrate! If it’s the last module, you can also click a "Give Feedback" button to rate the course and leave comments.
+    Track Progress: Back on your dashboard, the progress bar for the course updates as you complete modules, helping you see how far you’ve come.
+    Download Certificates: Once you finish a course, go to the certificates tab on your dashboard and click the download button to get a PDF certificate of completion.
+  "`,
+      generationConfig: {
+        temperature: 0.3,
+        topP: 0.9,
+        maxOutputTokens: 1048,
+        
+        
+      }
+    });
+
+    // Send message
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    const text = response.text();
+
+    // Return response
+    res.json({ 
+      response: text,
+    });
+
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    
+    // Detailed error response
+    res.status(500).json({ 
+      error: "Gemini API request failed",
+      details: error.message,
+    });
+  }
+});
+
+// Clerk middleware configuration
+app.use(requireAuth({
+  secretKey: process.env.CLERK_SECRET_KEY,
+}));
 
 
 
@@ -82,13 +206,19 @@ app.post("/api/saveUser", async (req, res) => {
         ]
       );
     }
-// Add this route to your existing Express setup
+    
+    res.status(200).json({ message: "User saved successfully" });
+  } catch (error) {
+    console.error("❌ Error saving user:", error);
+    res.status(500).json({ error: "Failed to save user", details: error.message });
+  }
+});
 
-app.post("/api/becomeContentCreator", requireAuth, async (req, res) => {
+// Route to become a content creator
+app.post("/api/becomeContentCreator", async (req, res) => {
   try {
     const userId = req.auth.userId;
     
-    // Update the user's is_content_creator flag to true
     await db.query(
       "UPDATE users SET is_content_creator = true WHERE clerk_user_id = $1",
       [userId]
@@ -107,24 +237,10 @@ app.post("/api/becomeContentCreator", requireAuth, async (req, res) => {
   }
 });
 
-
-    res.status(200).json({
-      message: "User saved successfully",
-      userId: userData.clerkUserId
-    });
-  } catch (error) {
-    console.error("❌ Database error:", error);
-    res.status(500).json({
-      error: "Database error",
-      details: error.message
-    });
-  }
-});
-
-
+// Check if user is a content creator
 app.post("/api/checkContentCreator", async (req, res) => {
   try {
-    const { userId } = req.body;
+    const userId = req.auth.userId;
     
     const user = await db.query(
       "SELECT is_content_creator FROM users WHERE clerk_user_id = $1",
@@ -150,7 +266,8 @@ app.post("/api/checkContentCreator", async (req, res) => {
   }
 });
 
-app.get("/api/userProgress", async (req, res) => {
+// Get user progress
+app.get("/api/userProgress", requireAuth, async (req, res) => {
   try {
     const userId = req.auth.userId;
     const userProgressResult = await db.query(

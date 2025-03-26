@@ -2,23 +2,30 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, OrbitControls } from "@react-three/drei";
 import TakeQuizButton from "./TakeQuizButton";
 import { GradualSpacing } from "./GradualSpacing";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import {
+  Navigate,
+  useNavigate,
+  useLocation,
+  useParams,
+} from "react-router-dom";
 import Loader from "./Loader";
 import Paper from "@mui/material/Paper";
 import { createTheme, styled } from "@mui/material/styles";
 import skillverseLogo from "../assets/skillverse.svg";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
-import { Menu, X } from "lucide-react";
-import aloeverohero from "../plantsAssets/image1.jpg";
+import { Menu, X, Leaf, Flower, Eye } from "lucide-react";
 import MusicControl from "./MusicControl";
-import { Leaf, Flower, Eye } from "lucide-react";
 import Confetti from "react-confetti";
-
 import * as THREE from "three";
+// Import social media logos from src/assets
+import instagramLogo from "../assets/instagram.png";
+import twitterLogo from "../assets/twitter.png";
+import facebookLogo from "../assets/facebook.png";
+import pinterestLogo from "../assets/pinterest.png";
 
 // Model Component with improved mobile responsiveness
 function Model({ glbData }) {
@@ -47,7 +54,6 @@ function Model({ glbData }) {
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     const maxDimension = Math.max(size.x, size.y, size.z);
-    // Adjusted scale for better visibility on mobile
     const targetScale = isMobile ? 1.5 / maxDimension : 2 / maxDimension;
     setScale(targetScale);
   }, [scene, isMobile]);
@@ -57,7 +63,7 @@ function Model({ glbData }) {
       ref={modelRef}
       object={scene}
       scale={scale}
-      position={isMobile ? [0, -0.5, 0] : [1.2, -0.2, 0]}
+      position={isMobile ? [0, -0.5, 0] : [0, 0, 0]}
       rotation={[0, Math.PI / 2, 0]}
     />
   );
@@ -85,6 +91,7 @@ export const AloePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moduleName, setModuleName] = useState("");
   const [revealedFacts, setRevealedFacts] = useState([]);
+  const [isInstructionVisible, setIsInstructionVisible] = useState(true);
   const [moduleDetails, setModuleDetails] = useState({
     module_name: "",
     description: "",
@@ -112,10 +119,20 @@ export const AloePage = () => {
     benefit3_description: "",
   });
   const paperRef = useRef(null);
-  // Add state to track screen width
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
   const [draggedItem, setDraggedItem] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [score, setScore] = useState(0);
+  const [matchedParts, setMatchedParts] = useState([]);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [showMatchPopup, setShowMatchPopup] = useState(false);
+  const [matchMessage, setMatchMessage] = useState("");
+  const [isMatchCorrect, setIsMatchCorrect] = useState(false);
+
+  const controls = useRef();
+  const interactiveSectionRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleDragStart = (e, item) => {
     setDraggedItem(item);
@@ -124,7 +141,7 @@ export const AloePage = () => {
   const handleDragOver = (e) => {
     e.preventDefault();
   };
-  // Utility function to shuffle an array
+
   const shuffleArray = (array) => {
     const shuffledArray = [...array];
     for (let i = shuffledArray.length - 1; i > 0; i--) {
@@ -139,8 +156,7 @@ export const AloePage = () => {
 
   const handleDrop = (e, target) => {
     e.preventDefault();
-    if (draggedItem) {
-      // Logic to check if the drop is correct
+    if (draggedItem && !matchedParts.includes(draggedItem)) {
       const correctMatches = {
         [moduleDetails.part1_name]: moduleDetails.part1_description,
         [moduleDetails.part2_name]: moduleDetails.part2_description,
@@ -149,15 +165,41 @@ export const AloePage = () => {
       };
 
       if (correctMatches[draggedItem] === target) {
-        // Update the state or UI to show the correct match
-        alert("Correct match!");
-        setShowConfetti(true); // Show confetti
+        setScore(score + 10);
+        setMatchedParts([...matchedParts, draggedItem]);
+        setShowConfetti(true);
+        setMatchMessage("Correct Match! 🎉");
+        setIsMatchCorrect(true);
+        if (matchedParts.length + 1 === 4) {
+          setGameCompleted(true);
+        }
       } else {
-        alert("Incorrect match. Try again.");
+        setScore(score - 5 >= 0 ? score - 5 : 0);
+        setMatchMessage("Incorrect Match! Try Again. 😓");
+        setIsMatchCorrect(false);
       }
+
+      setShowMatchPopup(true);
+
+      setTimeout(() => {
+        setShowMatchPopup(false);
+      }, 2000);
+
       setDraggedItem(null);
     }
   };
+
+  const closeMatchPopup = () => {
+    setShowMatchPopup(false);
+  };
+
+  const resetGame = () => {
+    setScore(0);
+    setMatchedParts([]);
+    setGameCompleted(false);
+    setShowConfetti(false);
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
@@ -202,6 +244,14 @@ export const AloePage = () => {
       setLoading(false);
     }
   }, [moduleId]);
+
+  useEffect(() => {
+    if (location.state?.scrollToInteractive && interactiveSectionRef.current) {
+      setTimeout(() => {
+        interactiveSectionRef.current.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [location.state]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -253,8 +303,6 @@ export const AloePage = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
-
-  const navigate = useNavigate();
 
   const handleTakeQuiz = () => {
     navigate(`/quiz/${moduleId}`, {
@@ -316,18 +364,23 @@ export const AloePage = () => {
   };
 
   const handleARClick = () => {
-    navigate(`/module-viewer/${moduleId}`);
+    navigate(`/module-viewer/${moduleId}`, {
+      state: {
+        scrollToInteractive: true,
+        fromApp: true,
+      },
+    });
   };
-  
+
   const handleVRClick = () => {
-    navigate(`/modelvr/${moduleId}`);
+    navigate(`/modelvr/${moduleId}`, {
+      state: { scrollToInteractive: true },
+    });
   };
 
   const handleback = () => {
     navigate("/plants");
   };
-
-  
 
   if (loading) {
     return <Loader />;
@@ -354,7 +407,6 @@ export const AloePage = () => {
     return <Navigate to="/custard-apple" />;
   }
 
-  // Determine font sizes based on screen width
   const heroTitleSize =
     screenWidth < 640
       ? "text-4xl"
@@ -371,6 +423,27 @@ export const AloePage = () => {
   return (
     <div className="flex justify-center items-center w-full min-h-screen bg-white">
       <div className="relative w-full max-w-screen-2xl mx-auto">
+        <style jsx global>{`
+          @keyframes bounce {
+            0% {
+              transform: scale(0.95);
+              opacity: 0;
+            }
+            50% {
+              transform: scale(1.05);
+              opacity: 1;
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+
+          .bounce {
+            animation: bounce 0.5s ease-out;
+          }
+        `}</style>
+
         {showConfetti && (
           <Confetti
             width={window.innerWidth}
@@ -419,7 +492,6 @@ export const AloePage = () => {
                 <ProfileButton />
               </div>
 
-              {/* Mobile Menu Button */}
               <button
                 className="mobile-menu-button md:hidden"
                 onClick={toggleMobileMenu}
@@ -429,7 +501,6 @@ export const AloePage = () => {
               </button>
             </div>
 
-            {/* Mobile Menu Dropdown */}
             <div
               className={`mobile-menu ${
                 isMobileMenuOpen ? "block" : "hidden"
@@ -460,22 +531,27 @@ export const AloePage = () => {
           <section className="hero-section relative w-full max-w-7xl mx-auto my-4 sm:my-8 overflow-hidden px-4">
             <img
               src={moduleDetails.module_image}
-              alt="Aloe Vera"
-              className="hero-image w-full h-10% rounded-2xl border border-gray-200 shadow-lg filter blur-md"
+              alt="Hero Image"
+              className="hero-image w-full h-96 object-cover rounded-lg border border-gray-200 shadow-md filter blur-sm"
             />
             <div className="hero-text-container absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center p-4">
               <div>
                 <div
-                  className="hero-title text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-green-600 text-center"
-                  style={{ fontFamily: "'Bebas Neue', sans-serif" }}
+                  className="hero-title text-9xl sm:text-[10rem] md:text-[14rem] lg:text-[16rem] font-black text-green-400 text-center tracking-tight drop-shadow-2xl"
+                  style={{
+                    fontFamily: "'Bebas Neue', sans-serif",
+                    textShadow: "6px 6px 12px rgba(0, 0, 0, 0.4)",
+                    transform: "scale(1.05)",
+                    letterSpacing: "-0.02em",
+                  }}
                 >
                   {moduleDetails.module_name}
                 </div>
                 <p
-                  className="scientific-name text-xl sm:text-2xl md:text-3xl font-italic text-black text-center mt-2"
+                  className="scientific-name text-xl sm:text-2xl md:text-3xl font-italic text-black text-center mt-2 bg-white bg-opacity-40 py-2 px-2 rounded-lg"
                   style={{ fontFamily: "'Paytone One', sans-serif" }}
                 >
-                  Aloe Barbadensis
+                  {moduleDetails.scientific_name}
                 </p>
               </div>
             </div>
@@ -484,15 +560,13 @@ export const AloePage = () => {
           {/* Info Cards Section */}
           <section className="info-cards-section w-full p-4 md:p-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Image Section */}
               <div className="w-full md:w-1/2 flex justify-center">
                 <img
                   src={moduleDetails.module_image}
-                  alt="Aloe Vera"
+                  alt="plant image"
                   className="w-64 h-64 sm:w-80 sm:h-80 rounded-lg shadow-lg"
                 />
               </div>
-              {/* Information Section */}
               <div className="w-full md:w-1/2 mt-6 md:mt-0">
                 <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-8">
                   <span className="text-3xl sm:text-4xl mr-2 sm:mr-4">🌿</span>
@@ -516,7 +590,6 @@ export const AloePage = () => {
           {/* Fun Facts Section */}
           <section className="info-cards-section w-full p-4 md:p-8">
             <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Text Section */}
               <div className="w-full md:w-1/2">
                 <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-8">
                   <span className="text-3xl sm:text-4xl mr-2 sm:mr-4">🌿</span>
@@ -526,20 +599,20 @@ export const AloePage = () => {
                     <GradualSpacing text="Amazing Facts" />
                   </h3>
                 </div>
-
-                {/* Fun Facts Container */}
                 <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
                   {[1, 2, 3, 4].map((factId) => (
                     <div
                       key={factId}
-                      className="cursor-pointer p-4 sm:p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      className={`cursor-pointer p-4 sm:p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 ${
+                        !revealedFacts.includes(factId) ? "glow-effect" : ""
+                      }`} // Add glow-effect class conditionally
                       onClick={() => revealFunFact(factId)}
                     >
                       <div className="flex items-center gap-3 sm:gap-4">
                         <span className="text-2xl sm:text-3xl">
                           {revealedFacts.includes(factId) ? "🌟" : "❓"}
                         </span>
-                        <p className="text-sm sm:text-base text-gray-700">
+                        <p className="funFact text-sm sm:text-base text-gray-700">
                           {revealedFacts.includes(factId)
                             ? moduleDetails[`funfact${factId}`]
                             : "Tap to reveal fun fact"}
@@ -549,16 +622,39 @@ export const AloePage = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Image Section */}
               <div className="w-full md:w-1/2 mt-6 md:mt-0">
                 <img
                   src="../src/plantsAssets/Sample.svg"
-                  alt="Aloe Vera Fun Facts"
+                  alt="Plant Fun Facts"
                   className="w-full h-auto rounded-lg shadow-lg"
                 />
               </div>
             </div>
+
+            {/* Add the glow effect CSS within the style tag */}
+            <style jsx global>{`
+              @keyframes glow {
+                0% {
+                  box-shadow: 0 0 5px rgba(34, 197, 94, 0.5),
+                    0 0 10px rgba(34, 197, 94, 0.5),
+                    0 0 15px rgba(34, 197, 94, 0.5);
+                }
+                50% {
+                  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8),
+                    0 0 20px rgba(34, 197, 94, 0.8),
+                    0 0 30px rgba(34, 197, 94, 0.8);
+                }
+                100% {
+                  box-shadow: 0 0 5px rgba(34, 197, 94, 0.5),
+                    0 0 10px rgba(34, 197, 94, 0.5),
+                    0 0 15px rgba(34, 197, 94, 0.5);
+                }
+              }
+
+              .glow-effect {
+                animation: glow 1.5s infinite ease-in-out;
+              }
+            `}</style>
           </section>
 
           {/* Medicinal Plant Parts Section */}
@@ -574,34 +670,38 @@ export const AloePage = () => {
               {[1, 2, 3, 4].map((partId) => (
                 <div
                   key={partId}
-                  className="flex flex-col md:flex-row items-center gap-4 sm:gap-8 bg-white rounded-2xl p-4 sm:p-6 shadow-lg transform transition-all duration-300 hover:scale-102 hover:shadow-xl"
+                  role="article"
+                  tabIndex={0}
+                  aria-label={`Plant part ${
+                    moduleDetails[`part${partId}_name`]
+                  }`}
+                  className="parts flex flex-col md:flex-row items-center gap-4 sm:gap-8 bg-green-100 rounded-lg p-4 sm:p-6 "
                 >
-                  <div className="w-full md:w-2/5 overflow-hidden rounded-lg relative group">
-                    <div className="absolute inset-0 bg-opacity-20 group-hover:opacity-20 transition-opacity z-10"></div>
+                  <div className="w-full md:w-2/5 overflow-hidden rounded-md relative">
                     <img
                       src={
                         moduleDetails[`part${partId}_image`] ||
                         "/placeholder.svg"
                       }
                       alt={moduleDetails[`part${partId}_name`]}
-                      className="w-64 h-64 mx-auto sm:w-80 sm:h-80 rounded-lg shadow-md border-2 border-green-300 transform transition-transform duration-500 group-hover:scale-110"
+                      className="w-64 h-64 mx-auto sm:w-80 sm:h-80 rounded-md border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1"
                     />
                   </div>
                   <div className="w-full md:w-3/5 md:-ml-6 mt-4 md:mt-0">
-                    <div className="bg-green-100 rounded-lg p-3 sm:p-4 border-l-4 border-green-500">
-                      <p className="text-green-900 whitespace-pre-line">
+                    <div className="bg-green-500 rounded-md p-3 sm:p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1">
+                      <p className="text-black whitespace-pre-line">
                         <strong
-                          className="text-2xl sm:text-3xl md:text-4xl block mb-2 text-green-700"
+                          className="text-2xl sm:text-3xl md:text-4xl block mb-2 text-black"
                           style={{ fontFamily: "'Paytone One', sans-serif" }}
                         >
-                          <span className="inline-block bg-green-200 rounded-full w-8 h-8 sm:w-10 sm:h-10 text-center mr-2">
+                          <span className="inline-block bg-yellow-400 rounded-full w-8 h-8 sm:w-10 sm:h-10 text-center mr-2 text-black">
                             {partId}
                           </span>
                           {moduleDetails[`part${partId}_name`]}
                         </strong>
                         <br />
                         <span
-                          className="text-sm sm:text-base"
+                          className="text-sm sm:text-base text-black"
                           style={{ fontFamily: "'Poppins', sans-serif" }}
                         >
                           {moduleDetails[`part${partId}_description`]}
@@ -613,12 +713,14 @@ export const AloePage = () => {
               ))}
             </div>
           </section>
-          <section className="info-cards-section w-full p-4 md:p-8 bg-green-100 rounded-xl">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Text Section */}
-              <div className="w-full md:w-1/2">
-                <div className="flex items-center justify-center md:justify-start mb-4 sm:mb-8">
-                  <span className="text-3xl sm:text-4xl mr-2 sm:mr-4">🌿</span>
+
+          {/* Match the Parts Section (Gamified) */}
+          <section className="info-cards-section w-full p-4 md:p-8 bg-green-100 rounded-lg">
+            <div className="flex flex-col gap-8">
+              {/* Header Section */}
+              <div className="header-section text-center">
+                <div className="flex items-center justify-center mb-4 sm:mb-8">
+                  <span className="text-3xl sm:text-4xl mr-2 sm:mr-4">🎮</span>
                   <h3
                     className={`${sectionTitleSize} font-bold text-green-800`}
                   >
@@ -626,45 +728,109 @@ export const AloePage = () => {
                   </h3>
                 </div>
 
-                <p className="text-base sm:text-lg text-gray-700 px-2 sm:px-0">
-                  Drag and drop the plant parts to their corresponding uses.
-                  This interactive game will help you learn about the different
-                  parts of the plant and their functions.
+                <p
+                  className="text-lg sm:text-xl text-black px-2 sm:px-0 mb-4"
+                  style={{ fontFamily: "'Paytone One', sans-serif" }}
+                >
+                  Drag and drop the plant parts to their uses. Earn 10 points
+                  for each correct match, lose 5 for a wrong one. Match all 4 to
+                  win!
                 </p>
+
+                <div className="flex flex-col items-center gap-2">
+                  <p
+                    className="text-xl font-bold text-green-700"
+                    style={{ fontFamily: "'Paytone One', sans-serif" }}
+                  >
+                    Score: <span className="text-3xl">{score}</span>
+                  </p>
+                  <p
+                    className="text-base text-gray-600"
+                    style={{ fontFamily: "'Paytone One', sans-serif" }}
+                  >
+                    Progress: {matchedParts.length}/4
+                  </p>
+                  <button
+                    onClick={resetGame}
+                    className="mt-2 px-4 py-2 bg-yellow-400 text-black rounded-lg border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400 bounce"
+                    style={{ fontFamily: "'Paytone One', sans-serif" }}
+                  >
+                    Reset Game
+                  </button>
+                </div>
+
+                {gameCompleted && (
+                  <div className="mt-4 p-4 bg-green-100 rounded-md border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center">
+                    <p
+                      className="text-2xl font-bold text-black animate-bounce"
+                      style={{ fontFamily: "'Paytone One', sans-serif" }}
+                    >
+                      🎉 Congratulations! You matched all parts!
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Drag and Drop Game Container */}
-              <div className="w-full md:w-1/2 mt-6 md:mt-0">
-                <div className="flex flex-col gap-6">
-                  {/* Draggable Items */}
-                  <div className="draggable-container grid grid-cols-2 gap-4">
+              {/* Matching Area */}
+              <div className="matching-area flex flex-col md:flex-row justify-center gap-8">
+                {/* Left Column: Plant Parts */}
+                <div className="parts-column w-full md:w-1/2">
+                  <div className="grid grid-cols-2 gap-4">
                     {moduleDetails &&
                       [
                         moduleDetails.part1_name,
-                        moduleDetails.part2_name,
                         moduleDetails.part3_name,
+                        moduleDetails.part2_name,
                         moduleDetails.part4_name,
                       ].map((part, index) => (
                         <div
                           key={index}
-                          draggable
-                          className="draggable-item bg-white rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center cursor-pointer"
-                          onDragStart={(e) => handleDragStart(e, part)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Drag plant part ${part}`}
+                          draggable={!matchedParts.includes(part)}
+                          className={`draggable-item bg-green-100 rounded-lg p-4 sm:p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 flex items-center justify-center cursor-pointer
+                  ${
+                    matchedParts.includes(part)
+                      ? "bg-green-200 opacity-50 cursor-not-allowed border-4 border-black"
+                      : "hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400 bounce"
+                  }`}
+                          onDragStart={(e) =>
+                            !matchedParts.includes(part) &&
+                            handleDragStart(e, part)
+                          }
+                          onKeyDown={(e) => {
+                            if (
+                              (e.key === "Enter" || e.key === " ") &&
+                              !matchedParts.includes(part)
+                            ) {
+                              handleDragStart(e, part);
+                            }
+                          }}
                         >
                           <div className="flex items-center">
-                            <Leaf className="text-green-600 mr-2" size={24} />
-                            <span className="text-sm sm:text-base font-medium text-gray-700">
+                            <Leaf
+                              className="text-green-600 mr-2 bg-yellow-400 rounded-full p-2"
+                              size={28}
+                            />
+                            <span
+                              className="text-base sm:text-lg font-medium text-black"
+                              style={{
+                                fontFamily: "'Paytone One', sans-serif",
+                              }}
+                            >
                               {part}
                             </span>
                           </div>
                         </div>
                       ))}
                   </div>
+                </div>
 
-                  {/* Drop Zones */}
-                  <div className="drop-container grid grid-cols-2 gap-4">
+                {/* Right Column: Descriptions */}
+                <div className="descriptions-column w-full md:w-1/2">
+                  <div className="grid grid-cols-2 gap-4">
                     {moduleDetails &&
-                      // Shuffle the drop zones array
                       shuffleArray([
                         moduleDetails.part1_description,
                         moduleDetails.part2_description,
@@ -673,13 +839,39 @@ export const AloePage = () => {
                       ]).map((description, index) => (
                         <div
                           key={index}
-                          className="drop-zone bg-white rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center justify-center"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Drop zone for ${description}`}
+                          className={`drop-zone bg-green-100 rounded-lg p-4 sm:p-6 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 flex items-center justify-center
+                  ${
+                    matchedParts.some(
+                      (part) =>
+                        moduleDetails[
+                          `part${matchedParts.indexOf(part) + 1}_description`
+                        ] === description
+                    )
+                      ? "bg-green-200 border-4 border-black"
+                      : "hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400 bounce"
+                  }`}
                           onDrop={(e) => handleDrop(e, description)}
                           onDragOver={(e) => handleDragOver(e)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              handleDrop(e, description);
+                            }
+                          }}
                         >
                           <div className="flex items-center">
-                            <Flower className="text-green-600 mr-2" size={24} />
-                            <span className="text-sm sm:text-base font-medium text-gray-700">
+                            <Flower
+                              className="text-green-600 mr-2 bg-yellow-400 rounded-full p-2"
+                              size={28}
+                            />
+                            <span
+                              className="text-base sm:text-lg font-medium text-black"
+                              style={{
+                                fontFamily: "'Paytone One', sans-serif",
+                              }}
+                            >
                               {description}
                             </span>
                           </div>
@@ -689,7 +881,31 @@ export const AloePage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Match Result Pop-Up */}
+            {showMatchPopup && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-green-100 rounded-md p-6 w-80 md:w-96 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform transition-all duration-300">
+                  <h2
+                    className="text-lg md:text-xl font-bold text-center text-black"
+                    style={{ fontFamily: "'Paytone One', sans-serif" }}
+                  >
+                    {matchMessage}
+                  </h2>
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={closeMatchPopup}
+                      className="px-4 py-2 bg-yellow-400 text-black rounded-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400"
+                      style={{ fontFamily: "'Paytone One', sans-serif" }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
+
           {/* 3D Model Section */}
           <div className="section-header text-center my-6 sm:my-8">
             <div className="flex items-center justify-center mb-4 sm:mb-8">
@@ -701,13 +917,84 @@ export const AloePage = () => {
           </div>
 
           <div className="flex flex-col md:flex-row items-center gap-8 px-4 py-4 sm:py-8">
-            <div className="w-full h-80 sm:h-96 md:h-[500px] model-container">
+            <div className="w-[90%] h-80 sm:h-96 md:h-[500px] model-container relative">
+              {isInstructionVisible && (
+                <div className="absolute top-4 left-4 bg-green-100 text-black border-4 border-black rounded-lg p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-10 transform transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 bounce">
+                  <button
+                    onClick={() => setIsInstructionVisible(false)}
+                    className="absolute top-2 right-2 text-black hover:text-red-500"
+                    aria-label="Close instructions"
+                  >
+                    <X size={16} />
+                  </button>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-green-600">
+                      <Leaf className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <p
+                        className="text-base sm:text-lg font-bold text-black"
+                        style={{ fontFamily: "'Paytone One', sans-serif" }}
+                      >
+                        How to Interact:
+                      </p>
+                      <div className="text-sm text-black space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-green-600">🖱️</span>
+                          <span>Click & drag to rotate</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-green-600">🔍</span>
+                          <span>Scroll to zoom</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-green-600">🖱️</span>
+                          <span>Right-click & drag to pan</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  controls.current?.reset();
+                }}
+                className="absolute bottom-4 right-4 bg-green-500 text-black font-bold border-4 border-black rounded-lg p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-10 transform transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400"
+                aria-label="Reset Model Position"
+              >
+                <span className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-black"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span
+                    className="text-sm sm:text-base"
+                    style={{ fontFamily: "'Paytone One', sans-serif" }}
+                  >
+                    Reset
+                  </span>
+                </span>
+              </button>
+
               <Canvas
                 camera={{
-                  position: [2.192129250918481, 1, 4.405377373613455],
+                  position: [2.5, 0, -2],
                   fov: 45,
                 }}
                 shadows
+                style={{ width: "100%", height: "100%" }}
               >
                 <ambientLight intensity={2} />
                 <directionalLight
@@ -720,14 +1007,20 @@ export const AloePage = () => {
                 {moduleDetails?.glb_file_base64 && (
                   <Model glbData={moduleDetails.glb_file_base64} />
                 )}
+                <OrbitControls
+                  ref={controls}
+                  enablePan={true}
+                  enableZoom={true}
+                  enableRotate={true}
+                />
               </Canvas>
-              {/* Text-to-Speech Button - Adjusted position for mobile */}
+
               <button
                 onClick={() =>
                   isSpeaking
                     ? stopSpeech()
                     : speakText(
-                        ".section-title, .section-subtitle, .hero-title, .scientific-name, .info-card"
+                        ".hero-title, .scientific-name,.what-is-description,.funFact,.parts,.section-header,.benefits-container"
                       )
                 }
                 className={`p-2 rounded-full shadow-md transition duration-300 fixed bottom-16 sm:bottom-auto sm:top-40 right-4 z-50 ${
@@ -763,13 +1056,13 @@ export const AloePage = () => {
             </div>
           </div>
 
-          <div className="benefits-container flex flex-wrap justify-center gap-4 sm:gap-8 p-4">
+          <div className="benefits-container flex flex-wrap justify-center gap-4 sm:gap-8 p-4 ">
             {[1, 2, 3].map((benefitId) => (
               <div
                 key={benefitId}
-                className="w-full sm:w-5/12 md:w-1/3 mb-4 sm:mb-8 p-2 sm:p-4 transform transition-transform duration-300 hover:scale-105"
+                className="w-full sm:w-5/12 md:w-1/3 mb-4 sm:mb-8 p-2 sm:p-4 transform transition-transform duration-300 hover:scale-105 "
               >
-                <div className="bg-green-50 rounded-lg p-4 sm:p-6 h-full shadow-md hover:shadow-lg border-2 border-green-200">
+                <div className="bg-green-50 rounded-lg p-4 sm:p-6 h-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 bounce">
                   <div className="flex items-center mb-2 sm:mb-3">
                     <span className="text-2xl sm:text-3xl mr-2 sm:mr-3">
                       🌿
@@ -792,8 +1085,12 @@ export const AloePage = () => {
             ))}
           </div>
 
-          {/* Interactive Experience Section */}
-          <div className="section-header text-center my-6 sm:my-8">
+          {/* Interactive Experience Section with ref */}
+          <div
+            ref={interactiveSectionRef}
+            id="interactive-experience"
+            className="section-header text-center my-6 sm:my-8"
+          >
             <div className="flex items-center justify-center mb-4 sm:mb-8">
               <span className="text-3xl sm:text-4xl mr-2 sm:mr-4"></span>
               <h3
@@ -806,25 +1103,32 @@ export const AloePage = () => {
           </div>
 
           <div className="ar-vr-container flex flex-wrap justify-center gap-4 sm:gap-8 p-4 bg-green-50 rounded-lg border border-green-200">
-            <div
+            <button
               onClick={handleARClick}
-              className="ar-vr-icon w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-green-100 to-green-200 rounded-full shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 border-green-300 transition-all duration-300 hover:shadow-xl hover:scale-105"
+              className="ar-vr-icon w-32 h-32 sm:w-48 sm:h-48 bg-green-500 border-4 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400 bounce"
+              aria-label="View in Augmented Reality"
             >
-              <Flower className="text-green-600 mb-1" size={28} />
-              <span className="text-xl sm:text-3xl font-bold text-green-700">
+              <Flower className="text-black mb-1" size={28} />
+              <span
+                className="text-xl sm:text-3xl font-bold text-black"
+                style={{ fontFamily: "'Paytone One', sans-serif" }}
+              >
                 AR
               </span>
-            </div>
-            <div
+            </button>
+            <button
               onClick={handleVRClick}
-              className="ar-vr-icon w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-teal-100 to-teal-200 rounded-full shadow-lg flex flex-col items-center justify-center cursor-pointer border-2 border-teal-300 transition-all duration-300 hover:shadow-xl hover:scale-105"
+              className="ar-vr-icon w-32 h-32 sm:w-48 sm:h-48 bg-teal-500 border-4 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-none hover:translate-x-1 hover:translate-y-1 active:scale-95 focus:ring-4 focus:ring-yellow-400 bounce"
+              aria-label="View in Virtual Reality"
             >
-              <Eye className="text-teal-600 mb-1" size={28} />
-              <span className="text-xl sm:text-3xl font-bold text-teal-700">
+              <Eye className="text-black mb-1" size={28} />
+              <span
+                className="text-xl sm:text-3xl font-bold text-black"
+                style={{ fontFamily: "'Paytone One', sans-serif" }}
+              >
                 VR
               </span>
-            </div>
-
+            </button>
             <div className="w-full text-center mt-6 text-green-800">
               <p className="text-sm font-medium"></p>
               <p className="text-xs text-green-600 mt-1"></p>
@@ -847,7 +1151,7 @@ export const AloePage = () => {
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Footer with Logo Images */}
           <footer
             className="footer w-full bg-cover bg-center mt-8 p-8"
             style={{
@@ -865,36 +1169,52 @@ export const AloePage = () => {
             <div className="social-container bg-white rounded-lg p-4 mt-8">
               <div className="social-buttons flex flex-wrap justify-center gap-4">
                 <button
-                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105"
+                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white hover:scale-105 flex items-center justify-center"
                   onClick={() =>
                     (window.location.href = "https://www.instagram.com")
                   }
                 >
-                  Instagram
+                  <img
+                    src={instagramLogo}
+                    alt="Instagram Logo"
+                    className="w-9 h-6"
+                  />
                 </button>
                 <button
-                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105"
+                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-black hover:text-white hover:scale-105 flex items-center justify-center"
                   onClick={() =>
                     (window.location.href = "https://www.twitter.com")
                   }
                 >
-                  Twitter
+                  <img
+                    src={twitterLogo}
+                    alt="Twitter Logo"
+                    className="w-6 h-6"
+                  />
                 </button>
                 <button
-                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105"
+                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-blue-500 hover:text-white hover:scale-105 flex items-center justify-center"
                   onClick={() =>
                     (window.location.href = "https://www.facebook.com")
                   }
                 >
-                  Facebook
+                  <img
+                    src={facebookLogo}
+                    alt="Facebook Logo"
+                    className="w-6 h-6"
+                  />
                 </button>
                 <button
-                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-red-500 hover:text-white hover:scale-105"
+                  className="social-button px-4 py-2 bg-white border border-black rounded-full hover:bg-red-100 hover:text-white hover:scale-105 flex items-center justify-center"
                   onClick={() =>
                     (window.location.href = "https://www.pinterest.com")
                   }
                 >
-                  Pinterest
+                  <img
+                    src={pinterestLogo}
+                    alt="Pinterest Logo"
+                    className="w-6 h-6"
+                  />
                 </button>
               </div>
 

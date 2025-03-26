@@ -4,23 +4,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
+// Import social media logos from src/assets
+import instagramLogo from "../assets/instagram.png";
+import twitterLogo from "../assets/twitter.png";
+import facebookLogo from "../assets/facebook.png";
+import pinterestLogo from "../assets/pinterest.png";
 
 export default function AboutUs() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
   // Close sidebar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isSidebarOpen && !event.target.closest('.mobile-sidebar') && 
-          !event.target.closest('.sidebar-toggle')) {
+      if (
+        isSidebarOpen &&
+        !event.target.closest(".mobile-sidebar") &&
+        !event.target.closest(".sidebar-toggle")
+      ) {
         setIsSidebarOpen(false);
       }
     };
-    
-    document.addEventListener('mousedown', handleClickOutside);
+
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isSidebarOpen]);
 
@@ -31,10 +39,10 @@ export default function AboutUs() {
         setIsSidebarOpen(false);
       }
     };
-    
-    window.addEventListener('resize', handleResize);
+
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [isSidebarOpen]);
 
@@ -82,45 +90,45 @@ export default function AboutUs() {
 
   // Sidebar animation variants
   const sidebarVariants = {
-    closed: { 
+    closed: {
       x: "100%",
       opacity: 0,
-      transition: { 
-        type: "tween", 
-        duration: 0.3,
-        ease: "easeInOut"
-      }
-    },
-    open: { 
-      x: 0,
-      opacity: 1,
-      transition: { 
-        type: "tween", 
+      transition: {
+        type: "tween",
         duration: 0.3,
         ease: "easeInOut",
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const sidebarItemVariants = {
-    closed: { 
-      x: 20,
-      opacity: 0
+      },
     },
-    open: { 
+    open: {
       x: 0,
       opacity: 1,
       transition: {
-        duration: 0.3
-      }
-    }
+        type: "tween",
+        duration: 0.3,
+        ease: "easeInOut",
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const sidebarItemVariants = {
+    closed: {
+      x: 20,
+      opacity: 0,
+    },
+    open: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.3,
+      },
+    },
   };
 
   const overlayVariants = {
     closed: { opacity: 0 },
-    open: { opacity: 1 }
+    open: { opacity: 1 },
   };
 
   const developers = [
@@ -183,6 +191,36 @@ export default function AboutUs() {
 
         {/* Login/Profile and Sidebar Toggle Section */}
         <div className="flex items-center gap-5">
+          {/* Mobile Sidebar Toggle Button */}
+          <button
+            className="md:hidden p-2 text-black focus:outline-none sidebar-toggle"
+            onClick={toggleSidebar}
+            aria-label="Toggle mobile menu"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {isSidebarOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
+
           <SignedOut>
             <SignInButton>
               <button className="text-black transform transition-transform duration-300 hover:scale-110 rounded-full border-2 border-black px-8 py-3">
@@ -193,48 +231,9 @@ export default function AboutUs() {
           <SignedIn>
             <ProfileButton />
           </SignedIn>
-
-          {/* Mobile Sidebar Toggle Button */}
-          <button
-            className="md:hidden text-black transform transition-transform duration-300 hover:scale-110 sidebar-toggle"
-            onClick={toggleSidebar}
-            aria-label="Toggle mobile menu"
-          >
-            {!isSidebarOpen ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            )}
-          </button>
         </div>
       </nav>
-      
+
       {/* Mobile Menu Overlay and Sidebar */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -248,7 +247,7 @@ export default function AboutUs() {
               variants={overlayVariants}
               onClick={() => setIsSidebarOpen(false)}
             />
-            
+
             {/* Sidebar */}
             <motion.div
               className="mobile-sidebar fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 md:hidden flex flex-col"
@@ -259,11 +258,10 @@ export default function AboutUs() {
             >
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                <p className="font-bold text-lg text-black">Menu</p>
-                <button 
+                
+                <button
                   onClick={() => setIsSidebarOpen(false)}
-                  className="p-1 rounded-full hover:bg-gray-100"
-                >
+                  className="p-1 rounded-full hover:bg-gray-100"                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6 text-gray-500"
@@ -280,7 +278,7 @@ export default function AboutUs() {
                   </svg>
                 </button>
               </div>
-              
+
               {/* Links */}
               <div className="p-5 flex flex-col gap-2">
                 <motion.div variants={sidebarItemVariants}>
@@ -307,7 +305,7 @@ export default function AboutUs() {
                     </span>
                   </NavButton>
                 </motion.div>
-                
+
                 <motion.div variants={sidebarItemVariants}>
                   <NavButton
                     className="block w-full text-left text-black hover:bg-gray-100 rounded-lg p-3 transition-colors"
@@ -333,7 +331,7 @@ export default function AboutUs() {
                   </NavButton>
                 </motion.div>
               </div>
-              
+
               {/* Footer */}
               <div className="mt-auto p-5 border-t border-gray-100">
                 <SignedOut>
@@ -343,13 +341,13 @@ export default function AboutUs() {
                     </button>
                   </SignInButton>
                 </SignedOut>
-                <SignedIn>
+                {/* <SignedIn>
                   <p className="text-sm text-gray-500 mb-2">Signed in as:</p>
                   <div className="flex items-center">
                     <div className="w-8 h-8 rounded-full bg-gray-200 mr-3"></div>
                     <div>User Account</div>
                   </div>
-                </SignedIn>
+                </SignedIn> */}
               </div>
             </motion.div>
           </>
@@ -444,7 +442,7 @@ export default function AboutUs() {
               <h3 className="text-xl font-bold text-black mb-2">{dev.name}</h3>
               <p className="text-gray-600">{dev.role}</p>
               <div className="mt-4 flex justify-center space-x-3">
-                <motion.button
+                {/* <motion.button
                   className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -457,42 +455,42 @@ export default function AboutUs() {
                   whileTap={{ scale: 0.9 }}
                 >
                   <span className="text-gray-600">LinkedIn</span>
-                </motion.button>
+                </motion.button> */}
               </div>
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      {/* Footer Section */}
+      {/* Footer Section with Logo Images */}
       <footer className="w-full mt-20 relative z-10">
         <style>
           {`
-      .footer-bg-image {
-        border-radius: 20px; /* Rounded corners for both mobile and desktop */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Drop shadow */
-      }
+            .footer-bg-image {
+              border-radius: 20px; /* Rounded corners for both mobile and desktop */
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Drop shadow */
+            }
 
-      @media (max-width: 768px) {
-        .nature-text {
-          font-size: 60px !important; /* Smaller font size for mobile */
-          left: 50% !important; /* Center the text horizontally */
-          transform: translateX(-50%) !important; /* Ensure proper centering */
-          white-space: normal !important; /* Allow text to wrap */
-          top: 20px !important; /* Adjust vertical positioning */
-          width: 90% !important; /* Limit width to prevent overflow */
-          text-align: center !important; /* Center-align the text */
-          line-height: 1.2 !important; /* Adjust line height for better readability */
-        }
+            @media (max-width: 768px) {
+              .nature-text {
+                font-size: 60px !important; /* Smaller font size for mobile */
+                left: 50% !important; /* Center the text horizontally */
+                transform: translateX(-50%) !important; /* Ensure proper centering */
+                white-space: normal !important; /* Allow text to wrap */
+                top: 20px !important; /* Adjust vertical positioning */
+                width: 90% !important; /* Limit width to prevent overflow */
+                text-align: center !important; /* Center-align the text */
+                line-height: 1.2 !important; /* Adjust line height for better readability */
+              }
 
-        .footer-bg-image {
-          background-size: cover !important; /* Ensure the image covers the container */
-          background-position: center !important; /* Center the image */
-          border-radius: 20px; /* Rounded corners for mobile */
-          box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.2); /* Drop shadow for mobile */
-        }
-      }
-    `}
+              .footer-bg-image {
+                background-size: cover !important; /* Ensure the image covers the container */
+                background-position: center !important; /* Center the image */
+                border-radius: 20px; /* Rounded corners for mobile */
+                box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.2); /* Drop shadow for mobile */
+              }
+            }
+          `}
         </style>
 
         <div className="footer-bg-image relative w-full h-[440px] bg-[url('https://cdn.animaapp.com/projects/66fe7ba2df054d0dfb35274e/releases/676d6d16be8aa405f53530bc/img/hd-wallpaper-anatomy-human-anatomy-1.png')] bg-cover">
@@ -503,32 +501,38 @@ export default function AboutUs() {
               initial="hidden"
               animate="visible"
             >
-              {[
-                { name: "Instagram", url: "https://www.instagram.com" },
-                { name: "Twitter", url: "https://www.twitter.com" },
-                { name: "Facebook", url: "https://www.facebook.com" },
-                { name: "Pinterest", url: "https://www.pinterest.com" },
-              ].map((social) => (
-                <motion.button
-                  key={social.name}
-                  className={`w-48 h-11 bg-white border border-black rounded-full hover:text-white transition duration-200 ${
-                    social.name === "Instagram"
-                      ? "hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500"
-                      : social.name === "Twitter"
-                      ? "hover:bg-gradient-to-r hover:from-black hover:to-gray-800"
-                      : social.name === "Facebook"
-                      ? "hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400"
-                      : social.name === "Pinterest"
-                      ? "hover:bg-gradient-to-r hover:from-red-600 hover:to-red-400"
-                      : ""
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => (window.location.href = social.url)}
-                >
-                  {social.name}
-                </motion.button>
-              ))}
+              <motion.button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-pink-500 hover:via-purple-500 hover:to-yellow-500 hover:text-white transition duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => (window.location.href = "https://www.instagram.com")}
+              >
+                <img src={instagramLogo} alt="Instagram Logo" className="w-9 h-6" />
+              </motion.button>
+              <motion.button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-black hover:to-gray-800 hover:text-white transition duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => (window.location.href = "https://www.twitter.com")}
+              >
+                <img src={twitterLogo} alt="Twitter Logo" className="w-6 h-6" />
+              </motion.button>
+              <motion.button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-400 hover:text-white transition duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => (window.location.href = "https://www.facebook.com")}
+              >
+                <img src={facebookLogo} alt="Facebook Logo" className="w-6 h-6" />
+              </motion.button>
+              <motion.button
+                className="w-48 h-11 bg-white border border-black rounded-full hover:bg-gradient-to-r hover:from-red-100 hover:to-red-100 hover:text-white transition duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => (window.location.href = "https://www.pinterest.com")}
+              >
+                <img src={pinterestLogo} alt="Pinterest Logo" className="w-6 h-6" />
+              </motion.button>
             </motion.div>
 
             <div className="mt-4 border-t border-gray-300"></div>

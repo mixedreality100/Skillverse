@@ -1,30 +1,64 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiHome, FiPlusCircle, FiBook, FiSettings, FiLogOut, FiMenu } from 'react-icons/fi';
 import { useNavigate } from "react-router-dom";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import AddCourse from './AddCourse';
 import AddModule from './AddModule';
 import AddQuiz from './AddQuiz';
 import MyCourses from './MyCourses';
-import Settings from './Settings';
 import { RiDashboardFill } from 'react-icons/ri';
 
 export const ContentCreatorDashboard = () => {
   const [currentComponent, setCurrentComponent] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile sidebar toggle
-  const [userInfo, setUserInfo] = useState(() => {
-    const savedUserInfo = localStorage.getItem('userInfo');
-    return savedUserInfo ? JSON.parse(savedUserInfo) : {
-      name: 'Content Creator',
-      email: 'contentCreator@gmail.com',
-      password: '',
-      profilePicture: 'https://via.placeholder.com/150'
-    };
+  const [userInfo, setUserInfo] = useState({
+    name: 'Content Creator',
+    email: 'contentCreator@gmail.com',
+    profilePicture: 'https://via.placeholder.com/150'
   });
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const courses = [
-    { id: 1, name: 'Medicinal Plants', enrolledStudents: 1 }
-  ];
+  // Get Clerk user and auth
+  const { user } = useUser(); // Get user from Clerk
+  const auth = useAuth(); // Get auth from Clerk
+
+  useEffect(() => {
+    if (user) {
+      const emailAddress = user.primaryEmailAddress?.emailAddress || "contentCreator@gmail.com";
+      console.log("Current user email:", emailAddress); // Add this line
+      setUserInfo({
+        name: user.fullName || "Content Creator",
+        email: emailAddress,
+        profilePicture: user.imageUrl || 'https://via.placeholder.com/150',
+      });
+      
+      // After setting user info, fetch courses for this instructor
+      fetchCourses(emailAddress);
+    }
+  }, [user]); 
+
+  // Function to fetch courses with enrollment counts
+  const fetchCourses = async (instructorEmail) => {
+    if (!instructorEmail) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:3000/api/instructor-courses?email=${encodeURIComponent(instructorEmail)}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+      
+      const data = await response.json();
+      setCourses(data);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const DashboardContent = () => (
     <div className="w-full">
@@ -43,17 +77,24 @@ export const ContentCreatorDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {courses.map(course => (
-              <tr key={course.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 text-lg border-b border-gray-200 text-center">
-                  {course.name}
-                </td>
-                <td className="px-6 py-4 text-lg border-b border-gray-200 text-center">
-                  {course.enrolledStudents}
+            {loading ? (
+              <tr>
+                <td colSpan={2} className="px-6 py-4 text-center text-lg text-gray-500 border-b border-gray-200">
+                  Loading courses...
                 </td>
               </tr>
-            ))}
-            {courses.length === 0 && (
+            ) : courses.length > 0 ? (
+              courses.map(course => (
+                <tr key={course.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-lg border-b border-gray-200 text-center">
+                    {course.course_name}
+                  </td>
+                  <td className="px-6 py-4 text-lg border-b border-gray-200 text-center">
+                    {course.enrolled_students}
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
                 <td colSpan={2} className="px-6 py-4 text-center text-lg text-gray-500 border-b border-gray-200">
                   No courses available
@@ -65,17 +106,6 @@ export const ContentCreatorDashboard = () => {
       </div>
     </div>
   );
-
-  // Function to handle logout
-  const handleLogout = () => {
-    navigate('/login');
-  };
-
-  // Function to update user info
-  const updateUserInfo = (newInfo) => {
-    setUserInfo(newInfo);
-    localStorage.setItem('userInfo', JSON.stringify(newInfo));
-  };
 
   return (
     <div className="flex h-screen bg-white font-poppins font-semibold">
@@ -117,7 +147,6 @@ export const ContentCreatorDashboard = () => {
             { icon: <RiDashboardFill className="w-5 h-5 mr-3" />, label: 'Dashboard', component: 'dashboard' },
             { icon: <FiBook className="w-5 h-5 mr-3" />, label: 'My Courses', component: 'my-courses' },
             { icon: <FiPlusCircle className="w-5 h-5 mr-3" />, label: 'Add Course', component: 'add-course' },
-            { icon: <FiSettings className="w-5 h-5 mr-3" />, label: 'Settings', component: 'settings' },
           ].map((item, index) => (
             <div
               key={index}
@@ -133,21 +162,13 @@ export const ContentCreatorDashboard = () => {
               <span className="text-white">{item.label}</span>
             </div>
           ))}
-
-          {/* Logout at bottom */}
-          <div className="absolute bottom-0 w-64 border-t border-gray-700">
-            <div className="flex items-center px-6 py-3 cursor-pointer hover:bg-gray-800" onClick={handleLogout}>
-              <FiLogOut className="w-5 h-5 mr-3" />
-              <span className="text-red-500">Logout</span>
-            </div>
-          </div>
         </nav>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 md:ml-64 bg-white overflow-y-auto px-4 md:px-20 py-6">
         {/* Header */}
-        <header className="bg-[#555555] rounded-[15px] p-4 md:p-8 flex flex-col md:flex-row items-center">
+        <header className="bg-[#e6b108] rounded-[15px] p-4 md:p-8 flex flex-col md:flex-row items-center">
           <div className="w-40 h-40 md:w-64 md:h-64 bg-gray-200 rounded-full overflow-hidden">
             <img
               className="w-full h-full object-cover"
@@ -157,8 +178,8 @@ export const ContentCreatorDashboard = () => {
           </div>
           <div className="md:ml-10 mt-6 md:mt-0 flex flex-col md:flex-row justify-between w-full">
             <div>
-              <h1 className="text-2xl md:text-4xl font-bold tracking-[-2px] text-white">{userInfo.name}</h1>
-              <p className="text-lg md:text-2xl font-light mt-2 text-white">{userInfo.email}</p>
+              <h1 className="text-2xl md:text-4xl font-bold tracking-[-2px] text-black">{userInfo.name}</h1>
+              <p className="text-lg md:text-2xl font-light mt-2 text-black">{userInfo.email}</p>
             </div>
           </div>
         </header>
@@ -169,10 +190,7 @@ export const ContentCreatorDashboard = () => {
           {currentComponent === 'add-course' && <AddCourse />}
           {currentComponent === 'add-module' && <AddModule />}
           {currentComponent === 'add-quiz' && <AddQuiz />}
-          {currentComponent === 'my-courses' && <MyCourses />}
-          {currentComponent === 'settings' && (
-            <Settings userInfo={userInfo} updateUserInfo={updateUserInfo} />
-          )}
+          {currentComponent === 'my-courses' && <MyCourses instructorEmail={userInfo.email} />}
         </main>
       </div>
     </div>

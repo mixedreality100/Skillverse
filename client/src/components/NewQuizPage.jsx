@@ -32,10 +32,29 @@ const NewQuizPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [feedbackFormVisible, setFeedbackFormVisible] = useState(false);
   const [showPopup, setShowPopup] = useState(false); // State to control popup visibility
+  const [userId, setUserId] = useState(null);
   const { user } = useUser();
 
-  const userId = 10; // Replace with actual user ID from authentication
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (user && user.primaryEmailAddress) {
+        try {
+          const response = await fetch(`http://localhost:3000/api/user-id?email=${user.primaryEmailAddress.emailAddress}`);
+          if (response.ok) {
+            const { userId } = await response.json();
+            setUserId(userId);
+          } else {
+            console.error('Failed to fetch user ID');
+          }
+        } catch (error) {
+          console.error("Error fetching user ID:", error);
+        }
+      }
+    };
 
+    fetchUserId();
+  }, [user]);
+  
   useEffect(() => {
     const fetchQuizQuestions = async () => {
       setLoading(true);

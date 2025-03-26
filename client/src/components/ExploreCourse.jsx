@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Mic, MicOff, Menu, X } from "lucide-react";
+import { Mic, MicOff, Menu } from "lucide-react";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
@@ -56,6 +56,7 @@ const ExploreCourse = () => {
     };
   }, [isListening]);
 
+  // Handle body overflow when sidebar is open
   useEffect(() => {
     if (isSidebarOpen) {
       document.body.style.overflow = "hidden";
@@ -131,6 +132,11 @@ const ExploreCourse = () => {
     setIsSidebarOpen(false);
   };
 
+  const handleLeaderboardClick = () => {
+    navigate("/leaderboard");
+    setIsSidebarOpen(false);
+  };
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -139,7 +145,7 @@ const ExploreCourse = () => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Navigation Bar */}
-        <nav className="flex justify-between items-center w-full mb-8">
+        <nav className="flex justify-between items-center w-full mb-8 relative">
           <div className="flex items-center">
             <img
               src="./src/assets/skillverse.svg"
@@ -149,7 +155,7 @@ const ExploreCourse = () => {
             />
           </div>
 
-          <div className="md:hidden">
+          <div className="md:hidden absolute right-[100px] top-1/2 transform -translate-y-1/2">
             <button
               onClick={toggleSidebar}
               className="p-2 focus:outline-none"
@@ -177,6 +183,12 @@ const ExploreCourse = () => {
             >
               About Us
             </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={handleLeaderboardClick}
+            >
+              Leaderboard
+            </NavButton>
           </div>
 
           <div className="flex items-center gap-4">
@@ -201,60 +213,62 @@ const ExploreCourse = () => {
 
         {/* Mobile Sidebar */}
         <div
-          className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300 ${
-            isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-          onClick={toggleSidebar}
-        ></div>
-
-        <div
-          className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${
             isSidebarOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          } md:hidden`}
         >
-          <div className="flex flex-col h-full">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-bold">Menu</h2>
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-full hover:bg-gray-100"
-                aria-label="Close menu"
+          <div className="p-4">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 text-black focus:outline-none"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="flex-1 p-4">
-              <div className="flex flex-col gap-4">
-                <button
-                  className="w-full px-4 py-3 text-left text-black rounded-lg hover:bg-gray-100 flex items-center"
-                  style={{
-                    boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
-                    border: "0.5px solid rgba(0, 0, 0, 0.1)",
-                    borderRadius: "12px",
-                  }}
-                  onClick={handleCoursesClick}
-                >
-                  <span className="text-lg">Courses</span>
-                </button>
-
-                <button
-                  className="w-full px-4 py-3 text-left text-black rounded-lg hover:bg-gray-100 flex items-center"
-                  style={{
-                    boxShadow: "5px 5px 10px #d1d1d1, -5px -5px 10px #ffffff",
-                    border: "0.5px solid rgba(0, 0, 0, 0.1)",
-                    borderRadius: "12px",
-                  }}
-                  onClick={handleAboutUsClick}
-                >
-                  <span className="text-lg">About Us</span>
-                </button>
-              </div>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
+          <nav className="flex flex-col space-y-4 p-4">
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={() => {
+                handleCoursesClick();
+              }}
+            >
+              Courses
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={() => {
+                handleAboutUsClick();
+              }}
+            >
+              About Us
+            </NavButton>
+            <NavButton
+              className="transform transition-transform duration-300 hover:scale-110 text-black"
+              onClick={() => {
+                handleLeaderboardClick();
+              }}
+            >
+              Leaderboard
+            </NavButton>
+          </nav>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">
+        <h1
+          className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8"
+          style={{ fontFamily: "'Paytone One', sans-serif" }}
+        >
           Explore Courses
         </h1>
 

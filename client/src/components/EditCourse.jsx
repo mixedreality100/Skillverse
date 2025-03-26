@@ -1,11 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
 import { FiUpload } from "react-icons/fi"
+import { useUser } from "@clerk/clerk-react"
+import { useParams, useNavigate } from "react-router-dom"
+import Button from "./Button" // Import the Button component
 
-const EditCourse = ({ onEditComplete }) => {
+const EditCourse = () => {
   const { courseId } = useParams()
+  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
   const [courseData, setCourseData] = useState({
     instructorEmail: "",
@@ -17,42 +20,112 @@ const EditCourse = ({ onEditComplete }) => {
     modules: [],
   })
 
+  const [userInfo, setUserInfo] = useState({
+    name: "Content Creator",
+    email: "contentCreator@gmail.com",
+    profilePicture: "https://via.placeholder.com/150",
+  })
+
+  // Get Clerk user
+  const { user } = useUser()
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        name: user.fullName || "Content Creator",
+        email: user.primaryEmailAddress?.emailAddress || "contentCreator@gmail.com",
+        profilePicture: user.imageUrl || "https://via.placeholder.com/150",
+      })
+      // Set the instructor email from Clerk user data and make it non-editable
+      setCourseData((prev) => ({
+        ...prev,
+        instructorEmail: user.primaryEmailAddress?.emailAddress || "contentCreator@gmail.com",
+      }))
+    }
+  }, [user])
+
+  // Fetch course data when component mounts
   useEffect(() => {
     const fetchCourseData = async () => {
-      setIsLoading(true)
       try {
-        // Fetch course basic information
+        setIsLoading(true)
+
+        // Fetch course details
         const courseResponse = await fetch(`http://localhost:3000/courses/${courseId}`)
         if (!courseResponse.ok) {
-          throw new Error(`Failed to fetch course: ${courseResponse.status}`)
+          throw new Error("Failed to fetch course data")
         }
-        const courseInfo = await courseResponse.json()
+        const courseDetails = await courseResponse.json()
 
         // Fetch modules for this course
         const modulesResponse = await fetch(`http://localhost:3000/modules/${courseId}`)
         if (!modulesResponse.ok) {
-          throw new Error(`Failed to fetch modules: ${modulesResponse.status}`)
+          throw new Error("Failed to fetch modules data")
         }
-        const modulesInfo = await modulesResponse.json()
+        const modulesData = await modulesResponse.json()
 
-        // Process modules and fetch quiz data for each module
-        const processedModules = await Promise.all(
-          modulesInfo.map(async (module) => {
-            // Fetch quiz questions for this module
-            let quizQuestions = []
-            try {
-              const quizResponse = await fetch(`http://localhost:3000/api/modules/${module.id}/quiz`)
-              if (quizResponse.ok) {
-                quizQuestions = await quizResponse.json()
-              }
-            } catch (error) {
-              console.error(`Error fetching quiz for module ${module.id}:`, error)
+        // Process modules to fetch quiz questions for each module
+        const modulesWithQuiz = await Promise.all(
+          modulesData.map(async (module) => {
+            const quizResponse = await fetch(`http://localhost:3000/api/modules/${module.id}/quiz`)
+            const quizData = await quizResponse.json()
+
+            // Format quiz data to match the expected structure
+            const formattedQuiz = quizData.map((q) => ({
+              question: q.question,
+              optionA: q.option_a,
+              optionB: q.option_b,
+              optionC: q.option_c,
+              optionD: q.option_d,
+              correctAnswer: q.correct_answer,
+            }))
+
+            // Create image preview URLs if images exist
+            let part1ImagePreview = null
+            let part2ImagePreview = null
+            let part3ImagePreview = null
+            let part4ImagePreview = null
+            let moduleImagePreview = null
+            const funfactPreview = null
+
+            if (module.module_image) {
+              moduleImagePreview =
+                typeof module.module_image === "string"
+                  ? module.module_image
+                  : `data:image/jpeg;base64,${module.module_image}`
             }
 
-            // Create a processed module object with all required fields
+            if (module.part1_image) {
+              part1ImagePreview =
+                typeof module.part1_image === "string"
+                  ? module.part1_image
+                  : `data:image/jpeg;base64,${module.part1_image}`
+            }
+
+            if (module.part2_image) {
+              part2ImagePreview =
+                typeof module.part2_image === "string"
+                  ? module.part2_image
+                  : `data:image/jpeg;base64,${module.part2_image}`
+            }
+
+            if (module.part3_image) {
+              part3ImagePreview =
+                typeof module.part3_image === "string"
+                  ? module.part3_image
+                  : `data:image/jpeg;base64,${module.part3_image}`
+            }
+
+            if (module.part4_image) {
+              part4ImagePreview =
+                typeof module.part4_image === "string"
+                  ? module.part4_image
+                  : `data:image/jpeg;base64,${module.part4_image}`
+            }
+
             return {
               id: module.id,
-              moduleName: module.module_name || "",
+              moduleName: module.module_name,
               scientificName: module.scientific_name || "",
               description: module.description || "",
               funfact1: module.funfact1 || "",
@@ -63,25 +136,25 @@ const EditCourse = ({ onEditComplete }) => {
                 name: module.part1_name || "",
                 description: module.part1_description || "",
                 image: null,
-                imagePreview: module.part1_image || null,
+                imagePreview: part1ImagePreview,
               },
               part2: {
                 name: module.part2_name || "",
                 description: module.part2_description || "",
                 image: null,
-                imagePreview: module.part2_image || null,
+                imagePreview: part2ImagePreview,
               },
               part3: {
                 name: module.part3_name || "",
                 description: module.part3_description || "",
                 image: null,
-                imagePreview: module.part3_image || null,
+                imagePreview: part3ImagePreview,
               },
               part4: {
                 name: module.part4_name || "",
                 description: module.part4_description || "",
                 image: null,
-                imagePreview: module.part4_image || null,
+                imagePreview: part4ImagePreview,
               },
               benefit1: {
                 name: module.benefit1_name || "",
@@ -99,44 +172,53 @@ const EditCourse = ({ onEditComplete }) => {
                 name: module.benefit4_name || "",
                 description: module.benefit4_description || "",
               },
-              numberOfQuiz: module.number_of_quiz || 0,
-              quiz: quizQuestions.map((q) => ({
-                question: q.question || "",
-                optionA: q.option_a || "",
-                optionB: q.option_b || "",
-                optionC: q.option_c || "",
-                optionD: q.option_d || "",
-                correctAnswer: q.correct_answer || "",
-              })),
+              numberOfQuiz: quizData.length.toString(),
+              quiz: formattedQuiz,
               image: null,
-              imagePreview: module.module_image || null,
+              imagePreview: moduleImagePreview,
               glbFile: null,
-              glbFilePreview: module.glb_file_base64 || null,
+              funfact: null,
+              funfactPreview: funfactPreview,
             }
           }),
         )
 
-        // Set the complete course data
+        // Create course image preview if it exists
+        let courseImagePreview = null
+        if (courseDetails.course_image) {
+          courseImagePreview = `data:image/png;base64,${courseDetails.course_image}`
+        }
+
+        // Set the course data state
         setCourseData({
-          instructorEmail: courseInfo.instructor_email || "",
-          courseName: courseInfo.course_name || "",
-          primaryLanguage: courseInfo.primary_language || "",
-          level: courseInfo.level || "",
+          instructorEmail: courseDetails.instructor_email,
+          courseName: courseDetails.course_name,
+          primaryLanguage: courseDetails.primary_language,
+          level: courseDetails.level,
           courseImage: null,
-          courseImagePreview: courseInfo.course_image ? `data:image/png;base64,${courseInfo.course_image}` : null,
-          modules: processedModules,
+          courseImagePreview: courseImagePreview,
+          modules: modulesWithQuiz,
         })
+
+        setIsLoading(false)
       } catch (error) {
         console.error("Error fetching course data:", error)
-        alert(`Error loading course data: ${error.message}`)
-      } finally {
+        alert("Failed to load course data. Please try again.")
         setIsLoading(false)
       }
     }
 
-    fetchCourseData()
+    if (courseId) {
+      fetchCourseData()
+    }
   }, [courseId])
 
+  // Handle back navigation
+  const handleBack = () => {
+    navigate(-1) // Navigate back to the previous page
+  }
+
+  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setCourseData((prev) => ({
@@ -145,6 +227,7 @@ const EditCourse = ({ onEditComplete }) => {
     }))
   }
 
+  // Handle file upload
   const handleCourseImageUpload = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -156,95 +239,49 @@ const EditCourse = ({ onEditComplete }) => {
     }
   }
 
-  const handleAddModule = () => {
-    setCourseData((prev) => ({
-      ...prev,
-      modules: [
-        ...prev.modules,
-        {
-          moduleName: "",
-          scientificName: "",
-          description: "",
-          funfact1: "",
-          funfact2: "",
-          funfact3: "",
-          funfact4: "",
-          part1: { name: "", description: "", image: null, imagePreview: null },
-          part2: { name: "", description: "", image: null, imagePreview: null },
-          part3: { name: "", description: "", image: null, imagePreview: null },
-          part4: { name: "", description: "", image: null, imagePreview: null },
-          benefit1: { name: "", description: "" },
-          benefit2: { name: "", description: "" },
-          benefit3: { name: "", description: "" },
-          benefit4: { name: "", description: "" },
-          numberOfQuiz: 0,
-          quiz: [],
-          image: null,
-          imagePreview: null,
-          glbFile: null,
-          glbFilePreview: null,
-        },
-      ],
-    }))
-  }
-
-  const handleRemoveModule = (moduleIndex) => {
-    setCourseData((prev) => ({
-      ...prev,
-      modules: prev.modules.filter((_, index) => index !== moduleIndex),
-    }))
-  }
-
-  const handleAddQuiz = (moduleIndex) => {
-    const newQuiz = {
-      question: "",
-      optionA: "",
-      optionB: "",
-      optionC: "",
-      optionD: "",
-      correctAnswer: "",
+  const handleModuleFileUpload = (e, index, type) => {
+    const file = e.target.files[0]
+    if (file) {
+      setCourseData((prev) => ({
+        ...prev,
+        modules: prev.modules.map((module, i) =>
+          i === index
+            ? {
+                ...module,
+                [type]: file,
+                [`${type}Preview`]: URL.createObjectURL(file),
+              }
+            : module,
+        ),
+      }))
     }
-
-    setCourseData((prev) => {
-      const updatedModules = [...prev.modules]
-      if (!updatedModules[moduleIndex].quiz) {
-        updatedModules[moduleIndex].quiz = []
-      }
-      updatedModules[moduleIndex].quiz.push(newQuiz)
-      updatedModules[moduleIndex].numberOfQuiz = updatedModules[moduleIndex].quiz.length
-      return {
-        ...prev,
-        modules: updatedModules,
-      }
-    })
   }
 
-  const handleModuleInputChange = (e, moduleIndex) => {
-    const { name, value } = e.target
-    setCourseData((prev) => {
-      const updatedModules = [...prev.modules]
-
-      // Handle nested properties (e.g., part1.name, benefit1.description)
-      if (name.includes(".")) {
-        const [parent, child] = name.split(".")
-        updatedModules[moduleIndex][parent] = {
-          ...updatedModules[moduleIndex][parent],
-          [child]: value,
-        }
-      } else {
-        updatedModules[moduleIndex][name] = value
-      }
-
-      return {
+  const handlePartImageUpload = (e, moduleIndex, partNumber) => {
+    const file = e.target.files[0]
+    if (file) {
+      setCourseData((prev) => ({
         ...prev,
-        modules: updatedModules,
-      }
-    })
+        modules: prev.modules.map((module, i) =>
+          i === moduleIndex
+            ? {
+                ...module,
+                [`part${partNumber}`]: {
+                  ...module[`part${partNumber}`],
+                  image: file,
+                  imagePreview: URL.createObjectURL(file),
+                },
+              }
+            : module,
+        ),
+      }))
+    }
   }
 
+  // Handle quiz question changes
   const handleQuizChange = (e, moduleIndex, questionIndex, field) => {
     const { value } = e.target
-    if (field === "correctAnswer" && value !== "" && !["A", "B", "C", "D"].includes(value)) {
+    if (field === "correctAnswer" && !["A", "B", "C", "D"].includes(value)) {
       alert("Invalid correct answer. Please select A, B, C, or D.")
       return
     }
@@ -268,443 +305,930 @@ const EditCourse = ({ onEditComplete }) => {
     }))
   }
 
-  const handleFileUpload = (e, moduleIndex, field) => {
-    const file = e.target.files[0]
-    if (file) {
-      setCourseData((prev) => {
-        const updatedModules = [...prev.modules]
+  // Handle adding a new module
+  const handleAddModule = () => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: [
+        ...prev.modules,
+        {
+          moduleName: "",
+          scientificName: "",
+          description: "",
+          funfact: null,
+          funfactPreview: null,
+          funfact1: "",
+          funfact2: "",
+          funfact3: "",
+          funfact4: "",
+          part1: { name: "", description: "", image: null, imagePreview: null },
+          part2: { name: "", description: "", image: null, imagePreview: null },
+          part3: { name: "", description: "", image: null, imagePreview: null },
+          part4: { name: "", description: "", image: null, imagePreview: null },
+          benefit1: { name: "", description: "" },
+          benefit2: { name: "", description: "" },
+          benefit3: { name: "", description: "" },
+          benefit4: { name: "", description: "" },
+          numberOfQuiz: "",
+          quiz: [],
+          image: null,
+          imagePreview: null,
+          glbFile: null,
+        },
+      ],
+    }))
+  }
 
-        if (field.includes(".")) {
-          // Handle nested file uploads like part1.image
-          const [parent, child] = field.split(".")
-          updatedModules[moduleIndex][parent] = {
-            ...updatedModules[moduleIndex][parent],
-            [child]: file,
-            [`${child}Preview`]: URL.createObjectURL(file),
+  // Handle removing a module
+  const handleRemoveModule = (index) => {
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.filter((_, i) => i !== index),
+    }))
+  }
+
+  // Handle adding quiz questions
+  const handleAddQuiz = (moduleIndex, numberOfQuiz) => {
+    const currentQuizLength = courseData.modules[moduleIndex].quiz.length
+    const newQuizCount = Number.parseInt(numberOfQuiz, 10)
+
+    if (newQuizCount <= currentQuizLength) {
+      const updatedModules = [...courseData.modules]
+      updatedModules[moduleIndex].quiz = updatedModules[moduleIndex].quiz.slice(0, newQuizCount)
+      setCourseData((prev) => ({
+        ...prev,
+        modules: updatedModules,
+      }))
+      return
+    }
+
+    const additionalQuestions = Array.from({ length: newQuizCount - currentQuizLength }, () => ({
+      question: "",
+      optionA: "",
+      optionB: "",
+      optionC: "",
+      optionD: "",
+      correctAnswer: "",
+    }))
+
+    setCourseData((prev) => ({
+      ...prev,
+      modules: prev.modules.map((module, i) =>
+        i === moduleIndex
+          ? {
+              ...module,
+              quiz: [...module.quiz, ...additionalQuestions],
+            }
+          : module,
+      ),
+    }))
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+  
+    // Validate form data
+    if (
+      !courseData.instructorEmail ||
+      !courseData.courseName ||
+      !courseData.primaryLanguage ||
+      !courseData.level ||
+      courseData.modules.length === 0
+    ) {
+      alert("Please fill all required course fields and add at least one module.")
+      return
+    }
+  
+    for (const module of courseData.modules) {
+      if (!module.moduleName || !module.scientificName || !module.description || !module.numberOfQuiz) {
+        alert("Please fill all required module fields.")
+        return
+      }
+  
+      if (module.quiz && module.quiz.length > 0) {
+        for (const question of module.quiz) {
+          if (
+            !question.question ||
+            !question.optionA ||
+            !question.optionB ||
+            !question.optionC ||
+            !question.optionD ||
+            !question.correctAnswer
+          ) {
+            alert("Please fill all required quiz question fields.")
+            return
           }
-        } else {
-          // Handle direct file uploads like image or glbFile
-          updatedModules[moduleIndex][field] = file
-          updatedModules[moduleIndex][`${field}Preview`] = URL.createObjectURL(file)
         }
-
-        return {
-          ...prev,
-          modules: updatedModules,
+      }
+    }
+  
+    try {
+      const formData = new FormData()
+  
+      console.log("Starting form submission...")
+  
+      formData.append("courseId", courseId)
+      formData.append("instructorEmail", courseData.instructorEmail)
+      formData.append("courseName", courseData.courseName)
+      formData.append("primaryLanguage", courseData.primaryLanguage)
+      formData.append("level", courseData.level)
+  
+      if (courseData.courseImage) {
+        console.log("Adding course image to FormData")
+        formData.append("courseImage", courseData.courseImage)
+      }
+  
+      console.log("Modules to process:", courseData.modules.length)
+  
+      const modulesForSubmit = courseData.modules.map((module) => {
+        const moduleCopy = JSON.parse(JSON.stringify(module))
+  
+        delete moduleCopy.image
+        delete moduleCopy.imagePreview
+        delete moduleCopy.glbFile
+        delete moduleCopy.funfact
+        delete moduleCopy.funfactPreview
+  
+        for (let i = 1; i <= 4; i++) {
+          if (moduleCopy[`part${i}`]) {
+            delete moduleCopy[`part${i}`].image
+            delete moduleCopy[`part${i}`].imagePreview
+          }
+        }
+  
+        return moduleCopy
+      })
+  
+      console.log("Prepared modules data structure:", 
+                  JSON.stringify(modulesForSubmit).substring(0, 100) + "...")
+  
+      formData.append("modules", JSON.stringify(modulesForSubmit))
+  
+      courseData.modules.forEach((module, i) => {
+        console.log(`Processing module ${i} files:`, module.moduleName)
+  
+        if (module.image) {
+          console.log(`Adding image for module ${i}`)
+          formData.append(`moduleImage_${i}`, module.image)
+        }
+  
+        if (module.glbFile) {
+          console.log(`Adding GLB file for module ${i}`)
+          formData.append(`moduleGlb_${i}`, module.glbFile)
+        }
+  
+        for (let j = 1; j <= 4; j++) {
+          if (module[`part${j}`] && module[`part${j}`].image) {
+            console.log(`Adding part${j} image for module ${i}`)
+            formData.append(`modulePart${j}_${i}`, module[`part${j}`].image)
+          }
         }
       })
+  
+      for (let pair of formData.entries()) {
+        console.log(`FormData contains: ${pair[0]}`)
+      }
+  
+      console.log("Submitting form data to server...")
+      const response = await fetch("http://localhost:3000/update-course", {
+        method: "POST",
+        body: formData,
+      })
+  
+      if (response.ok) {
+        alert("Course updated successfully!")
+        setCourseData({
+          instructorEmail: "",
+          courseName: "",
+          primaryLanguage: "",
+          level: "",
+          courseImage: null,
+          courseImagePreview: null,
+          modules: [],
+        })
+        window.location.reload()
+      } else {
+        const errorData = await response.json()
+        alert(`Failed to update course: ${errorData.message || "Unknown error"}`)
+      }
+    } catch (error) {
+      console.error("Error updating course:", error)
+      alert("Error updating course. Please try again.")
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    try {
-      const formData = new FormData();
-  
-      // Basic course info
-      formData.append("instructorEmail", courseData.instructorEmail);
-      formData.append("courseName", courseData.courseName);
-      formData.append("primaryLanguage", courseData.primaryLanguage);
-      formData.append("level", courseData.level);
-      
-      // Course image
-      if (courseData.courseImage) {
-        formData.append("courseImage", courseData.courseImage);
-      }
-  
-      // Add each module data separately
-      courseData.modules.forEach((module, moduleIndex) => {
-        // Module basic info
-        formData.append(`modules[${moduleIndex}][id]`, module.id || "");
-        formData.append(`modules[${moduleIndex}][moduleName]`, module.moduleName);
-        formData.append(`modules[${moduleIndex}][scientificName]`, module.scientificName);
-        formData.append(`modules[${moduleIndex}][description]`, module.description);
-        formData.append(`modules[${moduleIndex}][funfact1]`, module.funfact1);
-        formData.append(`modules[${moduleIndex}][funfact2]`, module.funfact2);
-        formData.append(`modules[${moduleIndex}][funfact3]`, module.funfact3);
-        formData.append(`modules[${moduleIndex}][funfact4]`, module.funfact4);
-        
-        // Part details
-        for (let i = 1; i <= 4; i++) {
-          formData.append(`modules[${moduleIndex}][part${i}][name]`, module[`part${i}`].name);
-          formData.append(`modules[${moduleIndex}][part${i}][description]`, module[`part${i}`].description);
-          if (module[`part${i}`].image) {
-            formData.append(`modules[${moduleIndex}][part${i}][image]`, module[`part${i}`].image);
-          }
-        }
-        
-        // Benefit details
-        for (let i = 1; i <= 4; i++) {
-          formData.append(`modules[${moduleIndex}][benefit${i}][name]`, module[`benefit${i}`].name);
-          formData.append(`modules[${moduleIndex}][benefit${i}][description]`, module[`benefit${i}`].description);
-        }
-        
-        // Quiz data
-        formData.append(`modules[${moduleIndex}][numberOfQuiz]`, module.quiz.length);
-        module.quiz.forEach((question, qIndex) => {
-          formData.append(`modules[${moduleIndex}][quiz][${qIndex}][question]`, question.question);
-          formData.append(`modules[${moduleIndex}][quiz][${qIndex}][optionA]`, question.optionA);
-          formData.append(`modules[${moduleIndex}][quiz][${qIndex}][optionB]`, question.optionB);
-          formData.append(`modules[${moduleIndex}][quiz][${qIndex}][optionC]`, question.optionC);
-          formData.append(`modules[${moduleIndex}][quiz][${qIndex}][optionD]`, question.optionD);
-          formData.append(`modules[${moduleIndex}][quiz][${qIndex}][correctAnswer]`, question.correctAnswer);
-        });
-        
-        // Module image and 3D model
-        if (module.image) {
-          formData.append(`modules[${moduleIndex}][image]`, module.image);
-        }
-        if (module.glbFile) {
-          formData.append(`modules[${moduleIndex}][glbFile]`, module.glbFile);
-        }
-      });
-  
-      // Log the formData for debugging (optional)
-      // for (let pair of formData.entries()) {
-      //   console.log(pair[0] + ': ' + pair[1]);
-      // }
-  
-      // Send to server
-      const response = await fetch(`http://localhost:3000/edit-course/${courseId}`, {
-        method: "PUT",
-        body: formData,
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Server responded with status ${response.status}: ${errorData.message}`);
-      }
-  
-      alert("Course updated successfully!");
-      if (onEditComplete) onEditComplete();
-    } catch (error) {
-      console.error("Error updating course:", error);
-      alert(`Error updating course: ${error.message}`);
-    }
-  };
-
-
-
-
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        <p className="ml-3 text-lg text-gray-700">Loading course data...</p>
-      </div>
-    )
+    return <div className="flex justify-center items-center h-screen">Loading course data...</div>
   }
 
   return (
-    <div className="bg-gray-100 p-8 rounded-lg shadow-md max-w-3xl mx-auto">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Edit Course</h2>
+    <div className="bg-gray-100 min-h-screen p-8">
+      {/* Use the imported Button component for the Back button */}
+      <Button onClick={handleBack}>Back</Button>
 
-        {/* Instructor Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Instructor Email</label>
-          <input
-            type="email"
-            name="instructorEmail"
-            value={courseData.instructorEmail}
-            onChange={handleInputChange}
-            className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Enter instructor email"
-            required
-          />
-        </div>
+      <div className="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Edit Course</h2>
 
-        {/* Course Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Course Name</label>
-          <input
-            type="text"
-            name="courseName"
-            value={courseData.courseName}
-            onChange={handleInputChange}
-            className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Enter course name"
-            required
-          />
-        </div>
-
-        {/* Primary Language */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Primary Language</label>
-          <input
-            type="text"
-            name="primaryLanguage"
-            value={courseData.primaryLanguage}
-            onChange={handleInputChange}
-            className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Enter primary language"
-            required
-          />
-        </div>
-
-        {/* Level */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Level</label>
-          <input
-            type="text"
-            name="level"
-            value={courseData.level}
-            onChange={handleInputChange}
-            className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            placeholder="Enter level"
-            required
-          />
-        </div>
-
-        {/* Course Image */}
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Course Image</label>
-          <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
-            <div className="text-center">
-              <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-              <label className="cursor-pointer">
-                <span className="block mt-2 text-sm text-gray-500">
-                  {courseData.courseImage ? courseData.courseImage.name : "Upload a course image"}
-                </span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleCourseImageUpload} />
-              </label>
-            </div>
-            {courseData.courseImagePreview && (
-              <div className="mt-4 text-center">
-                <img
-                  src={courseData.courseImagePreview || "/placeholder.svg"}
-                  alt="Course Preview"
-                  className="w-32 h-32 object-cover mx-auto rounded-lg"
-                />
-              </div>
-            )}
+          {/* Instructor Email (Non-editable) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Instructor Email</label>
+            <input
+              type="email"
+              name="instructorEmail"
+              value={courseData.instructorEmail}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-600 rounded-lg bg-gray-200 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-not-allowed"
+              placeholder="Enter instructor email"
+              readOnly // Make the field non-editable
+              required
+            />
           </div>
-        </div>
 
-        {/* Modules */}
-        {courseData.modules.map((module, moduleIndex) => (
-          <div key={moduleIndex} className="bg-white p-4 rounded-lg shadow-md my-4">
-            <h3 className="text-lg font-semibold mb-4">Module {moduleIndex + 1}</h3>
+          {/* Course Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Course Name</label>
+            <select
+              name="courseName"
+              value={courseData.courseName}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required
+            >
+              <option value="">Select Course</option>
+              <option value="Medicinal Plants">Medicinal Plants</option>
+              <option value="Solar System">Solar System</option>
+              <option value="Anatomy">Anatomy</option>
+            </select>
+          </div>
 
-            {/* Module Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Module Name</label>
-              <input
-                type="text"
-                name="moduleName"
-                value={module.moduleName}
-                onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="Enter module name"
-                required
-              />
+          {/* Primary Language */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Primary Language</label>
+            <select
+              name="primaryLanguage"
+              value={courseData.primaryLanguage}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required
+            >
+              <option value="">Select Language</option>
+              <option value="English">English</option>
+              <option value="Spanish">Spanish</option>
+              <option value="French">French</option>
+            </select>
+          </div>
+
+          {/* Level */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Level</label>
+            <select
+              name="level"
+              value={courseData.level}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required
+            >
+              <option value="">Select Level</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+
+          {/* Course Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-2">Course Image</label>
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+              <div className="text-center">
+                <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                <label className="cursor-pointer">
+                  <span className="block mt-2 text-sm text-gray-500">
+                    {courseData.courseImage ? courseData.courseImage.name : "Upload a new course image (optional)"}
+                  </span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleCourseImageUpload} />
+                </label>
+              </div>
+              {(courseData.courseImagePreview || courseData.courseImage) && (
+                <div className="mt-4 text-center">
+                  <img
+                    src={
+                      courseData.courseImage ? URL.createObjectURL(courseData.courseImage) : courseData.courseImagePreview
+                    }
+                    alt="Course Preview"
+                    className="w-32 h-32 object-cover mx-auto rounded-lg"
+                  />
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Scientific Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Scientific Name</label>
-              <input
-                type="text"
-                name="scientificName"
-                value={module.scientificName}
-                onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="Enter scientific name"
-                required
-              />
-            </div>
+          {/* Modules */}
+          {courseData.modules.map((module, moduleIndex) => (
+            <div key={moduleIndex} className="bg-white p-4 rounded-lg shadow-md my-4">
+              <h3 className="text-lg font-semibold mb-4">Module {moduleIndex + 1}</h3>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
-              <textarea
-                name="description"
-                value={module.description}
-                onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-                placeholder="Enter module description"
-                required
-              ></textarea>
-            </div>
-
-            {/* Funfact 1-4 */}
-            {[1, 2, 3, 4].map((num) => (
-              <div key={`funfact${num}`}>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Funfact {num}</label>
+              {/* Module Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Module Name</label>
                 <input
                   type="text"
-                  name={`funfact${num}`}
-                  value={module[`funfact${num}`]}
-                  onChange={(e) => handleModuleInputChange(e, moduleIndex)}
+                  value={module.moduleName}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].moduleName = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
                   className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder={`Enter funfact ${num}`}
+                  placeholder="Enter module name"
                   required
                 />
               </div>
-            ))}
 
-            {/* Parts 1-4 */}
-            {[1, 2, 3, 4].map((num) => (
-              <div key={`part${num}`} className="mt-4 p-3 border border-gray-300 rounded-lg">
-                <h4 className="font-medium mb-2">Part {num}</h4>
+              {/* Scientific Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Scientific Name</label>
+                <input
+                  type="text"
+                  value={module.scientificName}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].scientificName = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter scientific name"
+                  required
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Name</label>
-                  <input
-                    type="text"
-                    name={`part${num}.name`}
-                    value={module[`part${num}`].name}
-                    onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                    className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder={`Enter part ${num} name`}
-                    required
-                  />
-                </div>
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                <textarea
+                  value={module.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter module description"
+                  required
+                ></textarea>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
-                  <textarea
-                    name={`part${num}.description`}
-                    value={module[`part${num}`].description}
-                    onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                    className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-                    placeholder={`Enter part ${num} description`}
-                    required
-                  ></textarea>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Image</label>
-                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
-                    <div className="text-center">
-                      <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-                      <label className="cursor-pointer">
-                        <span className="block mt-2 text-sm text-gray-500">
-                          {module[`part${num}`].image ? module[`part${num}`].image.name : `Upload part ${num} image`}
-                        </span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={(e) => handleFileUpload(e, moduleIndex, `part${num}.image`)}
-                        />
-                      </label>
+              {/* Funfact Image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Funfact Image</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.funfact ? module.funfact.name : "Upload a new funfact image (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleModuleFileUpload(e, moduleIndex, "funfact")}
+                      />
+                    </label>
+                  </div>
+                  {(module.funfactPreview || module.funfact) && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={module.funfact ? URL.createObjectURL(module.funfact) : module.funfactPreview}
+                        alt="Funfact Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg"
+                      />
                     </div>
-                    {module[`part${num}`].imagePreview && (
-                      <div className="mt-4 text-center">
-                        <img
-                          src={module[`part${num || "/placeholder.svg"}`].imagePreview}
-                          alt={`Part ${num} Preview`}
-                          className="w-32 h-32 object-cover mx-auto rounded-lg"
-                        />
-                      </div>
-                    )}
+                  )}
+                </div>
+              </div>
+
+              {/* Funfact 1 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Funfact 1</label>
+                <input
+                  type="text"
+                  value={module.funfact1}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].funfact1 = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter funfact 1"
+                  required
+                />
+              </div>
+
+              {/* Funfact 2 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Funfact 2</label>
+                <input
+                  type="text"
+                  value={module.funfact2}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].funfact2 = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter funfact 2"
+                  required
+                />
+              </div>
+
+              {/* Funfact 3 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Funfact 3</label>
+                <input
+                  type="text"
+                  value={module.funfact3}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].funfact3 = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter funfact 3"
+                  required
+                />
+              </div>
+
+              {/* Funfact 4 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Funfact 4</label>
+                <input
+                  type="text"
+                  value={module.funfact4}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].funfact4 = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter funfact 4"
+                  required
+                />
+              </div>
+
+              {/* Part 1 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 1 Name</label>
+                <input
+                  type="text"
+                  value={module.part1.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part1.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter part 1 name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 1 Description</label>
+                <textarea
+                  value={module.part1.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part1.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter part 1 description"
+                  required
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 1 Image</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.part1.image ? module.part1.image.name : "Upload a new part 1 image (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handlePartImageUpload(e, moduleIndex, 1)}
+                      />
+                    </label>
                   </div>
+                  {(module.part1.imagePreview || module.part1.image) && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={module.part1.image ? URL.createObjectURL(module.part1.image) : module.part1.imagePreview}
+                        alt="Part 1 Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
 
-            {/* Benefits 1-4 */}
-            {[1, 2, 3, 4].map((num) => (
-              <div key={`benefit${num}`} className="mt-4">
-                <h4 className="font-medium mb-2">Benefit {num}</h4>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Name</label>
-                  <input
-                    type="text"
-                    name={`benefit${num}.name`}
-                    value={module[`benefit${num}`].name}
-                    onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                    className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder={`Enter benefit ${num} name`}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Description</label>
-                  <textarea
-                    name={`benefit${num}.description`}
-                    value={module[`benefit${num}`].description}
-                    onChange={(e) => handleModuleInputChange(e, moduleIndex)}
-                    className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-                    placeholder={`Enter benefit ${num} description`}
-                    required
-                  ></textarea>
-                </div>
+              {/* Part 2 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 2 Name</label>
+                <input
+                  type="text"
+                  value={module.part2.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part2.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter part 2 name"
+                  required
+                />
               </div>
-            ))}
 
-            {/* Module Image */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-400 mb-2">Module Image</label>
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
-                <div className="text-center">
-                  <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-                  <label className="cursor-pointer">
-                    <span className="block mt-2 text-sm text-gray-500">
-                      {module.image ? module.image.name : "Upload a module image"}
-                    </span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, moduleIndex, "image")}
-                    />
-                  </label>
-                </div>
-                {module.imagePreview && (
-                  <div className="mt-4 text-center">
-                    <img
-                      src={module.imagePreview || "/placeholder.svg"}
-                      alt="Module Preview"
-                      className="w-32 h-32 object-cover mx-auto rounded-lg"
-                    />
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 2 Description</label>
+                <textarea
+                  value={module.part2.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part2.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter part 2 description"
+                  required
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 2 Image</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.part2.image ? module.part2.image.name : "Upload a new part 2 image (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handlePartImageUpload(e, moduleIndex, 2)}
+                      />
+                    </label>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Module GLB File */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-400 mb-2">Module GLB File</label>
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
-                <div className="text-center">
-                  <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-                  <label className="cursor-pointer">
-                    <span className="block mt-2 text-sm text-gray-500">
-                      {module.glbFile ? module.glbFile.name : "Upload a GLB file"}
-                    </span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".glb"
-                      onChange={(e) => handleFileUpload(e, moduleIndex, "glbFile")}
-                    />
-                  </label>
+                  {(module.part2.imagePreview || module.part2.image) && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={module.part2.image ? URL.createObjectURL(module.part2.image) : module.part2.imagePreview}
+                        alt="Part 2 Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg"
+                      />
+                    </div>
+                  )}
                 </div>
-                {module.glbFilePreview && (
-                  <div className="mt-4 text-center">
-                    <span className="text-sm text-gray-500">3D Model Preview (GLB file)</span>
-                  </div>
-                )}
               </div>
-            </div>
 
-            {/* Quiz Section */}
-            <div className="mt-6">
-              <h4 className="font-medium mb-2">Quiz Questions</h4>
-              <p className="text-sm text-gray-500 mb-2">Current quiz questions: {module.quiz.length}</p>
+              {/* Part 3 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 3 Name</label>
+                <input
+                  type="text"
+                  value={module.part3.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part3.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter part 3 name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 3 Description</label>
+                <textarea
+                  value={module.part3.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part3.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter part 3 description"
+                  required
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 3 Image</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.part3.image ? module.part3.image.name : "Upload a new part 3 image (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handlePartImageUpload(e, moduleIndex, 3)}
+                      />
+                    </label>
+                  </div>
+                  {(module.part3.imagePreview || module.part3.image) && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={module.part3.image ? URL.createObjectURL(module.part3.image) : module.part3.imagePreview}
+                        alt="Part 3 Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Part 4 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 4 Name</label>
+                <input
+                  type="text"
+                  value={module.part4.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part4.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter part 4 name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 4 Description</label>
+                <textarea
+                  value={module.part4.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].part4.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter part 4 description"
+                  required
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Part 4 Image</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.part4.image ? module.part4.image.name : "Upload a new part 4 image (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handlePartImageUpload(e, moduleIndex, 4)}
+                      />
+                    </label>
+                  </div>
+                  {(module.part4.imagePreview || module.part4.image) && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={module.part4.image ? URL.createObjectURL(module.part4.image) : module.part4.imagePreview}
+                        alt="Part 4 Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Benefit 1 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Benefit 1 Name</label>
+                <input
+                  type="text"
+                  value={module.benefit1.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit1.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter benefit 1 name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Benefit 1 Description</label>
+                <textarea
+                  value={module.benefit1.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit1.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter benefit 1 description"
+                  required
+                ></textarea>
+              </div>
+
+              {/* Benefit 2 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Benefit 2 Name</label>
+                <input
+                  type="text"
+                  value={module.benefit2.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit2.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter benefit 2 name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Benefit 2 Description</label>
+                <textarea
+                  value={module.benefit2.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit2.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter benefit 2 description"
+                  required
+                ></textarea>
+              </div>
+
+              {/* Benefit 3 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Benefit 3 Name</label>
+                <input
+                  type="text"
+                  value={module.benefit3.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit3.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter benefit 3 name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Benefit 3 Description</label>
+                <textarea
+                  value={module.benefit3.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit3.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter benefit 3 description"
+                  required
+                ></textarea>
+              </div>
+
+              {/* Benefit 4 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Model Name</label>
+                <input
+                  type="text"
+                  value={module.benefit4.name}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit4.name = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Provide SketchFab Link for VR</label>
+                <textarea
+                  value={module.benefit4.description}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].benefit4.description = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter Sketchfab Link"
+                  required
+                ></textarea>
+              </div>
+
+              {/* Module Image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Module Image</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.image ? module.image.name : "Upload a new module image (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleModuleFileUpload(e, moduleIndex, "image")}
+                      />
+                    </label>
+                  </div>
+                  {(module.imagePreview || module.image) && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={module.image ? URL.createObjectURL(module.image) : module.imagePreview}
+                        alt="Module Preview"
+                        className="w-32 h-32 object-cover mx-auto rounded-lg"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Module GLB File */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Module GLB File</label>
+                <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="block mt-2 text-sm text-gray-500">
+                        {module.glbFile ? module.glbFile.name : "Upload a new GLB file (optional)"}
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".glb"
+                        onChange={(e) => handleModuleFileUpload(e, moduleIndex, "glbFile")}
+                      />
+                    </label>
+                  </div>
+                  {module.glbFile && (
+                    <div className="mt-4 text-center">
+                      <span className="text-sm text-gray-500">{module.glbFile.name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Number of Quiz */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Number of Quiz</label>
+                <input
+                  type="number"
+                  value={module.numberOfQuiz}
+                  onChange={(e) => {
+                    const newModules = [...courseData.modules]
+                    newModules[moduleIndex].numberOfQuiz = e.target.value
+                    setCourseData((prev) => ({ ...prev, modules: newModules }))
+                  }}
+                  className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  placeholder="Enter number of quiz"
+                  required
+                />
+              </div>
 
               {/* Add Quiz Button */}
               <button
                 type="button"
-                onClick={() => handleAddQuiz(moduleIndex)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-2 mb-4"
+                onClick={() => handleAddQuiz(moduleIndex, module.numberOfQuiz)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-5"
               >
-                Add Quiz Question
+                Update Quiz Questions
               </button>
 
               {/* Quiz Questions */}
@@ -726,19 +1250,50 @@ const EditCourse = ({ onEditComplete }) => {
                   </div>
 
                   {/* Options */}
-                  {["A", "B", "C", "D"].map((option) => (
-                    <div key={option}>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Option {option}</label>
-                      <input
-                        type="text"
-                        value={question[`option${option}`]}
-                        onChange={(e) => handleQuizChange(e, moduleIndex, questionIndex, `option${option}`)}
-                        className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        placeholder={`Enter option ${option}`}
-                        required
-                      />
-                    </div>
-                  ))}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Option A</label>
+                    <input
+                      type="text"
+                      value={question.optionA}
+                      onChange={(e) => handleQuizChange(e, moduleIndex, questionIndex, "optionA")}
+                      className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter option A"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Option B</label>
+                    <input
+                      type="text"
+                      value={question.optionB}
+                      onChange={(e) => handleQuizChange(e, moduleIndex, questionIndex, "optionB")}
+                      className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter option B"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Option C</label>
+                    <input
+                      type="text"
+                      value={question.optionC}
+                      onChange={(e) => handleQuizChange(e, moduleIndex, questionIndex, "optionC")}
+                      className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter option C"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Option D</label>
+                    <input
+                      type="text"
+                      value={question.optionD}
+                      onChange={(e) => handleQuizChange(e, moduleIndex, questionIndex, "optionD")}
+                      className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter option D"
+                      required
+                    />
+                  </div>
 
                   {/* Correct Answer */}
                   <div>
@@ -758,39 +1313,38 @@ const EditCourse = ({ onEditComplete }) => {
                   </div>
                 </div>
               ))}
+
+              {/* Remove Module Button */}
+              <button
+                type="button"
+                onClick={() => handleRemoveModule(moduleIndex)}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-3"
+              >
+                Remove Module
+              </button>
             </div>
+          ))}
 
-            {/* Remove Module Button */}
-            <button
-              type="button"
-              onClick={() => handleRemoveModule(moduleIndex)}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-5"
-            >
-              Remove Module
-            </button>
-          </div>
-        ))}
+          {/* Add Module Button */}
+          <button
+            type="button"
+            onClick={handleAddModule}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-3"
+          >
+            Add Module
+          </button>
 
-        {/* Add Module Button */}
-        <button
-          type="button"
-          onClick={handleAddModule}
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-3"
-        >
-          Add Module
-        </button>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200 mt-3"
-        >
-          Update Course
-        </button>
-      </form>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg shadow-md transition duration-200"
+          >
+            Update Course
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
 
 export default EditCourse
-

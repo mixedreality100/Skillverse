@@ -1,136 +1,119 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const Switch = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
-
   return (
     <StyledWrapper>
-      <div id="menuToggle">
-        <input id="checkbox" type="checkbox" onClick={toggleDropdown} />
-        <label className="toggle" htmlFor="checkbox">
-          <div className="bar bar--top" />
-          <div className="bar bar--middle" />
-          <div className="bar bar--bottom" />
-        </label>
-      </div>
-      {isOpen && (
-        <Dropdown isOpen={isOpen}>
-          <DropdownItem>3D Model</DropdownItem>
-          <DropdownItem>Benefits of Aloe Vera</DropdownItem>
-          <DropdownItem>Immersive Interaction</DropdownItem>
-          <DropdownItem>Quiz</DropdownItem>
-        </Dropdown>
-      )}
+      <label className="switch">
+        <input defaultChecked="true" id="checkbox" type="checkbox" />
+        <span className="slider">
+          <div className="star star_1" />
+          <div className="star star_2" />
+          <div className="star star_3" />
+          <svg viewBox="0 0 16 16" className="cloud_1 cloud">
+            <path transform="matrix(.77976 0 0 .78395-299.99-418.63)" fill="#fff" d="m391.84 540.91c-.421-.329-.949-.524-1.523-.524-1.351 0-2.451 1.084-2.485 2.435-1.395.526-2.388 1.88-2.388 3.466 0 1.874 1.385 3.423 3.182 3.667v.034h12.73v-.006c1.775-.104 3.182-1.584 3.182-3.395 0-1.747-1.309-3.186-2.994-3.379.007-.106.011-.214.011-.322 0-2.707-2.271-4.901-5.072-4.901-2.073 0-3.856 1.202-4.643 2.925" />
+          </svg>
+        </span>
+      </label>
     </StyledWrapper>
   );
 }
 
 const StyledWrapper = styled.div`
-position: absolute; /* Change to fixed if you want it to stay on screen while scrolling */
-top: 20px; /* Adjust as needed */
-right: 20px; /* Adjust as needed */
-
-  
-  #checkbox {
-    display: none;
-  }
-
-  .toggle {
+  /* Theme Switch */
+  /* The switch - the box around the slider */
+  .switch {
+    font-size: 17px;
     position: relative;
-    width: 40px;
-    cursor: pointer;
-    margin: auto;
-    display: block;
-    height: calc(4px * 3 + 11px * 2);
+    display: inline-block;
+    width: 4em;
+    height: 2.2em;
+    border-radius: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
 
-  .bar {
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
     position: absolute;
+    cursor: pointer;
+    top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    border-radius: calc(4px / 2);
-    background: #000000;
-    color: inherit;
-    opacity: 1;
-    transition: none 0.35s cubic-bezier(.5,-0.35,.35,1.5) 0s;
+    bottom: 0;
+    background-color: #2a2a2a;
+    transition: 0.4s;
+    border-radius: 30px;
+    overflow: hidden;
   }
 
-  /***** Tornado Animation *****/
-
-  .bar--top {
-    bottom: calc(50% + 11px + 4px/ 2);
-    transition-property: bottom,transform;
-    transition-delay: calc(0s + 0.35s) * .6;
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 1.2em;
+    width: 1.2em;
+    border-radius: 20px;
+    left: 0.5em;
+    bottom: 0.5em;
+    transition: 0.4s;
+    transition-timing-function: cubic-bezier(0.81, -0.04, 0.38, 1.5);
+    box-shadow: inset 8px -4px 0px 0px #fff;
   }
 
-  .bar--middle {
-    top: calc(50% - 4px/ 2);
-    transition-property: opacity,transform;
-    transition-delay: calc(0s + 0.35s * .3);
+  .switch input:checked + .slider {
+    background-color: #00a6ff;
   }
 
-  .bar--bottom {
-    top: calc(50% + 11px + 4px/ 2);
-    transition-property: top,transform;
-    transition-delay: 0s;
+  .switch input:checked + .slider:before {
+    transform: translateX(1.8em);
+    box-shadow: inset 15px -4px 0px 15px #ffcf48;
   }
 
-  #checkbox:checked + .toggle .bar--top {
-    transform: rotate(-135deg);
-    transition-delay: 0s;
-    bottom: calc(50% - 4px/ 2);
+  .star {
+    background-color: #fff;
+    border-radius: 50%;
+    position: absolute;
+    width: 5px;
+    transition: all 0.4s;
+    height: 5px;
   }
 
-  #checkbox:checked + .toggle .bar--middle {
+  .star_1 {
+    left: 2.5em;
+    top: 0.5em;
+  }
+
+  .star_2 {
+    left: 2.2em;
+    top: 1.2em;
+  }
+
+  .star_3 {
+    left: 3em;
+    top: 0.9em;
+  }
+
+  .switch input:checked ~ .slider .star {
     opacity: 0;
-    transform: rotate(-135deg);
-    transition-delay: calc(0s + 0.35s * .3);
   }
 
-  #checkbox:checked + .toggle .bar--bottom {
-    top: calc(50% - 4px/ 2);
-    transform: rotate(-225deg);
-    transition-delay: calc(0s + 0.35s * .6);
+  .cloud {
+    width: 3.5em;
+    position: absolute;
+    bottom: -1.4em;
+    left: -1.1em;
+    opacity: 0;
+    transition: all 0.4s;
+  }
+
+  .switch input:checked ~ .slider .cloud {
+    opacity: 1;
   }`;
-
-const Dropdown = styled.div`
-  font-family: 'Poppins', sans-serif;
-  font-weight: bold;
-  position: absolute;
-  top: 18px; /* Adjust as needed to position below the switch */
-  right: 34px;
-  width: 348px; /* Set width to 548px */
-  height: 274px; /* Set height to 474px */
-  background-color: white; /* Background color of the dropdown */
-  border: 1px solid #ccc; /* Border for the dropdown */
-  border-radius: 20px 0px 20px 20px; /* Rounded corners */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Shadow for dropdown */
-  z-index: 1000; /* Ensure dropdown is above other elements */
-  opacity: 0; /* Start with opacity 0 */
-  visibility: hidden; /* Start with visibility hidden */
-  transition: opacity 0.3s ease, visibility 0.3s ease; /* Transition for fade effect */
-
-  /* Show dropdown when isOpen is true */
-  ${({ isOpen }) => isOpen && `
-    opacity: 1; /* Fade in */
-    visibility: visible; /* Make it visible */
-  `}
-`;
-
-const DropdownItem = styled.div`
-  border-radius: 20px ; /* Rounded corners */
-  padding: 15px 25px; /* Padding for dropdown items */
-  cursor: pointer; /* Pointer cursor on hover */
-  font-size: 25px; /* Increase font size */
-  &:hover {
-    background-color: #c4c3c4; /* Change background on hover */
-  }
-`;
 
 export default Switch;
