@@ -12,8 +12,6 @@ import {
   useParams,
 } from "react-router-dom";
 import Loader from "./Loader";
-import Paper from "@mui/material/Paper";
-import { createTheme, styled } from "@mui/material/styles";
 import skillverseLogo from "../assets/skillverse.svg";
 import NavButton from "./NavButton";
 import ProfileButton from "./profile";
