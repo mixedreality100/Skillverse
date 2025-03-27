@@ -21,10 +21,10 @@ const initialState = {
   isSidebarOpen: false,
   userInfo: {
     id: null,
-    name: "Dylan Frias",
-    email: "2205809.dylan.sdcce@vvm.edu.in",
+    name: "Loading Name...",
+    email: "Loading Email...",
     profilePicture:
-      "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yc2ZPYWFqMmdhNEl1NGxzSXhDck1NOTZKamQifQ",
+     "",
   },
   enrolledCourses: [],
   isLoading: true,
