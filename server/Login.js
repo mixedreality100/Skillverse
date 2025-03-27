@@ -8,7 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 dotenv.config();
-import { GoogleGenerativeAI } from "@google/generative-ai"; // [[2]][[5]]
+import { GoogleGenerativeAI } from "@google/generative-ai"; 
 
 
 // ES module path fix
@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // Secure API key [[5]]
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -78,13 +78,13 @@ app.post("/api/gemini", async (req, res) => {
       systemInstruction:  `
   You are a specialized AI assistant for Skillverse. 
   You MUST ONLY answer questions about: 
-  - Medicinal plants 
-  - Human Anatomy 
-  - The Solar System. 
   - Normal greetings from the user and small talks.
   - About skillverse site
+  - About courses on skillverse site and assist them on content which would suit user on his wants to learn for eg. he wants to study tulsi recommend our medicinal course.
+   The courses being Anatomy with skeletal system, the link of anatomy being http://localhost:5173/course/26 and medicinal plants with Aloe vera, custard apple, cluster fig, shoeflower, tulsi, the link to medicinal course being http://localhost:5173/course/18.
+. 
   REFUSE to discuss ANY other topics. 
-  If a query is unrelated, respond with: "I cannot assist with that topic.
+  If a query is unrelated, respond with: "I cannot assist with that topic but i can assist you with our site.
   About Skillverse - Skillverse has ar/vr models to make the learning experience better with music and other functionalities.
   Navigate the Site:
         On desktop, you’ll find a navigation bar at the top with buttons like "Courses," "Explore," "About Us," and "Leaderboard." Click "Courses" to scroll down to a list of available courses, or click "Explore" to browse all courses in detail.
@@ -124,7 +124,7 @@ Once you’re logged in as a learner, where your learning journey begins:
       generationConfig: {
         temperature: 0.3,
         topP: 0.9,
-        maxOutputTokens: 1048,
+        maxOutputTokens: 248,
         
         
       }
@@ -162,10 +162,10 @@ app.post("/api/saveUser", async (req, res) => {
   try {
     const userId = req.auth.userId;
     
-    // Use clerkClient to get complete user details
+    
     const user = await clerkClient.users.getUser(userId);
     
-    // Extract properly formatted user data
+    //super mario 8 
     const userData = {
       clerkUserId: userId,
       email: user.emailAddresses[0]?.emailAddress || `no-email-${userId}@example.com`,

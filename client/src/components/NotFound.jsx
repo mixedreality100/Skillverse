@@ -52,7 +52,7 @@ const NotFound = () => {
           className="bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full 
                    transform transition-all duration-300 hover:scale-105 shadow-lg"
         >
-          Back to Safety
+          Back to Homepage
         </button>
 
         {/* Floating Yarn Balls */}
