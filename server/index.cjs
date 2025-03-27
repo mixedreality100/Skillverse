@@ -1554,14 +1554,42 @@ app.delete('/admin/api/users/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id, 10);
 
+    // Fetch the user's email
+    const userEmailResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+    if (userEmailResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const userEmail = userEmailResult.rows[0].email;
+
+    // Delete related records from feedback table
+    await pool.query('DELETE FROM feedback WHERE user_id = $1', [userId]);
+
     // Delete related records from course_enrollment table
     await pool.query('DELETE FROM course_enrollment WHERE user_id = $1', [userId]);
+
+    // Delete related records from module_completion table
+    await pool.query('DELETE FROM module_completion WHERE user_id = $1', [userId]);
+
+    // Delete related records from reward table
+    await pool.query('DELETE FROM reward WHERE user_id = $1', [userId]);
+
+    // Fetch course IDs associated with the user's email
+    const courseIdsResult = await pool.query('SELECT id FROM courses WHERE instructor_email = $1', [userEmail]);
+    const courseIds = courseIdsResult.rows.map(row => row.id);
+
+    // Delete related records from course_enrollment for each course
+    for (const courseId of courseIds) {
+      await pool.query('DELETE FROM course_enrollment WHERE course_id = $1', [courseId]);
+    }
+
+    // Delete courses associated with the user's email
+    await pool.query('DELETE FROM courses WHERE instructor_email = $1', [userEmail]);
 
     // Delete the user from the users table
     const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
 
     if (result.rows.length > 0) {
-      res.status(200).json({ message: 'User deleted successfully' });
+      res.status(200).json({ message: 'User and associated courses deleted successfully' });
     } else {
       res.status(404).json({ message: 'User not found' });
     }
@@ -1570,7 +1598,6 @@ app.delete('/admin/api/users/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 // Endpoint to fetch all courses for admin course management
 
 app.get('/courses', async (req, res) => {

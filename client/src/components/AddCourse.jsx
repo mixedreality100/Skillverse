@@ -234,7 +234,7 @@ useEffect(() => {
       });
       const result = await response.json();
       if (result.isContentCreator) {
-        alert("You are already a Content Creator");
+        alert("Course Created and Sent for approval");
         setIsContentCreator(true);
         await submitCourse(); // Submit the course if already a content creator
         return;

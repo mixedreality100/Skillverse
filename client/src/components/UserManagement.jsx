@@ -21,7 +21,7 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
-  const handleDeleteUser = (userId, userName) => {
+  const handleDeleteUser = (userId, userName, userEmail) => {
     setDeleteUserId(userId);
     setDeleteUserName(userName);
     setIsDeleteModalOpen(true);
@@ -182,22 +182,22 @@ const UserManagement = () => {
                     </td>
                     <td className="block sm:table-cell px-4 sm:px-6 py-2 sm:py-4 text-base sm:text-lg border-b border-gray-200 before:content-['Actions:'] before:font-bold before:mr-2 sm:before:content-none whitespace-normal">
                       <StyledWrapper>
-                        <button
-                          className="delete-btn noselect"
-                          onClick={() => handleDeleteUser(user.id, user.name)}
-                        >
-                          <span className="text">Delete</span>
-                          <span className="icon">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width={24}
-                              height={24}
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
-                            </svg>
-                          </span>
-                        </button>
+                      <button
+  className="delete-btn noselect"
+  onClick={() => handleDeleteUser(user.id, user.name, user.email)}
+>
+  <span className="text">Delete</span>
+  <span className="icon">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+    >
+      <path d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z" />
+    </svg>
+  </span>
+</button>
                       </StyledWrapper>
                     </td>
                   </tr>
