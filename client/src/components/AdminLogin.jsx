@@ -27,7 +27,9 @@ const AdminLogin = () => {
       const data = await response.json();
   
       if (response.status === 200) {
-        navigate('/admin-dashboard');
+        navigate('/admin-dashboard', {
+          state: { fromApp: true },
+        });
       } else {
         alert(data.message);
       }
