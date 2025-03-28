@@ -1027,7 +1027,7 @@ useEffect(() => {
             {/* Benefit 4 */}
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                Benefit 4 Name
+                Module Name
               </label>
               <input
                 type="text"
@@ -1038,14 +1038,14 @@ useEffect(() => {
                   setCourseData((prev) => ({ ...prev, modules: newModules }));
                 }}
                 className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                placeholder="Enter benefit 4 name"
+                placeholder="Enter name"
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
-                Benefit 4 Description
+               Paste SketchFab link
               </label>
               <textarea
                 value={module.benefit4.description}
@@ -1055,7 +1055,7 @@ useEffect(() => {
                   setCourseData((prev) => ({ ...prev, modules: newModules }));
                 }}
                 className="w-full p-3 border border-gray-600 rounded-lg bg-gray-100 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-                placeholder="Enter benefit 4 description"
+                placeholder="Paste Link here"
                 required
               ></textarea>
             </div>
